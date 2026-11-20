@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@theme {
+    --font-sans:
+        'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    /* Brand: deep royal blue used for primary actions and active states. */
+    --color-brand-50: #eef1fd;
+    --color-brand-100: #dde3fb;
+    --color-brand-200: #bcc6f6;
+    --color-brand-300: #8f9ff0;
+    --color-brand-400: #6d7ee8;
+    --color-brand-500: #4a5ce0;
+    --color-brand-600: #3446d1;
+    --color-brand-700: #2a38b0;
+    --color-brand-800: #222d8c;
+    --color-brand-900: #1b2468;
+
+    /* Neutral ink with a slight blue bias. */
+    --color-ink-900: #121826;
+    --color-ink-700: #2f3747;
+    --color-ink-500: #5d6678;
+    --color-ink-400: #8a93a5;
+    --color-ink-200: #dde2ea;
+    --color-ink-100: #eceff4;
+    --color-ink-50: #f5f7fa;
+
+    /* Surfaces. */
+    --color-canvas: #ecf1f9;
+    --color-panel: #f8fafd;
+    --color-media: #eaf0f9;
+
+    /* Status. */
+    --color-ok: #1f9d55;
+    --color-low: #e5484d;
+    --color-empty: #5d6678;
+    --color-service: #d97706;
+
+    /* Chart series. */
+    --color-series-in: #3446d1;
+    --color-series-out: #e07b39;
+}
+
+@layer base {
+    /* The app has a single light look. Without this, browsers in dark mode
+       paint native dropdowns, date pickers and scrollbars black. */
+    :root {
+        color-scheme: light;
+    }
+
+    body {
+        @apply bg-canvas text-ink-900;
+    }
+
+    ::selection {
+        @apply bg-brand-100 text-brand-900;
+    }
+}
+
+@media print {
+    @page {
+        margin: 14mm 12mm;
+    }
+
+    body {
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
