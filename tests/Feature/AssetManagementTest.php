@@ -280,7 +280,8 @@ test('asset detail exposes the options the dialogs need', function () {
     $this->actingAs($this->secretary)
         ->get(route('assets.show', 'INV-LPT-003'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('canManage', false)
+            ->where('canEdit', false)
+            ->where('canDispose', false)
             ->has('employees', 7)
             ->has('rooms', 4)
             ->where('lastHistoryDate', '2026-03-03')

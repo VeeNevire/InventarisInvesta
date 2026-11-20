@@ -15,13 +15,14 @@ import {
     SettingsIcon,
     UserIcon,
 } from '@/components/icons';
+import { allowedMasterTabs } from '@/components/master-layout';
 import { initials } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard, guide, logout } from '@/routes';
 import { index as assetsIndex } from '@/routes/assets';
 import { index as itemsIndex } from '@/routes/items';
-import { index as employeesIndex } from '@/routes/master/employees';
 import { index as reportsIndex } from '@/routes/reports';
+import { edit as settingsEdit } from '@/routes/settings';
 import { index as stockOpnamesIndex } from '@/routes/stock-opnames';
 import { index as transactionsIndex } from '@/routes/transactions';
 
@@ -30,6 +31,8 @@ type NavEntry = {
     href: string | null;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
     match?: (url: string) => boolean;
+    /** Short plain-language hint shown under the title. */
+    hint?: string;
 };
 
 const modules: NavEntry[] = [
@@ -44,12 +47,14 @@ const modules: NavEntry[] = [
         href: itemsIndex.url(),
         icon: BoxIcon,
         match: (url) => url.startsWith('/barang'),
+        hint: 'Habis pakai',
     },
     {
         title: 'Aset',
         href: assetsIndex.url(),
         icon: LaptopIcon,
         match: (url) => url.startsWith('/aset'),
+        hint: 'Laptop, printer, dll.',
     },
     {
         title: 'Transaksi',
@@ -78,13 +83,19 @@ const secondary: NavEntry[] = [
         icon: HelpIcon,
         match: (url) => url.startsWith('/panduan'),
     },
-    { title: 'Pengaturan', href: null, icon: SettingsIcon },
+    {
+        title: 'Pengaturan',
+        href: settingsEdit.url(),
+        icon: SettingsIcon,
+        match: (url) => url.startsWith('/pengaturan'),
+    },
 ];
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     const { url, props } = usePage();
     const [search, setSearch] = useState('');
     const user = props.auth.user;
+    const masterDataHref = allowedMasterTabs(props.auth.can)[0]?.href ?? null;
 
     function submitSearch(event: FormEvent) {
         event.preventDefault();
@@ -146,15 +157,22 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                                 )}
                                 strokeWidth={1.6}
                             />
-                            <span
-                                className={cn(
-                                    'text-sm',
-                                    isActive
-                                        ? 'font-semibold text-brand-700'
-                                        : 'text-ink-700',
+                            <span className="flex flex-col items-center gap-0.5">
+                                <span
+                                    className={cn(
+                                        'text-sm leading-tight',
+                                        isActive
+                                            ? 'font-semibold text-brand-700'
+                                            : 'text-ink-700',
+                                    )}
+                                >
+                                    {entry.title}
+                                </span>
+                                {entry.hint && (
+                                    <span className="text-[11px] leading-tight text-ink-500">
+                                        {entry.hint}
+                                    </span>
                                 )}
-                            >
-                                {entry.title}
                             </span>
                         </>
                     );
@@ -206,10 +224,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="h-px bg-ink-200" />
 
             <ul className="flex flex-col gap-2">
-                {props.auth.canManageMasterData ? (
+                {masterDataHref && (
                     <li>
                         <Link
-                            href={employeesIndex.url()}
+                            href={masterDataHref}
                             data-tour="nav-master"
                             onClick={onNavigate}
                             aria-current={
@@ -238,24 +256,6 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                                 Master Data
                             </span>
                         </Link>
-                    </li>
-                ) : (
-                    <li>
-                        <span
-                            aria-disabled="true"
-                            title="Hanya Admin yang bisa mengelola master data"
-                            className="flex cursor-not-allowed items-center gap-3 opacity-60"
-                        >
-                            <span className="flex size-10 items-center justify-center rounded-xl bg-white/60 text-ink-700">
-                                <DatabaseIcon className="size-[18px]" />
-                            </span>
-                            <span className="flex h-10 flex-1 items-center justify-between rounded-xl bg-white/60 px-3.5 text-sm text-ink-700">
-                                Master Data
-                                <span className="text-[10px] font-semibold text-ink-400">
-                                    Khusus Admin
-                                </span>
-                            </span>
-                        </span>
                     </li>
                 )}
                 {secondary.map((entry) => {

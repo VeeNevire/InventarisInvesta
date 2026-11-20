@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\Permission;
 use App\Models\Employee;
 use App\Models\Room;
 use App\Models\User;
@@ -38,7 +39,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Date::use(CarbonImmutable::class);
 
-        Gate::define('manage-master-data', fn (User $user): bool => $user->isAdmin());
+        foreach (Permission::cases() as $permission) {
+            Gate::define($permission->value, fn (User $user): bool => $user->hasPermission($permission));
+        }
+
+        Gate::define('manage-users', fn (User $user): bool => $user->isAdmin());
 
         Relation::enforceMorphMap([
             'employee' => Employee::class,

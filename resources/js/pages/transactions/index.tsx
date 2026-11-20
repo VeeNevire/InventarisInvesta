@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import {
     ArrowDownTrayIcon,
     ArrowUpTrayIcon,
+    ArrowsIcon,
     BanIcon,
     ChevronDownIcon,
     ImageIcon,
@@ -52,6 +53,7 @@ export default function TransactionsIndex({
     const [cancelling, setCancelling] =
         useState<TransactionHistoryEntry | null>(null);
     const isFirstRender = useRef(true);
+    const hasFilters = Object.values(filters).some((value) => value !== '');
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -165,10 +167,51 @@ export default function TransactionsIndex({
 
             {transactions.length === 0 ? (
                 <div className="rounded-2xl bg-white">
-                    <EmptyState
-                        title="Belum ada transaksi yang cocok"
-                        description="Ubah kata kunci atau filter, atau catat transaksi baru."
-                    />
+                    {hasFilters ? (
+                        <EmptyState
+                            icon={ArrowsIcon}
+                            title="Tidak ada transaksi yang cocok"
+                            description="Ubah kata kunci atau filter, atau catat transaksi baru."
+                            action={
+                                <ButtonLink
+                                    href={transactionsIndex.url()}
+                                    variant="soft"
+                                    size="sm"
+                                >
+                                    Hapus semua filter
+                                </ButtonLink>
+                            }
+                        />
+                    ) : (
+                        <EmptyState
+                            icon={ArrowsIcon}
+                            title="Belum ada transaksi"
+                            description="Catat Barang Masuk saat barang datang, dan Barang Keluar saat ada yang mengambil. Semua riwayatnya akan tampil di sini."
+                            action={
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    <ButtonLink
+                                        href={incomingCreate.url()}
+                                        variant="outline"
+                                        size="sm"
+                                        icon={
+                                            <ArrowDownTrayIcon className="size-4" />
+                                        }
+                                    >
+                                        Barang Masuk
+                                    </ButtonLink>
+                                    <ButtonLink
+                                        href={outgoingCreate.url()}
+                                        size="sm"
+                                        icon={
+                                            <ArrowUpTrayIcon className="size-4" />
+                                        }
+                                    >
+                                        Barang Keluar
+                                    </ButtonLink>
+                                </div>
+                            }
+                        />
+                    )}
                 </div>
             ) : (
                 <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
@@ -210,7 +253,8 @@ export default function TransactionsIndex({
 
             {!canCancel && (
                 <p className="text-[13px] text-ink-500">
-                    Pembatalan transaksi hanya bisa dilakukan oleh Admin.
+                    Anda belum diberi akses membatalkan transaksi. Minta Admin
+                    membatalkannya, atau minta akses tersebut.
                 </p>
             )}
 

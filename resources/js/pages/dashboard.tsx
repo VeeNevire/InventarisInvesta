@@ -11,6 +11,8 @@ import {
 } from '@/components/icons';
 import type { MonthlyMovement } from '@/components/movement-chart';
 import { MovementChart } from '@/components/movement-chart';
+import type { OnboardingProgress } from '@/components/onboarding-checklist';
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
 import { ButtonLink } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/page-header';
@@ -60,6 +62,7 @@ type DashboardProps = {
         idle_days: number | null;
     }[];
     monthlyMovement: MonthlyMovement[];
+    onboarding: OnboardingProgress;
 };
 
 export default function Dashboard({
@@ -70,6 +73,7 @@ export default function Dashboard({
     assetsNeedingAttention,
     idleItems,
     monthlyMovement,
+    onboarding,
 }: DashboardProps) {
     return (
         <AppLayout
@@ -97,6 +101,8 @@ export default function Dashboard({
                     </>
                 }
             />
+
+            <OnboardingChecklist progress={onboarding} />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
@@ -160,6 +166,13 @@ export default function Dashboard({
                         }
                     />
                     <ul className="flex flex-col gap-1 px-3 pb-3">
+                        {lowStockItems.length === 0 && (
+                            <li className="px-2 pb-2 text-sm text-ink-500">
+                                {stats.item_count === 0
+                                    ? 'Belum ada barang. Barang yang stoknya hampir habis akan muncul di sini.'
+                                    : 'Semua stok aman, tidak ada yang di bawah batas minimum.'}
+                            </li>
+                        )}
                         {lowStockItems.map((item) => {
                             const fill =
                                 item.minimum_stock > 0
@@ -231,128 +244,169 @@ export default function Dashboard({
                         title="Transaksi terakhir"
                         description="Barang masuk, keluar, dan penyesuaian stok"
                     />
-                    <div className="overflow-x-auto px-5 pb-3">
-                        <table className="w-full min-w-[560px] text-sm">
-                            <thead>
-                                <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
-                                    <th className="py-2.5 pr-3 font-medium">
-                                        Transaksi
-                                    </th>
-                                    <th className="px-3 py-2.5 font-medium">
-                                        Barang
-                                    </th>
-                                    <th className="px-3 py-2.5 font-medium">
-                                        Pihak / keperluan
-                                    </th>
-                                    <th className="py-2.5 pl-3 text-right font-medium">
-                                        Tanggal
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-ink-100">
-                                {recentTransactions.map((transaction) => (
-                                    <tr
-                                        key={transaction.id}
-                                        className={
-                                            transaction.is_cancelled
-                                                ? 'text-ink-400'
-                                                : undefined
-                                        }
-                                    >
-                                        <td className="py-3 pr-3 align-top">
-                                            <div className="flex flex-col items-start gap-1.5">
-                                                <span
-                                                    className={
-                                                        transaction.is_cancelled
-                                                            ? 'font-medium line-through'
-                                                            : 'font-medium text-ink-900'
-                                                    }
-                                                >
-                                                    {transaction.number}
-                                                </span>
-                                                {transaction.is_cancelled ? (
-                                                    <Badge
-                                                        tone="gray"
-                                                        variant="soft"
-                                                    >
-                                                        Dibatalkan
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge
-                                                        tone={
-                                                            transactionTone[
-                                                                transaction.type
-                                                                    .value
-                                                            ]
-                                                        }
-                                                        variant="soft"
-                                                    >
-                                                        {transaction.type.label}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 align-top">
-                                            <ul className="flex flex-col gap-1">
-                                                {transaction.lines?.map(
-                                                    (line) => (
-                                                        <li
-                                                            key={line.item_code}
-                                                            className="flex justify-between gap-3"
-                                                        >
-                                                            <span className="truncate">
-                                                                {line.item_name}
-                                                            </span>
-                                                            <span
-                                                                className={
-                                                                    line.quantity >
-                                                                    0
-                                                                        ? 'font-semibold text-ok tabular-nums'
-                                                                        : 'font-semibold tabular-nums'
-                                                                }
-                                                            >
-                                                                {line.quantity >
-                                                                0
-                                                                    ? '+'
-                                                                    : '−'}
-                                                                {formatNumber(
-                                                                    Math.abs(
-                                                                        line.quantity,
-                                                                    ),
-                                                                )}{' '}
-                                                                {line.unit}
-                                                            </span>
-                                                        </li>
-                                                    ),
-                                                )}
-                                            </ul>
-                                        </td>
-                                        <td className="px-3 py-3 align-top text-ink-500">
-                                            <div className="flex flex-col gap-0.5">
-                                                {transaction.counterpart && (
-                                                    <span className="text-ink-700">
-                                                        {
-                                                            transaction.counterpart
-                                                        }
-                                                    </span>
-                                                )}
-                                                {transaction.purpose && (
-                                                    <span className="text-xs">
-                                                        {transaction.purpose}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="py-3 pl-3 text-right align-top whitespace-nowrap text-ink-500">
-                                            {formatDate(
-                                                transaction.transacted_on,
-                                            )}
-                                        </td>
+                    {recentTransactions.length === 0 ? (
+                        <div className="flex flex-col items-start gap-3 px-5 pb-5">
+                            <p className="text-sm text-ink-500">
+                                Belum ada transaksi. Setiap barang masuk dan
+                                keluar yang dicatat akan tampil di sini.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                <ButtonLink
+                                    href={incomingCreate.url()}
+                                    variant="soft"
+                                    size="sm"
+                                    icon={
+                                        <ArrowDownTrayIcon className="size-4" />
+                                    }
+                                >
+                                    Catat barang masuk
+                                </ButtonLink>
+                                <ButtonLink
+                                    href={outgoingCreate.url()}
+                                    variant="soft"
+                                    size="sm"
+                                    icon={
+                                        <ArrowUpTrayIcon className="size-4" />
+                                    }
+                                >
+                                    Catat barang keluar
+                                </ButtonLink>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto px-5 pb-3">
+                            <table className="w-full min-w-[560px] text-sm">
+                                <thead>
+                                    <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
+                                        <th className="py-2.5 pr-3 font-medium">
+                                            Transaksi
+                                        </th>
+                                        <th className="px-3 py-2.5 font-medium">
+                                            Barang
+                                        </th>
+                                        <th className="px-3 py-2.5 font-medium">
+                                            Pihak / keperluan
+                                        </th>
+                                        <th className="py-2.5 pl-3 text-right font-medium">
+                                            Tanggal
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-ink-100">
+                                    {recentTransactions.map((transaction) => (
+                                        <tr
+                                            key={transaction.id}
+                                            className={
+                                                transaction.is_cancelled
+                                                    ? 'text-ink-400'
+                                                    : undefined
+                                            }
+                                        >
+                                            <td className="py-3 pr-3 align-top">
+                                                <div className="flex flex-col items-start gap-1.5">
+                                                    <span
+                                                        className={
+                                                            transaction.is_cancelled
+                                                                ? 'font-medium line-through'
+                                                                : 'font-medium text-ink-900'
+                                                        }
+                                                    >
+                                                        {transaction.number}
+                                                    </span>
+                                                    {transaction.is_cancelled ? (
+                                                        <Badge
+                                                            tone="gray"
+                                                            variant="soft"
+                                                        >
+                                                            Dibatalkan
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge
+                                                            tone={
+                                                                transactionTone[
+                                                                    transaction
+                                                                        .type
+                                                                        .value
+                                                                ]
+                                                            }
+                                                            variant="soft"
+                                                        >
+                                                            {
+                                                                transaction.type
+                                                                    .label
+                                                            }
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-3 align-top">
+                                                <ul className="flex flex-col gap-1">
+                                                    {transaction.lines?.map(
+                                                        (line) => (
+                                                            <li
+                                                                key={
+                                                                    line.item_code
+                                                                }
+                                                                className="flex justify-between gap-3"
+                                                            >
+                                                                <span className="truncate">
+                                                                    {
+                                                                        line.item_name
+                                                                    }
+                                                                </span>
+                                                                <span
+                                                                    className={
+                                                                        line.quantity >
+                                                                        0
+                                                                            ? 'font-semibold text-ok tabular-nums'
+                                                                            : 'font-semibold tabular-nums'
+                                                                    }
+                                                                >
+                                                                    {line.quantity >
+                                                                    0
+                                                                        ? '+'
+                                                                        : '−'}
+                                                                    {formatNumber(
+                                                                        Math.abs(
+                                                                            line.quantity,
+                                                                        ),
+                                                                    )}{' '}
+                                                                    {line.unit}
+                                                                </span>
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            </td>
+                                            <td className="px-3 py-3 align-top text-ink-500">
+                                                <div className="flex flex-col gap-0.5">
+                                                    {transaction.counterpart && (
+                                                        <span className="text-ink-700">
+                                                            {
+                                                                transaction.counterpart
+                                                            }
+                                                        </span>
+                                                    )}
+                                                    {transaction.purpose && (
+                                                        <span className="text-xs">
+                                                            {
+                                                                transaction.purpose
+                                                            }
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="py-3 pl-3 text-right align-top whitespace-nowrap text-ink-500">
+                                                {formatDate(
+                                                    transaction.transacted_on,
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </Card>
 
                 <div className="flex flex-col gap-4">

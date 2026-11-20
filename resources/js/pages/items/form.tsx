@@ -25,6 +25,8 @@ type EditableItem = Item & { category_id: number; has_transactions: boolean };
 
 type ItemFormProps = {
     item: EditableItem | null;
+    /** Whether the delete button is shown; only relevant when editing. */
+    canDelete?: boolean;
     categories: {
         id: number;
         code: string;
@@ -37,7 +39,12 @@ type ItemFormProps = {
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-export default function ItemForm({ item, categories, units }: ItemFormProps) {
+export default function ItemForm({
+    item,
+    categories,
+    units,
+    canDelete = false,
+}: ItemFormProps) {
     const isEditing = item !== null;
     const fileInput = useRef<HTMLInputElement>(null);
     const [newPhoto, setNewPhoto] = useState<File | null>(null);
@@ -143,7 +150,8 @@ export default function ItemForm({ item, categories, units }: ItemFormProps) {
                         : 'Daftarkan barang baru dengan stok 0. Stoknya diisi lewat Barang Masuk.'
                 }
                 actions={
-                    isEditing && (
+                    isEditing &&
+                    canDelete && (
                         <Button
                             variant="ghost"
                             icon={<TrashIcon className="size-4" />}

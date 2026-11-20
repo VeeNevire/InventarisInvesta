@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CategoryType;
+use App\Enums\Permission;
 use App\Enums\StockStatus;
 use App\Enums\StockTransactionType;
 use App\Http\Requests\SaveItemRequest;
@@ -129,7 +130,7 @@ class ItemController extends Controller
         return to_route('items.show', $item);
     }
 
-    public function edit(Item $item): Response
+    public function edit(Request $request, Item $item): Response
     {
         return Inertia::render('items/form', [
             'item' => [
@@ -137,6 +138,7 @@ class ItemController extends Controller
                 'category_id' => $item->category_id,
                 'has_transactions' => $item->transactionLines()->exists(),
             ],
+            'canDelete' => $request->user()?->can(Permission::DeleteItems->value) ?? false,
             ...$this->formOptions(),
         ]);
     }

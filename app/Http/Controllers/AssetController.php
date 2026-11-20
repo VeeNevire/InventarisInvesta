@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\AssetHistoryType;
 use App\Enums\AssetStatus;
 use App\Enums\CategoryType;
+use App\Enums\Permission;
 use App\Http\Requests\Asset\SaveAssetRequest;
 use App\Http\Resources\AssetHistoryResource;
 use App\Http\Resources\AssetResource;
@@ -100,7 +101,8 @@ class AssetController extends Controller
             'asset' => (new AssetResource($asset))->resolve(),
             'today' => now()->toDateString(),
             'lastHistoryDate' => $histories->first()?->occurred_on->toDateString(),
-            'canManage' => $request->user()?->can('manage-master-data') ?? false,
+            'canEdit' => $request->user()?->can(Permission::UpdateAssets->value) ?? false,
+            'canDispose' => $request->user()?->can(Permission::DisposeAssets->value) ?? false,
             'employees' => $this->activeEmployees(),
             'rooms' => Room::query()->orderBy('name')->get(['id', 'name', 'floor']),
             'divisions' => Division::query()->orderBy('name')->get(['id', 'name']),

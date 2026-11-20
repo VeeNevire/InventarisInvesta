@@ -271,3 +271,30 @@ export const RefreshIcon = createIcon(
 );
 
 export const CheckIcon = createIcon(<path d="M20 6 9 17l-5-5" />);
+
+export const UsersIcon = createIcon(
+    <>
+        <circle cx="9" cy="8" r="3.5" />
+        <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+        <path d="M16 4.5a3.5 3.5 0 0 1 0 7" />
+        <path d="M18.5 14.2A6.5 6.5 0 0 1 21.5 20" />
+    </>,
+);
+
+export const TruckIcon = createIcon(
+    <>
+        <path d="M3 6h11v10H3Z" />
+        <path d="M14 10h4l3 3v3h-7" />
+        <circle cx="7" cy="18" r="2" />
+        <circle cx="17" cy="18" r="2" />
+    </>,
+);
+
+export const KeyIcon = createIcon(
+    <>
+        <circle cx="8" cy="15" r="4" />
+        <path d="m10.8 12.2 8.2-8.2" />
+        <path d="m16 7 3 3" />
+        <path d="m14 9 2 2" />
+    </>,
+);

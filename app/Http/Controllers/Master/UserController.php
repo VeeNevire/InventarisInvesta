@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Enums\Permission;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\SaveUserRequest;
@@ -26,15 +27,25 @@ class UserController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role->value,
+                    'permissions' => $user->isAdmin() ? [] : ($user->permissions ?? []),
                     'is_current' => $user->is($request->user()),
                     'can_delete' => ! $user->is($request->user()) && ! ($user->isAdmin() && $adminCount <= 1),
                 ]),
+            'permissionOptions' => collect(Permission::cases())->map(fn (Permission $permission): array => [
+                'value' => $permission->value,
+                'label' => $permission->label(),
+                'description' => $permission->description(),
+                'group' => $permission->group(),
+            ]),
         ]);
     }
 
     public function store(SaveUserRequest $request): RedirectResponse
     {
-        $user = User::query()->create($request->validated());
+        $user = User::query()->create([
+            ...$request->safe()->except('permissions'),
+            'permissions' => $request->permissions(),
+        ]);
 
         $this->toast("Akun {$user->name} dibuat.");
 
@@ -43,9 +54,12 @@ class UserController extends Controller
 
     public function update(SaveUserRequest $request, User $user): RedirectResponse
     {
-        $user->update(collect($request->validated())->filter(
-            fn (mixed $value, string $key): bool => $key !== 'password' || filled($value),
-        )->all());
+        $user->update([
+            ...collect($request->safe()->except('permissions'))->filter(
+                fn (mixed $value, string $key): bool => $key !== 'password' || filled($value),
+            )->all(),
+            'permissions' => $request->permissions(),
+        ]);
 
         $this->toast("Akun {$user->name} diperbarui.");
 

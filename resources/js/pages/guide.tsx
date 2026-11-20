@@ -99,7 +99,8 @@ const sections: GuideSection[] = [
                         aset, dan cek stok, serta melihat laporan.{' '}
                         <Term>Admin</Term> bisa semua itu, ditambah mengelola
                         Master Data, membatalkan transaksi, dan menghapuskan
-                        aset.
+                        aset. Admin juga bisa memberi Sekretaris tertentu akses
+                        tambahan, misalnya menambah atau menghapus barang.
                     </>
                 ),
             },
@@ -210,7 +211,7 @@ const sections: GuideSection[] = [
             },
             {
                 title: 'Batalkan dengan alasan',
-                body: 'Klik transaksinya, lalu Batalkan transaksi, dan tulis alasannya. Hanya Admin yang bisa melakukannya.',
+                body: 'Klik transaksinya, lalu Batalkan transaksi, dan tulis alasannya. Hanya Admin atau pengguna yang diberi akses membatalkan transaksi yang bisa melakukannya.',
             },
             {
                 title: 'Catat ulang yang benar',
@@ -311,7 +312,7 @@ const sections: GuideSection[] = [
                 body: 'Klik Kirim servis dan tulis keluhannya. Setelah selesai, klik Selesai servis dan isi biayanya.',
             },
             {
-                title: 'Hapuskan (Admin)',
+                title: 'Hapuskan',
                 body: 'Untuk aset yang dijual, dibuang, atau hilang. Datanya tetap tersimpan dengan status Dihapuskan.',
             },
         ],
@@ -368,7 +369,7 @@ const sections: GuideSection[] = [
             },
             {
                 title: 'Pengguna',
-                body: 'Tambah akun Admin atau Sekretaris dan reset kata sandi. Harus selalu ada minimal satu Admin.',
+                body: 'Tambah akun Admin atau Sekretaris dan reset kata sandi. Untuk Sekretaris, centang akses tambahan yang boleh dipakainya. Harus selalu ada minimal satu Admin.',
             },
         ],
     },
@@ -386,7 +387,7 @@ const faqs: { question: string; answer: string }[] = [
     },
     {
         question: 'Salah memasukkan jumlah, bisa diedit?',
-        answer: 'Tidak bisa diedit supaya jejaknya tetap ada. Minta Admin membatalkan transaksi tersebut, lalu catat ulang dengan jumlah yang benar.',
+        answer: 'Tidak bisa diedit supaya jejaknya tetap ada. Minta Admin (atau rekan yang diberi akses membatalkan) membatalkan transaksi tersebut, lalu catat ulang dengan jumlah yang benar.',
     },
     {
         question: 'Ada karyawan baru yang mengambil barang.',
@@ -397,13 +398,17 @@ const faqs: { question: string; answer: string }[] = [
         answer: 'Buka aset laptopnya lalu klik Kembalikan. Setelah itu Admin bisa menonaktifkan karyawan tersebut di Master Data.',
     },
     {
+        question: 'Bagaimana cara mengganti kata sandi atau email saya?',
+        answer: 'Buka Pengaturan di menu kiri. Untuk mengganti kata sandi, masukkan kata sandi sekarang lalu kata sandi baru. Kalau lupa kata sandi, minta Admin mengaturnya ulang di Master Data → Pengguna.',
+    },
+    {
         question: 'Kenapa lonceng terus menyala untuk barang tertentu?',
         answer: 'Stok barang itu sudah di bawah batas minimum. Tambah stoknya lewat Barang Masuk, atau matikan notifikasinya di halaman detail barang kalau memang tidak perlu dipantau.',
     },
 ];
 
 export default function Guide() {
-    const { canManageMasterData, user } = usePage().props.auth;
+    const { canAccessMasterData, user } = usePage().props.auth;
     const [showOnLogin, setShowOnLogin] = useState(
         user?.show_guide_on_login ?? true,
     );
@@ -570,7 +575,7 @@ export default function Guide() {
                                             {section.title}
                                             {section.adminOnly && (
                                                 <span className="rounded-md bg-ink-100 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
-                                                    Khusus Admin
+                                                    Admin / akses tambahan
                                                 </span>
                                             )}
                                         </h2>
@@ -581,7 +586,7 @@ export default function Guide() {
                                 </div>
                                 {section.link &&
                                     (!section.adminOnly ||
-                                        canManageMasterData) && (
+                                        canAccessMasterData) && (
                                         <Link
                                             href={section.link.href}
                                             className="inline-flex items-center gap-1 rounded-xl bg-brand-50 px-3.5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-100"

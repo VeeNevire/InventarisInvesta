@@ -19,6 +19,8 @@ use App\Http\Controllers\OutgoingTransactionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportExportController;
 use App\Http\Controllers\ReportPrintController;
+use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StockTransactionController;
 use App\Http\Controllers\TransactionReceiptController;
@@ -34,17 +36,17 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/', DashboardController::class)->name('dashboard');
 
-    Route::middleware('can:manage-master-data')->group(function () {
-        Route::get('/barang/baru', [ItemController::class, 'create'])->name('items.create');
-        Route::post('/barang', [ItemController::class, 'store'])->name('items.store');
-        Route::get('/barang/{item:code}/edit', [ItemController::class, 'edit'])->name('items.edit');
-        Route::put('/barang/{item:code}', [ItemController::class, 'update'])->name('items.update');
-        Route::delete('/barang/{item:code}', [ItemController::class, 'destroy'])->name('items.destroy');
+    Route::get('/barang/baru', [ItemController::class, 'create'])->middleware('can:items.create')->name('items.create');
+    Route::post('/barang', [ItemController::class, 'store'])->middleware('can:items.create')->name('items.store');
+    Route::get('/barang/{item:code}/edit', [ItemController::class, 'edit'])->middleware('can:items.update')->name('items.edit');
+    Route::put('/barang/{item:code}', [ItemController::class, 'update'])->middleware('can:items.update')->name('items.update');
+    Route::delete('/barang/{item:code}', [ItemController::class, 'destroy'])->middleware('can:items.delete')->name('items.destroy');
 
-        Route::get('/aset/{asset:code}/edit', [AssetController::class, 'edit'])->name('assets.edit');
-        Route::put('/aset/{asset:code}', [AssetController::class, 'update'])->name('assets.update');
+    Route::get('/aset/{asset:code}/edit', [AssetController::class, 'edit'])->middleware('can:assets.update')->name('assets.edit');
+    Route::put('/aset/{asset:code}', [AssetController::class, 'update'])->middleware('can:assets.update')->name('assets.update');
 
-        Route::prefix('master')->name('master.')->group(function () {
+    Route::prefix('master')->name('master.')->group(function () {
+        Route::middleware('can:master.employees')->group(function () {
             Route::resource('karyawan', EmployeeController::class)
                 ->only(['index', 'store', 'update', 'destroy'])
                 ->parameters(['karyawan' => 'employee'])
@@ -53,6 +55,8 @@ Route::middleware('auth')->group(function () {
                 ->only(['index', 'store', 'update', 'destroy'])
                 ->parameters(['divisi' => 'division'])
                 ->names('divisions');
+        });
+        Route::middleware('can:master.places')->group(function () {
             Route::resource('ruangan', RoomController::class)
                 ->only(['index', 'store', 'update', 'destroy'])
                 ->parameters(['ruangan' => 'room'])
@@ -61,15 +65,17 @@ Route::middleware('auth')->group(function () {
                 ->only(['index', 'store', 'update', 'destroy'])
                 ->parameters(['supplier' => 'supplier'])
                 ->names('suppliers');
-            Route::resource('kategori', CategoryController::class)
-                ->only(['index', 'store', 'update', 'destroy'])
-                ->parameters(['kategori' => 'category'])
-                ->names('categories');
-            Route::resource('pengguna', UserController::class)
-                ->only(['index', 'store', 'update', 'destroy'])
-                ->parameters(['pengguna' => 'user'])
-                ->names('users');
         });
+        Route::resource('kategori', CategoryController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['kategori' => 'category'])
+            ->middleware('can:master.categories')
+            ->names('categories');
+        Route::resource('pengguna', UserController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['pengguna' => 'user'])
+            ->middleware('can:manage-users')
+            ->names('users');
     });
 
     Route::get('/barang', [ItemController::class, 'index'])->name('items.index');
@@ -93,6 +99,10 @@ Route::middleware('auth')->group(function () {
 
     Route::inertia('/panduan', 'guide')->name('guide');
     Route::patch('/panduan/preferensi', GuidePreferenceController::class)->name('guide.preference');
+
+    Route::get('/pengaturan', [AccountController::class, 'edit'])->name('settings.edit');
+    Route::put('/pengaturan/profil', [AccountController::class, 'update'])->name('settings.profile.update');
+    Route::put('/pengaturan/kata-sandi', PasswordController::class)->name('settings.password.update');
 
     Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/laporan/{report}/unduh', ReportExportController::class)->name('reports.export');

@@ -32,7 +32,8 @@ type AssetShowProps = {
     serviceCost: number;
     today: string;
     lastHistoryDate: string | null;
-    canManage: boolean;
+    canEdit: boolean;
+    canDispose: boolean;
     employees: { id: number; name: string; division: string | null }[];
     divisions: { id: number; name: string }[];
     rooms: { id: number; name: string; floor: string | null }[];
@@ -68,7 +69,8 @@ export default function AssetShow({
     serviceCost,
     today,
     lastHistoryDate,
-    canManage,
+    canEdit,
+    canDispose,
     employees,
     divisions,
     rooms,
@@ -118,7 +120,7 @@ export default function AssetShow({
                 description={asset.specification}
                 actions={
                     <>
-                        {canManage && (
+                        {canEdit && (
                             <ButtonLink
                                 href={assetEdit.url(asset.code)}
                                 variant="soft"
@@ -126,7 +128,7 @@ export default function AssetShow({
                                 Edit aset
                             </ButtonLink>
                         )}
-                        {canManage &&
+                        {canDispose &&
                             (status === 'tersedia' || status === 'rusak') && (
                                 <Button
                                     variant="ghost"

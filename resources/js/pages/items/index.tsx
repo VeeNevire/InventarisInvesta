@@ -54,7 +54,7 @@ export default function ItemsIndex({
     statusCounts,
     summary,
 }: ItemsIndexProps) {
-    const { canManageMasterData } = usePage().props.auth;
+    const canCreateItems = usePage().props.auth.can['items.create'];
     const [search, setSearch] = useState(filters.search);
     const [viewMode, setViewMode] = useState<ViewMode>('table');
     const isFirstRender = useRef(true);
@@ -130,7 +130,7 @@ export default function ItemsIndex({
                 description="Barang habis pakai di gudang: merchandise, ATK, materi promosi, dan perlengkapan kantor."
                 actions={
                     <>
-                        {canManageMasterData && (
+                        {canCreateItems && (
                             <ButtonLink
                                 href={itemCreate.url()}
                                 variant="soft"
@@ -274,19 +274,41 @@ export default function ItemsIndex({
 
             {items.length === 0 ? (
                 <div className="rounded-2xl bg-white">
-                    <EmptyState
-                        title="Tidak ada barang yang cocok"
-                        description="Coba kata kunci lain atau hapus filter kategori dan status."
-                        action={
-                            <ButtonLink
-                                href={itemsIndex.url()}
-                                variant="soft"
-                                size="sm"
-                            >
-                                Hapus semua filter
-                            </ButtonLink>
-                        }
-                    />
+                    {summary.item_count === 0 ? (
+                        <EmptyState
+                            title="Belum ada barang persediaan"
+                            description="Barang habis pakai seperti ATK, kalender, atau merchandise. Daftarkan barangnya, lalu isi stok awal lewat Barang Masuk."
+                            action={
+                                <ButtonLink
+                                    href={
+                                        canCreateItems
+                                            ? itemCreate.url()
+                                            : incomingCreate.url()
+                                    }
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                >
+                                    {canCreateItems
+                                        ? 'Tambah barang pertama'
+                                        : 'Catat barang masuk'}
+                                </ButtonLink>
+                            }
+                        />
+                    ) : (
+                        <EmptyState
+                            title="Tidak ada barang yang cocok"
+                            description="Coba kata kunci lain atau hapus filter kategori dan status."
+                            action={
+                                <ButtonLink
+                                    href={itemsIndex.url()}
+                                    variant="soft"
+                                    size="sm"
+                                >
+                                    Hapus semua filter
+                                </ButtonLink>
+                            }
+                        />
+                    )}
                 </div>
             ) : viewMode === 'cards' ? (
                 <ItemCards items={items} />

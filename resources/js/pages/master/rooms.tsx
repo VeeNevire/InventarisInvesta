@@ -8,6 +8,7 @@ import { DoorIcon, PlusIcon } from '@/components/icons';
 import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
 import { destroy, store, update } from '@/routes/master/rooms';
 
@@ -37,7 +38,27 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
                 </Button>
             }
         >
-            <MasterTable minWidth="520px">
+            <MasterTable
+                minWidth="520px"
+                empty={
+                    rooms.length === 0 && (
+                        <EmptyState
+                            icon={DoorIcon}
+                            title="Belum ada ruangan"
+                            description="Tambahkan ruangan untuk aset yang dipakai bersama, misalnya printer di Ruang Keuangan atau proyektor di Ruang Rapat."
+                            action={
+                                <Button
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                    onClick={() => setEditing('new')}
+                                >
+                                    Tambah ruangan pertama
+                                </Button>
+                            }
+                        />
+                    )
+                }
+            >
                 <thead>
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                         <th className="py-3.5 pr-3 pl-5 font-medium">

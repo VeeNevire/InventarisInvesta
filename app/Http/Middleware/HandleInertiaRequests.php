@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Permission;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -41,7 +42,13 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user()?->only(['id', 'name', 'email', 'role', 'show_guide_on_login']),
-                'canManageMasterData' => $request->user()?->can('manage-master-data') ?? false,
+                'can' => [
+                    ...collect(Permission::cases())->mapWithKeys(fn (Permission $permission): array => [
+                        $permission->value => $request->user()?->hasPermission($permission) ?? false,
+                    ])->all(),
+                    'manage-users' => $request->user()?->isAdmin() ?? false,
+                ],
+                'canAccessMasterData' => $request->user()?->canAccessMasterData() ?? false,
             ],
             'offerGuide' => fn (): bool => $request->session()->get('offer_guide', false) === true
                 && ($request->user()->show_guide_on_login ?? false),

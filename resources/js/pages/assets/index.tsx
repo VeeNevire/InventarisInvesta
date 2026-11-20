@@ -160,19 +160,37 @@ export default function AssetsIndex({
 
             {assets.length === 0 ? (
                 <div className="rounded-2xl bg-white">
-                    <EmptyState
-                        title="Tidak ada aset yang cocok"
-                        description="Coba kata kunci lain atau hapus filter."
-                        action={
-                            <ButtonLink
-                                href={assetsIndex.url()}
-                                variant="soft"
-                                size="sm"
-                            >
-                                Hapus semua filter
-                            </ButtonLink>
-                        }
-                    />
+                    {summary.total === 0 ? (
+                        <EmptyState
+                            icon={LaptopIcon}
+                            title="Belum ada aset"
+                            description="Aset adalah barang yang dipakai bergantian dan dicatat per unit, misalnya laptop, printer, atau proyektor."
+                            action={
+                                <ButtonLink
+                                    href={assetCreate.url()}
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                >
+                                    Tambah aset pertama
+                                </ButtonLink>
+                            }
+                        />
+                    ) : (
+                        <EmptyState
+                            icon={LaptopIcon}
+                            title="Tidak ada aset yang cocok"
+                            description="Coba kata kunci lain atau hapus filter."
+                            action={
+                                <ButtonLink
+                                    href={assetsIndex.url()}
+                                    variant="soft"
+                                    size="sm"
+                                >
+                                    Hapus semua filter
+                                </ButtonLink>
+                            }
+                        />
+                    )}
                 </div>
             ) : (
                 <div className="overflow-x-auto rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">

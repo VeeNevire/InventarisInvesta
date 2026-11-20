@@ -65,7 +65,24 @@ class DashboardController extends Controller
             )->resolve(),
             'idleItems' => $this->idleItems($today),
             'monthlyMovement' => $this->monthlyMovement($today),
+            'onboarding' => $this->onboarding(),
         ]);
+    }
+
+    /**
+     * First-day checklist: which basic steps have already been done once.
+     *
+     * @return array{has_employees: bool, has_items: bool, has_incoming: bool, has_outgoing: bool, has_assets: bool}
+     */
+    private function onboarding(): array
+    {
+        return [
+            'has_employees' => Employee::query()->exists(),
+            'has_items' => Item::query()->exists(),
+            'has_incoming' => StockTransaction::query()->active()->where('type', StockTransactionType::Masuk)->exists(),
+            'has_outgoing' => StockTransaction::query()->active()->where('type', StockTransactionType::Keluar)->exists(),
+            'has_assets' => Asset::query()->exists(),
+        ];
     }
 
     /**

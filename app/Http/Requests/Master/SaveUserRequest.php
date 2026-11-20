@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Master;
 
+use App\Enums\Permission;
 use App\Enums\UserRole;
 use App\Models\User;
 use Closure;
@@ -33,6 +34,8 @@ class SaveUserRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
             'role' => ['required', Rule::enum(UserRole::class)],
             'password' => [$this->route('user') ? 'nullable' : 'required', 'string', Password::min(8), 'confirmed'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::enum(Permission::class)],
         ];
     }
 
@@ -49,7 +52,23 @@ class SaveUserRequest extends FormRequest
             'password.required' => 'Kata sandi wajib diisi.',
             'password.min' => 'Kata sandi minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak sama.',
+            'permissions.*.enum' => 'Hak akses tidak dikenal.',
         ];
+    }
+
+    /**
+     * The ticked permissions, kept only for Sekretaris accounts since admins
+     * already have every permission.
+     *
+     * @return array<int, string>
+     */
+    public function permissions(): array
+    {
+        if ($this->input('role') === UserRole::Admin->value) {
+            return [];
+        }
+
+        return collect($this->validated('permissions') ?? [])->unique()->values()->all();
     }
 
     /**

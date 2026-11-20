@@ -4,10 +4,11 @@ import {
     ConfirmDeleteDialog,
     RowActions,
 } from '@/components/confirm-delete-dialog';
-import { PlusIcon } from '@/components/icons';
+import { PlusIcon, TruckIcon } from '@/components/icons';
 import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
 import { formatDate } from '@/lib/format';
 import { destroy, store, update } from '@/routes/master/suppliers';
@@ -40,7 +41,27 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                 </Button>
             }
         >
-            <MasterTable minWidth="720px">
+            <MasterTable
+                minWidth="720px"
+                empty={
+                    suppliers.length === 0 && (
+                        <EmptyState
+                            icon={TruckIcon}
+                            title="Belum ada supplier"
+                            description="Supplier juga tercatat otomatis saat namanya diketik di form Barang Masuk, jadi halaman ini boleh dibiarkan kosong dulu."
+                            action={
+                                <Button
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                    onClick={() => setEditing('new')}
+                                >
+                                    Tambah supplier
+                                </Button>
+                            }
+                        />
+                    )
+                }
+            >
                 <thead>
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                         <th className="py-3.5 pr-3 pl-5 font-medium">

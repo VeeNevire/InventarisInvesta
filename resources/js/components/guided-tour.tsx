@@ -63,7 +63,7 @@ const steps: TourStep[] = [
     {
         target: 'nav-master',
         title: 'Master Data',
-        body: 'Khusus Admin: kelola barang, karyawan, divisi, ruangan, supplier, kategori, dan akun pengguna.',
+        body: 'Kelola data dasar: karyawan, divisi, ruangan, supplier, kategori, dan akun pengguna. Anda hanya melihat bagian yang boleh Anda kelola.',
         adminOnly: true,
     },
     {
@@ -75,6 +75,11 @@ const steps: TourStep[] = [
         target: 'nav-panduan',
         title: 'Panduan',
         body: 'Lupa caranya? Buka Panduan untuk langkah-langkah setiap fitur dan tanya jawab. Tur ini juga bisa diulang dari sana.',
+    },
+    {
+        target: 'nav-pengaturan',
+        title: 'Pengaturan',
+        body: 'Ubah nama, email, dan kata sandi akun Anda. Tur ini juga bisa dimatikan atau diulang dari sana.',
     },
     {
         target: 'account',
@@ -113,7 +118,7 @@ function findTarget(name: string | undefined): HTMLElement | null {
  */
 export function GuidedTour() {
     const { offerGuide, auth } = usePage().props;
-    const isAdmin = auth.canManageMasterData;
+    const isAdmin = auth.canAccessMasterData || auth.can['manage-users'];
     const [isOffering, setIsOffering] = useState(Boolean(offerGuide));
     const [dontAskAgain, setDontAskAgain] = useState(false);
     const [stepIndex, setStepIndex] = useState<number | null>(null);

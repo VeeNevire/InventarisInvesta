@@ -2,16 +2,17 @@
 
 namespace App\Http\Requests\Asset;
 
+use App\Enums\Permission;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 class DisposeAssetRequest extends AssetMovementRequest
 {
     /**
-     * Disposing is permanent, so only admins may do it.
+     * Disposing is permanent, so it needs its own permission.
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-master-data') ?? false;
+        return $this->user()?->can(Permission::DisposeAssets->value) ?? false;
     }
 
     /**

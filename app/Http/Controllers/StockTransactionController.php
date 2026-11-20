@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permission;
 use App\Enums\StockTransactionType;
 use App\Http\Resources\StockTransactionResource;
 use App\Models\StockTransaction;
@@ -63,7 +64,7 @@ class StockTransactionController extends Controller
             'typeCounts' => collect(StockTransactionType::cases())->mapWithKeys(fn (StockTransactionType $type): array => [
                 $type->value => (int) ($counts[$type->value] ?? 0),
             ]),
-            'canCancel' => $request->user()?->isAdmin() ?? false,
+            'canCancel' => $request->user()?->can(Permission::CancelTransactions->value) ?? false,
         ]);
     }
 }

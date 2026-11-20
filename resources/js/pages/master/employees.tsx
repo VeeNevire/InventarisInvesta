@@ -4,10 +4,11 @@ import {
     ConfirmDeleteDialog,
     RowActions,
 } from '@/components/confirm-delete-dialog';
-import { PlusIcon, UserIcon } from '@/components/icons';
+import { PlusIcon, UserIcon, UsersIcon } from '@/components/icons';
 import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
 import { Badge } from '@/components/ui/status-badge';
 import { initials } from '@/lib/format';
@@ -49,7 +50,27 @@ export default function Employees({ employees, divisions }: EmployeesProps) {
                 </Button>
             }
         >
-            <MasterTable minWidth="720px">
+            <MasterTable
+                minWidth="720px"
+                empty={
+                    employees.length === 0 && (
+                        <EmptyState
+                            icon={UsersIcon}
+                            title="Belum ada karyawan"
+                            description="Daftarkan orang yang biasa mengambil barang atau memegang aset. Karyawan juga bisa ditambah langsung saat mencatat Barang Keluar."
+                            action={
+                                <Button
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                    onClick={() => setEditing('new')}
+                                >
+                                    Tambah karyawan pertama
+                                </Button>
+                            }
+                        />
+                    )
+                }
+            >
                 <thead>
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                         <th className="py-3.5 pr-3 pl-5 font-medium">Nama</th>

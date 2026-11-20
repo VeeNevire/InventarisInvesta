@@ -4,14 +4,16 @@ import {
     ConfirmDeleteDialog,
     RowActions,
 } from '@/components/confirm-delete-dialog';
-import { BoxIcon, LaptopIcon, PlusIcon } from '@/components/icons';
+import { BoxIcon, LaptopIcon, PlusIcon, TagIcon } from '@/components/icons';
 import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
 import { SegmentedControl } from '@/components/ui/segmented-control';
-import { destroy, store, update } from '@/routes/master/categories';
 import { Select } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { destroy, store, update } from '@/routes/master/categories';
 
 type CategoryType = 'persediaan' | 'aset';
 
@@ -28,122 +30,117 @@ type Category = {
     children_count: number;
 };
 
+/** What the dialog is doing: a new main category, a new subcategory, or an edit. */
+type Editing =
+    | { mode: 'new'; type: CategoryType }
+    | { mode: 'new-sub'; parent: Category }
+    | { mode: 'edit'; category: Category };
+
+const typeInfo: Record<
+    CategoryType,
+    { label: string; hint: string; codeExample: (code: string) => string }
+> = {
+    persediaan: {
+        label: 'Barang persediaan',
+        hint: 'Barang habis pakai yang dihitung jumlahnya, seperti ATK atau merchandise. Bisa punya subkategori.',
+        codeExample: (code) => `${code}-001`,
+    },
+    aset: {
+        label: 'Aset',
+        hint: 'Barang yang dipakai dan dicatat per unit, seperti laptop atau printer.',
+        codeExample: (code) => `INV-${code}-001`,
+    },
+};
+
 export default function Categories({ categories }: { categories: Category[] }) {
     const [type, setType] = useState<CategoryType>('persediaan');
-    const [categoryLevel, setCategoryLevel] = useState<'all' | 'main' | 'sub'>(
-        'all',
-    );
-    const [parentFilter, setParentFilter] = useState('');
-    const [formType, setFormType] = useState<CategoryType>('persediaan');
-    const [editing, setEditing] = useState<Category | 'new' | null>(null);
-    const [parentCategory, setParentCategory] = useState<Category | null>(null);
-    const [selectedChildId, setSelectedChildId] = useState('');
+    const [editing, setEditing] = useState<Editing | null>(null);
     const [deleting, setDeleting] = useState<Category | null>(null);
-    const current = editing === 'new' ? null : editing;
-    const visible = categories.filter(
-        (category) =>
-            category.type === type &&
-            (type !== 'persediaan' ||
-                categoryLevel === 'all' ||
-                (categoryLevel === 'main'
-                    ? !category.parent_id
-                    : Boolean(category.parent_id) &&
-                      (!parentFilter ||
-                          String(category.parent_id) === parentFilter))),
-    );
+
+    const ofType = categories.filter((category) => category.type === type);
+    const mainCategories = ofType.filter((category) => !category.parent_id);
+    const rows = mainCategories.flatMap((main) => [
+        main,
+        ...ofType.filter((category) => category.parent_id === main.id),
+    ]);
 
     return (
         <MasterLayout
             title="Kategori"
-            description="Pengelompokan barang dan aset. Kodenya menjadi awalan kode barang (MRC-001) dan kode aset (INV-LPT-001)."
+            description="Kelompok barang dan aset. Setiap kategori punya kode singkat yang menjadi awalan kode barangnya."
             actions={
                 <Button
                     icon={<PlusIcon className="size-[18px]" />}
-                    onClick={() => {
-                        setFormType(type);
-                        setEditing('new');
-                    }}
+                    onClick={() => setEditing({ mode: 'new', type })}
                 >
                     Tambah kategori
                 </Button>
             }
         >
-            <div className="w-fit rounded-2xl bg-white/70 p-1.5">
+            <div className="flex flex-col gap-3 rounded-2xl bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between">
                 <SegmentedControl<CategoryType>
                     label="Jenis kategori"
                     value={type}
                     onChange={setType}
-                    segments={[
-                        {
-                            value: 'persediaan',
-                            label: 'Barang persediaan',
+                    segments={(['persediaan', 'aset'] as const).map(
+                        (value) => ({
+                            value,
+                            label: (
+                                <>
+                                    {value === 'aset' ? (
+                                        <LaptopIcon className="size-4" />
+                                    ) : (
+                                        <BoxIcon className="size-4" />
+                                    )}
+                                    {typeInfo[value].label}
+                                </>
+                            ),
                             count: categories.filter(
-                                (category) => category.type === 'persediaan',
+                                (category) => category.type === value,
                             ).length,
-                        },
-                        {
-                            value: 'aset',
-                            label: 'Aset',
-                            count: categories.filter(
-                                (category) => category.type === 'aset',
-                            ).length,
-                        },
-                    ]}
+                        }),
+                    )}
                 />
+                <p className="max-w-md text-[13px] text-ink-500 sm:text-right">
+                    {typeInfo[type].hint}
+                </p>
             </div>
 
-            {type === 'persediaan' && (
-                <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-white/70 p-3">
-                    <SegmentedControl
-                        label="Filter kategori"
-                        value={categoryLevel}
-                        onChange={(level) => {
-                            setCategoryLevel(level);
-                            setParentFilter('');
-                        }}
-                        segments={[
-                            { value: 'all', label: 'Semua' },
-                            { value: 'main', label: 'Kategori utama' },
-                            { value: 'sub', label: 'Subkategori' },
-                        ]}
-                    />
-                    {categoryLevel === 'sub' && (
-                        <div className="w-full sm:w-64">
-                            <Select
-                                id="parent-filter"
-                                aria-label="Filter kategori utama"
-                                value={parentFilter}
-                                onChange={setParentFilter}
-                                placeholder="Semua kategori utama"
-                                options={[
-                                    {
-                                        value: '',
-                                        label: 'Semua kategori utama',
-                                    },
-                                    ...categories
-                                        .filter(
-                                            (category) =>
-                                                category.type ===
-                                                    'persediaan' &&
-                                                !category.parent_id,
-                                        )
-                                        .map((category) => ({
-                                            value: String(category.id),
-                                            label: category.name,
-                                        })),
-                                ]}
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-
-            <MasterTable minWidth="560px">
+            <MasterTable
+                minWidth="620px"
+                empty={
+                    rows.length === 0 && (
+                        <EmptyState
+                            icon={TagIcon}
+                            title={`Belum ada kategori ${typeInfo[type].label.toLowerCase()}`}
+                            description={
+                                type === 'aset'
+                                    ? 'Contoh: Laptop (kode LPT), Printer (kode PRN). Kategori aset juga bisa dibuat langsung saat menambah aset.'
+                                    : 'Contoh: Alat Tulis Kantor (kode ATK), Merchandise (kode MRC).'
+                            }
+                            action={
+                                <Button
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                    onClick={() =>
+                                        setEditing({ mode: 'new', type })
+                                    }
+                                >
+                                    Tambah kategori pertama
+                                </Button>
+                            }
+                        />
+                    )
+                }
+            >
                 <thead>
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
-                        <th className="py-3.5 pr-3 pl-5 font-medium">Kode</th>
-                        <th className="px-3 py-3.5 font-medium">Nama</th>
-                        <th className="px-3 py-3.5 font-medium">Contoh kode</th>
+                        <th className="py-3.5 pr-3 pl-5 font-medium">Nama</th>
+                        <th className="px-3 py-3.5 font-medium">Kode</th>
+                        <th className="px-3 py-3.5 font-medium">
+                            Kode {type === 'aset' ? 'aset' : 'barang'} jadi
+                            seperti
+                        </th>
                         <th className="px-3 py-3.5 text-right font-medium">
                             {type === 'aset' ? 'Jumlah aset' : 'Jumlah barang'}
                         </th>
@@ -153,100 +150,213 @@ export default function Categories({ categories }: { categories: Category[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {visible.map((category) => (
-                        <tr key={category.id}>
-                            <td className="py-3 pr-3 pl-5">
-                                <span className="rounded-md bg-ink-100 px-2 py-1 font-mono text-xs font-semibold text-ink-900">
-                                    {category.code}
-                                </span>
-                            </td>
-                            <td className="px-3 py-3">
-                                <span className="flex items-center gap-2.5 font-semibold text-ink-900">
-                                    {category.type === 'aset' ? (
-                                        <LaptopIcon className="size-4 text-ink-400" />
-                                    ) : (
-                                        <BoxIcon className="size-4 text-ink-400" />
+                    {rows.map((category) => {
+                        const isSub = Boolean(category.parent_id);
+
+                        return (
+                            <tr
+                                key={category.id}
+                                className={isSub ? 'bg-ink-50/40' : undefined}
+                            >
+                                <td
+                                    className={cn(
+                                        'py-3 pr-3',
+                                        isSub ? 'pl-12' : 'pl-5',
                                     )}
-                                    <span className="flex flex-col items-start gap-1">
-                                        {category.name}
-                                        {category.parent_name && (
-                                            <span
-                                                className="rounded-md bg-ink-100 px-2 py-1 text-xs font-medium text-ink-700"
-                                                title={`Kategori utama: ${category.parent_name}`}
-                                            >
+                                >
+                                    <span className="flex flex-col">
+                                        <span
+                                            className={cn(
+                                                'flex items-center gap-2',
+                                                isSub
+                                                    ? 'text-ink-700'
+                                                    : 'font-semibold text-ink-900',
+                                            )}
+                                        >
+                                            {isSub && (
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="text-ink-300"
+                                                >
+                                                    └
+                                                </span>
+                                            )}
+                                            {category.name}
+                                        </span>
+                                        {isSub ? (
+                                            <span className="sr-only">
+                                                Subkategori dari{' '}
                                                 {category.parent_name}
                                             </span>
+                                        ) : (
+                                            category.children_count > 0 && (
+                                                <span className="text-xs text-ink-500">
+                                                    {category.children_count}{' '}
+                                                    subkategori
+                                                </span>
+                                            )
                                         )}
                                     </span>
-                                </span>
-                            </td>
-                            <td className="px-3 py-3 font-mono text-xs text-ink-500">
-                                {category.type === 'aset'
-                                    ? `INV-${category.code}-001`
-                                    : `${category.code}-001`}
-                            </td>
-                            <td className="px-3 py-3 text-right text-ink-700 tabular-nums">
-                                {category.type === 'aset'
-                                    ? category.assets_count
-                                    : category.items_count}
-                            </td>
-                            <td className="py-3 pr-5 pl-3">
-                                <RowActions
-                                    extraAction={
-                                        category.type === 'persediaan' &&
-                                        !category.parent_id ? (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                    setParentCategory(category);
-                                                    setSelectedChildId('');
-                                                }}
-                                            >
-                                                Subkategori
-                                            </Button>
-                                        ) : undefined
-                                    }
-                                    onEdit={() => {
-                                        setFormType(category.type);
-                                        setEditing(category);
-                                    }}
-                                    onDelete={() => setDeleting(category)}
-                                    canDelete={!category.is_used}
-                                    deleteHint="Kategori ini masih dipakai."
-                                />
-                            </td>
-                        </tr>
-                    ))}
+                                </td>
+                                <td className="px-3 py-3">
+                                    <span className="rounded-md bg-ink-100 px-2 py-1 font-mono text-xs font-semibold text-ink-900">
+                                        {category.code}
+                                    </span>
+                                </td>
+                                <td className="px-3 py-3 font-mono text-xs text-ink-500">
+                                    {typeInfo[category.type].codeExample(
+                                        category.code,
+                                    )}
+                                </td>
+                                <td className="px-3 py-3 text-right text-ink-700 tabular-nums">
+                                    {category.type === 'aset'
+                                        ? category.assets_count
+                                        : category.items_count}
+                                </td>
+                                <td className="py-3 pr-5 pl-3">
+                                    <RowActions
+                                        extraAction={
+                                            category.type === 'persediaan' &&
+                                            !isSub ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    icon={
+                                                        <PlusIcon className="size-4" />
+                                                    }
+                                                    onClick={() =>
+                                                        setEditing({
+                                                            mode: 'new-sub',
+                                                            parent: category,
+                                                        })
+                                                    }
+                                                >
+                                                    Subkategori
+                                                </Button>
+                                            ) : undefined
+                                        }
+                                        onEdit={() =>
+                                            setEditing({
+                                                mode: 'edit',
+                                                category,
+                                            })
+                                        }
+                                        onDelete={() => setDeleting(category)}
+                                        canDelete={!category.is_used}
+                                        deleteHint={
+                                            category.children_count > 0
+                                                ? 'Masih punya subkategori.'
+                                                : 'Masih dipakai oleh barang atau aset.'
+                                        }
+                                    />
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </MasterTable>
 
-            <Dialog
-                open={editing !== null}
-                onClose={() => setEditing(null)}
-                title={current ? `Edit ${current.name}` : 'Tambah kategori'}
+            {editing && (
+                <CategoryDialog
+                    editing={editing}
+                    mainCategories={categories.filter(
+                        (category) =>
+                            category.type === 'persediaan' &&
+                            !category.parent_id,
+                    )}
+                    onClose={() => setEditing(null)}
+                />
+            )}
+
+            {deleting && (
+                <ConfirmDeleteDialog
+                    open
+                    onClose={() => setDeleting(null)}
+                    title={`Hapus kategori ${deleting.name}?`}
+                    description="Kategori ini belum dipakai, jadi bisa dihapus permanen."
+                    url={destroy.url(deleting.id)}
+                />
+            )}
+        </MasterLayout>
+    );
+}
+
+/**
+ * One form for every case: new category, new subcategory, or edit. Choosing a
+ * main category turns it into a subcategory; choosing none makes it a main one.
+ */
+function CategoryDialog({
+    editing,
+    mainCategories,
+    onClose,
+}: {
+    editing: Editing;
+    mainCategories: Category[];
+    onClose: () => void;
+}) {
+    const current = editing.mode === 'edit' ? editing.category : null;
+    const initialType: CategoryType =
+        editing.mode === 'new'
+            ? editing.type
+            : editing.mode === 'new-sub'
+              ? editing.parent.type
+              : editing.category.type;
+    const initialParent =
+        editing.mode === 'new-sub'
+            ? String(editing.parent.id)
+            : current?.parent_id
+              ? String(current.parent_id)
+              : '';
+
+    const [type, setType] = useState<CategoryType>(initialType);
+    const [parentId, setParentId] = useState(initialParent);
+    const [code, setCode] = useState(current?.code ?? '');
+
+    const isCodeLocked = current?.is_used ?? false;
+    const canChooseParent =
+        type === 'persediaan' && (current?.children_count ?? 0) === 0;
+    const parentOptions = mainCategories.filter(
+        (category) => category.id !== current?.id,
+    );
+    const title =
+        editing.mode === 'edit'
+            ? `Ubah ${editing.category.name}`
+            : editing.mode === 'new-sub'
+              ? `Tambah subkategori ${editing.parent.name}`
+              : 'Tambah kategori';
+    const previewCode = code.trim().toUpperCase() || 'KODE';
+
+    return (
+        <Dialog open onClose={onClose} title={title}>
+            <Form
+                {...(current ? update.form(current.id) : store.form())}
+                options={{ preserveScroll: true }}
+                onSuccess={onClose}
+                className="flex flex-col gap-4"
             >
-                <Form
-                    key={current?.id ?? 'new'}
-                    {...(current ? update.form(current.id) : store.form())}
-                    options={{ preserveScroll: true }}
-                    onSuccess={() => setEditing(null)}
-                    className="flex flex-col gap-4"
-                >
-                    {({ errors, processing }) => (
-                        <>
+                {({ errors, processing }) => (
+                    <>
+                        {editing.mode === 'new-sub' ? (
+                            <input type="hidden" name="type" value={type} />
+                        ) : (
                             <Field
                                 label="Jenis"
                                 htmlFor="category-type"
+                                hint={
+                                    current?.is_used
+                                        ? 'Terkunci karena sudah dipakai'
+                                        : undefined
+                                }
                                 error={errors.type}
                             >
                                 <Select
                                     id="category-type"
                                     name="type"
-                                    value={formType}
-                                    onChange={(value) =>
-                                        setFormType(value as CategoryType)
-                                    }
+                                    value={type}
+                                    onChange={(value) => {
+                                        setType(value as CategoryType);
+                                        setParentId('');
+                                    }}
                                     disabled={current?.is_used}
                                     options={[
                                         {
@@ -264,313 +374,129 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                     ]}
                                 />
                             </Field>
-                            {current?.parent_id && (
-                                <input
-                                    type="hidden"
-                                    name="parent_id"
-                                    value={current.parent_id}
-                                />
-                            )}
-                            <Field
-                                label="Kode"
-                                htmlFor="category-code"
-                                hint={
-                                    current?.is_used
-                                        ? 'Terkunci karena sudah dipakai'
-                                        : '2–5 huruf, misalnya MRC atau LPT'
-                                }
-                                error={errors.code}
-                            >
-                                <input
-                                    id="category-code"
-                                    name="code"
-                                    defaultValue={current?.code}
-                                    readOnly={current?.is_used}
-                                    required
-                                    maxLength={5}
-                                    autoFocus={!current}
-                                    aria-invalid={Boolean(errors.code)}
-                                    className={`${inputClasses} font-mono uppercase read-only:bg-ink-50 read-only:text-ink-500`}
-                                />
-                            </Field>
-                            <Field
-                                label="Nama kategori"
-                                htmlFor="category-name"
-                                error={errors.name}
-                            >
-                                <input
-                                    id="category-name"
-                                    name="name"
-                                    defaultValue={current?.name}
-                                    required
-                                    autoFocus={Boolean(current)}
-                                    aria-invalid={Boolean(errors.name)}
-                                    className={inputClasses}
-                                />
-                            </Field>
-                            <DialogFooter>
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setEditing(null)}
-                                >
-                                    Batal
-                                </Button>
-                                <Button type="submit" disabled={processing}>
-                                    {processing ? 'Menyimpan…' : 'Simpan'}
-                                </Button>
-                            </DialogFooter>
-                        </>
-                    )}
-                </Form>
-            </Dialog>
+                        )}
 
-            {parentCategory && (
-                <Dialog
-                    open
-                    onClose={() => setParentCategory(null)}
-                    title="Kelola subkategori"
-                    description={`Kategori utama: ${parentCategory.name}`}
-                >
-                    <div className="flex flex-col gap-5">
-                        <div className="flex flex-col gap-2 text-sm text-ink-700">
-                            <p className="font-semibold">
-                                Subkategori saat ini
-                            </p>
-                            {categories.filter(
-                                (category) =>
-                                    category.parent_id === parentCategory.id,
-                            ).length === 0 && <p>Belum ada subkategori.</p>}
-                            {categories
-                                .filter(
-                                    (category) =>
-                                        category.parent_id ===
-                                        parentCategory.id,
-                                )
-                                .map((category) => (
-                                    <Form
-                                        key={category.id}
-                                        {...update.form(category.id)}
-                                        options={{ preserveScroll: true }}
-                                        className="flex items-center justify-between gap-2 rounded-xl bg-ink-50 px-3"
-                                    >
-                                        {({ processing, errors }) => (
-                                            <>
-                                                <span>
-                                                    {category.name} (
-                                                    {category.code})
-                                                </span>
-                                                <input
-                                                    type="hidden"
-                                                    name="type"
-                                                    value={category.type}
-                                                />
-                                                <input
-                                                    type="hidden"
-                                                    name="code"
-                                                    value={category.code}
-                                                />
-                                                <input
-                                                    type="hidden"
-                                                    name="name"
-                                                    value={category.name}
-                                                />
-                                                <input
-                                                    type="hidden"
-                                                    name="parent_id"
-                                                    value=""
-                                                />
-                                                <Button
-                                                    type="submit"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    disabled={processing}
-                                                >
-                                                    Lepas
-                                                </Button>
-                                                {errors.parent_id && (
-                                                    <span className="text-red-700">
-                                                        {errors.parent_id}
-                                                    </span>
-                                                )}
-                                            </>
-                                        )}
-                                    </Form>
-                                ))}
-                        </div>
-                        <Form
-                            {...store.form()}
-                            onSuccess={() => setParentCategory(null)}
-                            className="flex flex-col gap-3 border-t border-ink-100 pt-4"
+                        <Field
+                            label="Nama kategori"
+                            htmlFor="category-name"
+                            error={errors.name}
                         >
-                            {({ errors, processing }) => (
-                                <>
-                                    <p className="font-semibold text-ink-900">
-                                        Tambah subkategori baru
-                                    </p>
-                                    <input
-                                        type="hidden"
-                                        name="type"
-                                        value={parentCategory.type}
-                                    />
-                                    <input
-                                        type="hidden"
-                                        name="parent_id"
-                                        value={parentCategory.id}
-                                    />
-                                    <Field
-                                        label="Nama subkategori"
-                                        htmlFor="new-subcategory-name"
-                                        error={errors.name}
-                                    >
-                                        <input
-                                            id="new-subcategory-name"
-                                            name="name"
-                                            className={inputClasses}
-                                            required
-                                        />
-                                    </Field>
-                                    <Field
-                                        label="Kode subkategori"
-                                        htmlFor="new-subcategory-code"
-                                        hint="2–5 huruf, misalnya ATK"
-                                        error={errors.code}
-                                    >
-                                        <input
-                                            id="new-subcategory-code"
-                                            name="code"
-                                            className={inputClasses}
-                                            maxLength={5}
-                                            required
-                                        />
-                                    </Field>
-                                    <Button
-                                        type="submit"
-                                        variant="soft"
-                                        disabled={processing}
-                                    >
-                                        Tambah subkategori
-                                    </Button>
-                                </>
-                            )}
-                        </Form>
-                        {(() => {
-                            const available = categories.filter(
-                                (category) =>
-                                    category.type === parentCategory.type &&
-                                    !category.parent_id &&
-                                    category.id !== parentCategory.id &&
-                                    !category.children_count,
-                            );
-                            const selected = available.find(
-                                (category) =>
-                                    String(category.id) === selectedChildId,
-                            );
-                            return (
-                                available.length > 0 && (
-                                    <Form
-                                        {...(selected
-                                            ? update.form(selected.id)
-                                            : update.form(parentCategory.id))}
-                                        onSuccess={() =>
-                                            setParentCategory(null)
-                                        }
-                                        className="flex flex-col gap-3 border-t border-ink-100 pt-4"
-                                    >
-                                        {({ errors, processing }) => (
-                                            <>
-                                                <p className="font-semibold text-ink-900">
-                                                    Masukkan kategori yang sudah
-                                                    ada
-                                                </p>
-                                                <Select
-                                                    id="existing-subcategory"
-                                                    value={selectedChildId}
-                                                    onChange={
-                                                        setSelectedChildId
-                                                    }
-                                                    placeholder="Pilih kategori"
-                                                    options={available.map(
-                                                        (category) => ({
-                                                            value: String(
-                                                                category.id,
-                                                            ),
-                                                            label: `${category.name} (${category.code})`,
-                                                        }),
-                                                    )}
-                                                />
-                                                {selected && (
-                                                    <>
-                                                        <input
-                                                            type="hidden"
-                                                            name="type"
-                                                            value={
-                                                                selected.type
-                                                            }
-                                                        />
-                                                        <input
-                                                            type="hidden"
-                                                            name="code"
-                                                            value={
-                                                                selected.code
-                                                            }
-                                                        />
-                                                        <input
-                                                            type="hidden"
-                                                            name="name"
-                                                            value={
-                                                                selected.name
-                                                            }
-                                                        />
-                                                        <input
-                                                            type="hidden"
-                                                            name="parent_id"
-                                                            value={
-                                                                parentCategory.id
-                                                            }
-                                                        />
-                                                    </>
-                                                )}
-                                                {errors.parent_id && (
-                                                    <p className="text-sm text-red-700">
-                                                        {errors.parent_id}
-                                                    </p>
-                                                )}
-                                                <Button
-                                                    type="submit"
-                                                    variant="outline"
-                                                    disabled={
-                                                        !selected || processing
-                                                    }
-                                                >
-                                                    Masukkan ke kategori ini
-                                                </Button>
-                                            </>
-                                        )}
-                                    </Form>
-                                )
-                            );
-                        })()}
-                        <DialogFooter>
-                            <Button
-                                variant="ghost"
-                                onClick={() => setParentCategory(null)}
+                            <input
+                                id="category-name"
+                                name="name"
+                                defaultValue={current?.name}
+                                required
+                                autoFocus
+                                placeholder={
+                                    type === 'aset'
+                                        ? 'Contoh: Laptop'
+                                        : 'Contoh: Alat Tulis Kantor'
+                                }
+                                aria-invalid={Boolean(errors.name)}
+                                className={inputClasses}
+                            />
+                        </Field>
+
+                        <Field
+                            label="Kode singkat"
+                            htmlFor="category-code"
+                            hint={
+                                isCodeLocked
+                                    ? 'Terkunci karena sudah dipakai'
+                                    : '2–5 huruf'
+                            }
+                            error={errors.code}
+                        >
+                            <input
+                                id="category-code"
+                                name="code"
+                                value={code}
+                                onChange={(event) =>
+                                    setCode(
+                                        event.target.value
+                                            .replace(/[^a-z]/gi, '')
+                                            .toUpperCase(),
+                                    )
+                                }
+                                readOnly={isCodeLocked}
+                                required
+                                maxLength={5}
+                                placeholder={type === 'aset' ? 'LPT' : 'ATK'}
+                                aria-invalid={Boolean(errors.code)}
+                                aria-describedby="category-code-preview"
+                                className={`${inputClasses} font-mono uppercase read-only:bg-ink-50 read-only:text-ink-500`}
+                            />
+                            <p
+                                id="category-code-preview"
+                                className="text-xs text-ink-500"
                             >
-                                Tutup
+                                {type === 'aset' ? 'Aset' : 'Barang'} di
+                                kategori ini akan berkode{' '}
+                                <span className="rounded bg-ink-100 px-1.5 py-0.5 font-mono font-semibold text-ink-900">
+                                    {typeInfo[type].codeExample(previewCode)}
+                                </span>
+                                ,{' '}
+                                <span className="font-mono">
+                                    {typeInfo[type]
+                                        .codeExample(previewCode)
+                                        .replace(/001$/, '002')}
+                                </span>
+                                , dan seterusnya.
+                            </p>
+                        </Field>
+
+                        {editing.mode === 'new-sub' ? (
+                            <input
+                                type="hidden"
+                                name="parent_id"
+                                value={parentId}
+                            />
+                        ) : canChooseParent && parentOptions.length > 0 ? (
+                            <Field
+                                label="Masuk ke kategori utama"
+                                htmlFor="category-parent"
+                                hint="Opsional"
+                                error={errors.parent_id}
+                            >
+                                <Select
+                                    id="category-parent"
+                                    name="parent_id"
+                                    value={parentId}
+                                    onChange={setParentId}
+                                    options={[
+                                        {
+                                            value: '',
+                                            label: 'Tidak, ini kategori utama',
+                                        },
+                                        ...parentOptions.map((category) => ({
+                                            value: String(category.id),
+                                            label: category.name,
+                                            description: `Jadikan subkategori ${category.name}`,
+                                        })),
+                                    ]}
+                                />
+                            </Field>
+                        ) : (
+                            <input type="hidden" name="parent_id" value="" />
+                        )}
+
+                        {errors.parent_id && editing.mode === 'new-sub' && (
+                            <p className="text-sm text-[#c52c32]">
+                                {errors.parent_id}
+                            </p>
+                        )}
+
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={onClose}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Menyimpan…' : 'Simpan'}
                             </Button>
                         </DialogFooter>
-                    </div>
-                </Dialog>
-            )}
-
-            {deleting && (
-                <ConfirmDeleteDialog
-                    open
-                    onClose={() => setDeleting(null)}
-                    title={`Hapus kategori ${deleting.name}?`}
-                    description="Kategori ini belum dipakai, jadi bisa dihapus permanen."
-                    url={destroy.url(deleting.id)}
-                />
-            )}
-        </MasterLayout>
+                    </>
+                )}
+            </Form>
+        </Dialog>
     );
 }

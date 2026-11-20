@@ -45,7 +45,7 @@ export default function ItemShow({
     stockCard,
     monthSummary,
 }: ItemShowProps) {
-    const { canManageMasterData } = usePage().props.auth;
+    const canEditItem = usePage().props.auth.can['items.update'];
     const [cardFilter, setCardFilter] = useState<CardFilter>('all');
     const [isSavingNotification, setIsSavingNotification] = useState(false);
     const fullName = item.variant
@@ -112,7 +112,7 @@ export default function ItemShow({
                 }
                 actions={
                     <>
-                        {canManageMasterData && (
+                        {canEditItem && (
                             <ButtonLink
                                 href={itemEdit.url(item.code)}
                                 variant="soft"

@@ -4,10 +4,11 @@ import {
     ConfirmDeleteDialog,
     RowActions,
 } from '@/components/confirm-delete-dialog';
-import { PlusIcon } from '@/components/icons';
+import { GridIcon, PlusIcon } from '@/components/icons';
 import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
 import { destroy, store, update } from '@/routes/master/divisions';
 
@@ -36,7 +37,27 @@ export default function Divisions({ divisions }: { divisions: Division[] }) {
                 </Button>
             }
         >
-            <MasterTable minWidth="480px">
+            <MasterTable
+                minWidth="480px"
+                empty={
+                    divisions.length === 0 && (
+                        <EmptyState
+                            icon={GridIcon}
+                            title="Belum ada divisi"
+                            description="Contoh: Marketing, Keuangan, IT. Divisi dipakai untuk mengelompokkan karyawan dan laporan pemakaian."
+                            action={
+                                <Button
+                                    size="sm"
+                                    icon={<PlusIcon className="size-4" />}
+                                    onClick={() => setEditing('new')}
+                                >
+                                    Tambah divisi pertama
+                                </Button>
+                            }
+                        />
+                    )
+                }
+            >
                 <thead>
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                         <th className="py-3.5 pr-3 pl-5 font-medium">Divisi</th>

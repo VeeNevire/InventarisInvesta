@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Permission;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $email
  * @property UserRole $role
+ * @property array<int, string>|null $permissions
  * @property bool $show_guide_on_login
  * @property Carbon|null $email_verified_at
  * @property string $password
@@ -24,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'role', 'password', 'show_guide_on_login'])]
+#[Fillable(['name', 'email', 'role', 'permissions', 'password', 'show_guide_on_login'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,6 +36,23 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    /**
+     * Admins can do everything; a Sekretaris only what was ticked for them.
+     */
+    public function hasPermission(Permission $permission): bool
+    {
+        return $this->isAdmin() || in_array($permission->value, $this->permissions ?? [], true);
+    }
+
+    /**
+     * Whether any Master Data page is open to this user.
+     */
+    public function canAccessMasterData(): bool
+    {
+        return $this->isAdmin() || collect(Permission::cases())
+            ->contains(fn (Permission $permission): bool => $permission->isMasterData() && $this->hasPermission($permission));
     }
 
     /**
@@ -47,6 +66,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'permissions' => 'array',
             'show_guide_on_login' => 'boolean',
         ];
     }
