@@ -1,9 +1,13 @@
 import { Form, Head } from '@inertiajs/react';
 import type { ComponentType, SVGProps } from 'react';
+import { useState } from 'react';
 import {
+    AlertIcon,
     ArrowsIcon,
     BoxIcon,
     ClipboardIcon,
+    EyeIcon,
+    EyeOffIcon,
     LaptopIcon,
     TagIcon,
 } from '@/components/icons';
@@ -12,31 +16,63 @@ import { store as loginStore } from '@/routes/login';
 
 type FloatingTile = {
     icon: ComponentType<SVGProps<SVGSVGElement>>;
-    className: string;
+    position: string;
+    size: string;
+    rotate: string;
+    animationClass: string;
 };
 
 /**
- * Faint inventory tiles scattered behind the login card.
+ * Faint inventory tiles scattered behind the login card that gently float.
  */
 const floatingTiles: FloatingTile[] = [
-    { icon: BoxIcon, className: 'top-[12%] left-[10%] size-16 -rotate-12' },
-    { icon: LaptopIcon, className: 'top-[18%] right-[12%] size-20 rotate-6' },
-    { icon: TagIcon, className: 'bottom-[16%] left-[14%] size-14 rotate-12' },
+    {
+        icon: BoxIcon,
+        position: 'top-[12%] left-[10%]',
+        size: 'size-16',
+        rotate: '-rotate-12',
+        animationClass: 'animate-float-1',
+    },
+    {
+        icon: LaptopIcon,
+        position: 'top-[18%] right-[12%]',
+        size: 'size-20',
+        rotate: 'rotate-6',
+        animationClass: 'animate-float-2',
+    },
+    {
+        icon: TagIcon,
+        position: 'bottom-[16%] left-[14%]',
+        size: 'size-14',
+        rotate: 'rotate-12',
+        animationClass: 'animate-float-3',
+    },
     {
         icon: ArrowsIcon,
-        className: 'right-[9%] bottom-[22%] size-16 -rotate-6',
+        position: 'right-[9%] bottom-[22%]',
+        size: 'size-16',
+        rotate: '-rotate-6',
+        animationClass: 'animate-float-4',
     },
     {
         icon: ClipboardIcon,
-        className: 'top-[46%] left-[4%] hidden size-12 rotate-3 md:flex',
+        position: 'top-[46%] left-[4%] hidden md:block',
+        size: 'size-12',
+        rotate: 'rotate-3',
+        animationClass: 'animate-float-2',
     },
     {
         icon: BoxIcon,
-        className: 'top-[52%] right-[4%] hidden size-12 -rotate-3 md:flex',
+        position: 'top-[52%] right-[4%] hidden md:block',
+        size: 'size-12',
+        rotate: '-rotate-3',
+        animationClass: 'animate-float-1',
     },
 ];
 
 export default function Login() {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <>
             <Head title="Masuk" />
@@ -55,13 +91,17 @@ export default function Login() {
                 />
 
                 {floatingTiles.map((tile, index) => (
-                    <span
+                    <div
                         key={index}
                         aria-hidden="true"
-                        className={`pointer-events-none absolute flex items-center justify-center rounded-2xl border border-white/80 bg-white/55 text-brand-400 shadow-[0_12px_30px_-14px_rgba(42,56,176,0.35)] backdrop-blur-sm ${tile.className}`}
+                        className={`pointer-events-none absolute ${tile.position} ${tile.animationClass}`}
                     >
-                        <tile.icon className="size-1/2" strokeWidth={1.4} />
-                    </span>
+                        <span
+                            className={`flex items-center justify-center rounded-2xl border border-white/80 bg-white/55 text-brand-400 shadow-[0_12px_30px_-14px_rgba(42,56,176,0.35)] backdrop-blur-sm ${tile.size} ${tile.rotate}`}
+                        >
+                            <tile.icon className="size-1/2" strokeWidth={1.4} />
+                        </span>
+                    </div>
                 ))}
 
                 <div className="relative flex w-full max-w-[420px] flex-col gap-7 rounded-[28px] border border-white bg-white/90 p-8 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_32px_64px_-28px_rgba(30,45,120,0.35)] backdrop-blur-md sm:p-10">
@@ -71,7 +111,7 @@ export default function Login() {
                         </span>
                         <div className="flex flex-col gap-1.5">
                             <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900">
-                                Masuk ke Inventaris
+                                Masuk ke Inventaris{' '}
                                 <span className="text-brand-700">Investa</span>
                             </h1>
                             <p className="text-sm text-ink-500">
@@ -93,7 +133,10 @@ export default function Login() {
                                         htmlFor="email"
                                         className="text-sm font-medium text-ink-700"
                                     >
-                                        Email
+                                        Email{' '}
+                                        <span className="text-low" aria-hidden="true">
+                                            *
+                                        </span>
                                     </label>
                                     <input
                                         id="email"
@@ -102,6 +145,7 @@ export default function Login() {
                                         autoComplete="email"
                                         autoFocus
                                         required
+                                        aria-required="true"
                                         placeholder="nama@perusahaan.co.id"
                                         aria-invalid={Boolean(errors.email)}
                                         aria-describedby={
@@ -109,14 +153,16 @@ export default function Login() {
                                                 ? 'email-error'
                                                 : undefined
                                         }
-                                        className="h-12 rounded-xl border border-ink-200 bg-white px-4 text-[15px] text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-500 focus:ring-3 focus:ring-brand-100 aria-invalid:border-low"
+                                        className="h-12 rounded-xl border border-ink-200 bg-white px-4 text-[15px] text-ink-900 outline-none transition-colors placeholder:text-ink-400 focus:border-brand-500 focus:ring-3 focus:ring-brand-100 focus-visible:border-brand-500 focus-visible:ring-3 focus-visible:ring-brand-100 aria-invalid:border-low"
                                     />
                                     {errors.email && (
                                         <p
                                             id="email-error"
-                                            className="text-sm text-[#c52c32]"
+                                            role="alert"
+                                            className="flex items-center gap-1.5 text-sm font-medium text-[#c52c32]"
                                         >
-                                            {errors.email}
+                                            <AlertIcon className="size-4 shrink-0" />
+                                            <span>{errors.email}</span>
                                         </p>
                                     )}
                                 </div>
@@ -126,20 +172,64 @@ export default function Login() {
                                         htmlFor="password"
                                         className="text-sm font-medium text-ink-700"
                                     >
-                                        Kata sandi
+                                        Kata sandi{' '}
+                                        <span className="text-low" aria-hidden="true">
+                                            *
+                                        </span>
                                     </label>
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        autoComplete="current-password"
-                                        required
-                                        aria-invalid={Boolean(errors.password)}
-                                        className="h-12 rounded-xl border border-ink-200 bg-white px-4 text-[15px] text-ink-900 outline-none focus:border-brand-500 focus:ring-3 focus:ring-brand-100 aria-invalid:border-low"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            autoComplete="current-password"
+                                            required
+                                            aria-required="true"
+                                            aria-invalid={Boolean(errors.password)}
+                                            aria-describedby={
+                                                errors.password
+                                                    ? 'password-error'
+                                                    : undefined
+                                            }
+                                            className="h-12 w-full rounded-xl border border-ink-200 bg-white pr-12 pl-4 text-[15px] text-ink-900 outline-none transition-colors focus:border-brand-500 focus:ring-3 focus:ring-brand-100 focus-visible:border-brand-500 focus-visible:ring-3 focus-visible:ring-brand-100 aria-invalid:border-low"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword((prev) => !prev)}
+                                            aria-label={
+                                                showPassword
+                                                    ? 'Sembunyikan kata sandi'
+                                                    : 'Tampilkan kata sandi'
+                                            }
+                                            aria-pressed={showPassword}
+                                            className="group absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-400 transition-colors hover:text-ink-700 focus:text-ink-700 focus:outline-none"
+                                        >
+                                            <span className="relative flex size-5 items-center justify-center transition-transform duration-200 ease-out group-hover:scale-110 group-active:scale-90">
+                                                <EyeIcon
+                                                    className={`absolute inset-0 size-5 transition-all duration-300 ease-out ${
+                                                        showPassword
+                                                            ? 'scale-50 rotate-45 opacity-0 pointer-events-none'
+                                                            : 'scale-100 rotate-0 opacity-100'
+                                                    }`}
+                                                />
+                                                <EyeOffIcon
+                                                    className={`absolute inset-0 size-5 transition-all duration-300 ease-out ${
+                                                        showPassword
+                                                            ? 'scale-100 rotate-0 opacity-100'
+                                                            : 'scale-50 -rotate-45 opacity-0 pointer-events-none'
+                                                    }`}
+                                                />
+                                            </span>
+                                        </button>
+                                    </div>
                                     {errors.password && (
-                                        <p className="text-sm text-[#c52c32]">
-                                            {errors.password}
+                                        <p
+                                            id="password-error"
+                                            role="alert"
+                                            className="flex items-center gap-1.5 text-sm font-medium text-[#c52c32]"
+                                        >
+                                            <AlertIcon className="size-4 shrink-0" />
+                                            <span>{errors.password}</span>
                                         </p>
                                     )}
                                 </div>
@@ -157,13 +247,55 @@ export default function Login() {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="h-12 w-full"
+                                    className="h-12 w-full gap-2 text-[15px]"
                                 >
-                                    {processing ? 'Memeriksa…' : 'Masuk'}
+                                    {processing ? (
+                                        <>
+                                            <svg
+                                                className="size-4 animate-spin text-white"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                aria-hidden="true"
+                                            >
+                                                <circle
+                                                    className="opacity-25"
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                    stroke="currentColor"
+                                                    strokeWidth="4"
+                                                />
+                                                <path
+                                                    className="opacity-75"
+                                                    fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                />
+                                            </svg>
+                                            <span>Memeriksa…</span>
+                                        </>
+                                    ) : (
+                                        <span>Masuk</span>
+                                    )}
                                 </Button>
                             </>
                         )}
                     </Form>
+
+                    <div className="border-t border-ink-100 pt-5 text-center text-xs text-ink-500">
+                        <p className="leading-relaxed">
+                            Lupa kata sandi atau mengalami kendala masuk?
+                        </p>
+                        <p className="mt-1">
+                            Hubungi Administrator / Tim IT di{' '}
+                            <a
+                                href="mailto:admin@investa.co.id"
+                                className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
+                            >
+                                admin@investa.co.id
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </>

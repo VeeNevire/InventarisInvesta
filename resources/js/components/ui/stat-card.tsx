@@ -23,8 +23,15 @@ export function StatCard({
     icon: Icon,
     tone = 'brand',
 }: StatCardProps) {
+    // Construct an accessible label combining label and value
+    const ariaLabel = `${label}: ${typeof value === 'string' ? value : ''}`;
     return (
-        <div className="flex flex-col gap-4 rounded-2xl border border-white bg-white p-5 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
+        <div
+            className="flex flex-col gap-4 rounded-2xl border border-white bg-white p-5 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]"
+            tabIndex={0}
+            aria-label={ariaLabel}
+            role="region"
+        >
             <div className="flex items-center justify-between gap-3">
                 <span className="text-[13px] font-medium text-ink-500">
                     {label}
@@ -43,9 +50,10 @@ export function StatCard({
                     {value}
                 </span>
                 {hint && (
-                    <span className="text-[13px] text-ink-500">{hint}</span>
+                    <span className="text-[13px] text-ink-600">{hint}</span>
                 )}
             </div>
         </div>
     );
 }
+
