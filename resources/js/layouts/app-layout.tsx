@@ -39,7 +39,10 @@ export default function AppLayout({
 
     return (
         <>
-            <Head title={title} />
+            <Head>
+                <title>{title}</title>
+                <link rel="icon" type="image/png" href="/logo-mark.png?v=3" />
+            </Head>
             <div className="min-h-screen bg-[radial-gradient(120%_80%_at_0%_0%,#f4f7fc_0%,#e9eff8_55%,#e3eaf5_100%)] lg:flex print:block print:min-h-0 print:bg-white print:bg-none">
                 <aside className="hidden w-[272px] shrink-0 lg:block print:hidden">
                     <div className="sticky top-0 h-screen overflow-y-auto">

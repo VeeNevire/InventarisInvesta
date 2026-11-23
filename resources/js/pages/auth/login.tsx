@@ -106,9 +106,13 @@ export default function Login() {
 
                 <div className="relative flex w-full max-w-[420px] flex-col gap-7 rounded-[28px] border border-white bg-white/90 p-8 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_32px_64px_-28px_rgba(30,45,120,0.35)] backdrop-blur-md sm:p-10">
                     <div className="flex flex-col items-center gap-5 text-center">
-                        <span className="flex size-14 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-[0_10px_24px_-10px_rgba(42,56,176,0.9)]">
-                            <BoxIcon className="size-7" strokeWidth={1.9} />
-                        </span>
+                        <div className="flex size-16 items-center justify-center rounded-2xl border border-brand-100/60 bg-white p-2.5 shadow-[0_10px_24px_-10px_rgba(42,56,176,0.4)]">
+                            <img
+                                src="/logo-mark.png"
+                                alt="Inventaris Investa"
+                                className="size-full object-contain"
+                            />
+                        </div>
                         <div className="flex flex-col gap-1.5">
                             <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900">
                                 Masuk ke Inventaris{' '}
@@ -287,14 +291,8 @@ export default function Login() {
                             Lupa kata sandi atau mengalami kendala masuk?
                         </p>
                         <p className="mt-1">
-                            Hubungi Administrator / Tim IT di{' '}
-                            <a
-                                href="mailto:admin@investa.co.id"
-                                className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded"
-                            >
-                                admin@investa.co.id
-                            </a>
-                        </p>
+                                Hubungi Administrator Atau TIM IT Investa untuk mendapatkan bantuan.
+                            </p>
                     </div>
                 </div>
             </div>

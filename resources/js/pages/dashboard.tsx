@@ -80,27 +80,38 @@ export default function Dashboard({
             title="Beranda"
             breadcrumbs={[{ title: 'Beranda', href: dashboard.url() }]}
         >
-            <PageHeader
-                title="Beranda"
-                description={`Ringkasan gudang per ${formatDate(today)}`}
-                actions={
-                    <>
-                        <ButtonLink
-                            href={incomingCreate.url()}
-                            variant="outline"
-                            icon={<ArrowDownTrayIcon className="size-[18px]" />}
-                        >
-                            Barang Masuk
-                        </ButtonLink>
-                        <ButtonLink
-                            href={outgoingCreate.url()}
-                            icon={<ArrowUpTrayIcon className="size-[18px]" />}
-                        >
-                            Barang Keluar
-                        </ButtonLink>
-                    </>
-                }
-            />
+            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div className="flex items-center gap-3 mb-2 sm:mb-0">
+                    <img
+                        src="/logo-mark.png"
+                        alt="Inventaris Investa"
+                        className="size-11 object-contain drop-shadow-sm"
+                    />
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink-900">
+                            Beranda
+                        </h1>
+                        <p className="text-sm text-ink-500">
+                            Ringkasan gudang per {formatDate(today)}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex gap-2 mt-2 sm:mt-0">
+                    <ButtonLink
+                        href={incomingCreate.url()}
+                        variant="outline"
+                        icon={<ArrowDownTrayIcon className="size-[18px]" />}
+                    >
+                        Barang Masuk
+                    </ButtonLink>
+                    <ButtonLink
+                        href={outgoingCreate.url()}
+                        icon={<ArrowUpTrayIcon className="size-[18px]" />}
+                    >
+                        Barang Keluar
+                    </ButtonLink>
+                </div>
+            </header>
 
             <OnboardingChecklist progress={onboarding} />
 

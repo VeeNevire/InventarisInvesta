@@ -23,7 +23,9 @@ export function AppHeader({ breadcrumbs, onOpenMenu }: AppHeaderProps) {
                 >
                     <MenuIcon />
                 </button>
+                <img src="/logo-mark.png" alt="Inventaris Investa" className="size-8 object-contain mr-1 lg:hidden" />
                 <nav aria-label="Breadcrumb" className="min-w-0">
+
                     <ol className="flex items-center gap-1.5 text-[15px]">
                         {breadcrumbs.map((crumb, index) => {
                             const isLast = index === breadcrumbs.length - 1;

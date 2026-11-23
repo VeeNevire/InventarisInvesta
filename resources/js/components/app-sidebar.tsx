@@ -115,9 +115,11 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 className="flex items-center gap-2.5 px-1"
                 onClick={onNavigate}
             >
-                <span className="flex size-9 items-center justify-center rounded-xl bg-brand-700 text-white shadow-[0_6px_14px_-6px_rgba(42,56,176,0.8)]">
-                    <BoxIcon className="size-5" strokeWidth={2} />
-                </span>
+                <img
+                    src="/logo-mark.png"
+                    alt="Logo Inventaris Investa"
+                    className="size-9 rounded-xl object-contain shadow-[0_6px_14px_-6px_rgba(42,56,176,0.6)]"
+                />
                 <span className="text-[19px] font-bold tracking-[-0.02em] text-ink-900">
                     Inventaris
                     <span className="text-brand-700">Investa</span>
