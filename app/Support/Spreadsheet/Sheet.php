@@ -27,6 +27,9 @@ final class Sheet
 
     public bool $landscape = false;
 
+    /** Shown in place of an empty table; null leaves the table body blank. */
+    public ?string $emptyMessage = 'Tidak ada data pada periode ini.';
+
     public function __construct(
         public readonly string $name,
         public readonly string $title,
@@ -88,6 +91,13 @@ final class Sheet
     public function note(string $text): self
     {
         $this->notes[] = $text;
+
+        return $this;
+    }
+
+    public function emptyMessage(?string $message): self
+    {
+        $this->emptyMessage = $message;
 
         return $this;
     }

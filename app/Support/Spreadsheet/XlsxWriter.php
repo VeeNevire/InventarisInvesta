@@ -124,9 +124,9 @@ final class XlsxWriter
         );
         $rowNumber++;
 
-        if ($sheet->rows === []) {
+        if ($sheet->rows === [] && $sheet->emptyMessage !== null) {
             $rows[] = $this->rowXml($rowNumber, array_merge(
-                [['Tidak ada data pada periode ini.', self::STYLE_TEXT]],
+                [[$sheet->emptyMessage, self::STYLE_TEXT]],
                 array_fill(0, $columnCount - 1, [null, self::STYLE_TEXT]),
             ));
             $merges[] = "A{$rowNumber}:{$lastColumn}{$rowNumber}";

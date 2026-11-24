@@ -26,18 +26,24 @@ class Category extends Model
     use HasFactory;
 
     /**
-     * @return HasMany<Item, $this>
+     * @return BelongsTo<Category, $this>
      */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');
     }
 
+    /**
+     * @return HasMany<Category, $this>
+     */
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
     }
 
+    /**
+     * @return HasMany<Item, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(Item::class);

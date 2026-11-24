@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuidePreferenceController;
 use App\Http\Controllers\IncomingTransactionController;
 use App\Http\Controllers\ItemController;
+use App\Http\Controllers\ItemImportController;
 use App\Http\Controllers\ItemNotificationController;
 use App\Http\Controllers\Master\CategoryController;
 use App\Http\Controllers\Master\DivisionController;
@@ -35,6 +36,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/keluar', [LoginController::class, 'destroy'])->name('logout');
 
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    Route::middleware('can:items.create')->prefix('barang/import')->name('items.import.')->group(function () {
+        Route::get('/', [ItemImportController::class, 'create'])->name('create');
+        Route::get('/template', [ItemImportController::class, 'template'])->name('template');
+        Route::post('/', [ItemImportController::class, 'upload'])->name('upload');
+        Route::get('/{token}', [ItemImportController::class, 'show'])->whereUuid('token')->name('show');
+        Route::post('/{token}', [ItemImportController::class, 'store'])->whereUuid('token')->name('store');
+    });
 
     Route::get('/barang/baru', [ItemController::class, 'create'])->middleware('can:items.create')->name('items.create');
     Route::post('/barang', [ItemController::class, 'store'])->middleware('can:items.create')->name('items.store');

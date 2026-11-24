@@ -211,6 +211,13 @@ export const ListIcon = createIcon(
     </>,
 );
 
+export const TableIcon = createIcon(
+    <>
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M3 10h18M3 15h18M9 10v10" />
+    </>,
+);
+
 export const XIcon = createIcon(<path d="M18 6 6 18M6 6l12 12" />);
 
 export const MenuIcon = createIcon(<path d="M4 6h16M4 12h16M4 18h16" />);

@@ -29,8 +29,32 @@ class SaveItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => $this->isMethod('post') ? ['sometimes', 'required', 'string', 'max:100', 'alpha_dash:ascii', Rule::unique('items', 'code')] : ['prohibited'],
+            'code' => $this->isMethod('post') ? ['sometimes', 'required', ...self::codeRules(), Rule::unique('items', 'code')] : ['prohibited'],
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('type', CategoryType::Persediaan->value)],
+            ...self::attributeRules(),
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'remove_photo' => ['boolean'],
+        ];
+    }
+
+    /**
+     * Format rules for an item code, shared with the Excel import.
+     *
+     * @return list<string>
+     */
+    public static function codeRules(): array
+    {
+        return ['string', 'max:100', 'alpha_dash:ascii'];
+    }
+
+    /**
+     * Rules for the descriptive item fields, shared with the Excel import.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function attributeRules(): array
+    {
+        return [
             'name' => ['required', 'string', 'max:255'],
             'variant' => ['nullable', 'string', 'max:100'],
             'unit' => ['required', 'string', 'max:20'],
@@ -38,8 +62,21 @@ class SaveItemRequest extends FormRequest
             'minimum_stock' => ['required', 'integer', 'min:0', 'max:1000000'],
             'notify_low_stock' => ['boolean'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
-            'remove_photo' => ['boolean'],
+        ];
+    }
+
+    /**
+     * Messages for the shared code and attribute rules.
+     *
+     * @return array<string, string>
+     */
+    public static function attributeMessages(): array
+    {
+        return [
+            'code.alpha_dash' => 'Kode hanya boleh berisi huruf, angka, tanda hubung, dan garis bawah.',
+            'name.required' => 'Nama barang wajib diisi.',
+            'unit.required' => 'Satuan wajib diisi.',
+            'minimum_stock.required' => 'Isi stok minimum (boleh 0).',
         ];
     }
 
@@ -81,13 +118,10 @@ class SaveItemRequest extends FormRequest
     public function messages(): array
     {
         return [
+            ...self::attributeMessages(),
             'code.required' => 'Isi kode barang.',
-            'code.alpha_dash' => 'Kode hanya boleh berisi huruf, angka, tanda hubung, dan garis bawah.',
             'code.unique' => 'Kode barang ini sudah digunakan.',
             'category_id.required' => 'Pilih kategori.',
-            'name.required' => 'Nama barang wajib diisi.',
-            'unit.required' => 'Satuan wajib diisi.',
-            'minimum_stock.required' => 'Isi stok minimum (boleh 0).',
             'photo.image' => 'Foto harus berupa gambar.',
             'photo.mimes' => 'Foto harus JPG, PNG, atau WEBP.',
             'photo.max' => 'Ukuran foto maksimal 5 MB.',

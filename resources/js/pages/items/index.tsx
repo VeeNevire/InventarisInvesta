@@ -10,6 +10,7 @@ import {
     ListIcon,
     MapPinIcon,
     PlusIcon,
+    TableIcon,
 } from '@/components/icons';
 import { ButtonLink } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -21,6 +22,7 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Badge, stockStatusTone } from '@/components/ui/status-badge';
 import AppLayout from '@/layouts/app-layout';
 import { create as itemCreate } from '@/routes/items';
+import { create as itemImport } from '@/routes/items/import';
 import { create as incomingCreate } from '@/routes/transactions/incoming';
 import { create as outgoingCreate } from '@/routes/transactions/outgoing';
 import { formatNumber, formatRupiah } from '@/lib/format';
@@ -137,6 +139,15 @@ export default function ItemsIndex({
                                 icon={<PlusIcon className="size-[18px]" />}
                             >
                                 Tambah barang
+                            </ButtonLink>
+                        )}
+                        {canCreateItems && (
+                            <ButtonLink
+                                href={itemImport.url()}
+                                variant="soft"
+                                icon={<TableIcon className="size-[18px]" />}
+                            >
+                                Import Excel
                             </ButtonLink>
                         )}
                         <ButtonLink
