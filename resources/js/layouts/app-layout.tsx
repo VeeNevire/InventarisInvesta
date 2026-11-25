@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { MotionConfig } from 'motion/react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { AppHeader } from '@/components/app-header';
@@ -38,7 +39,7 @@ export default function AppLayout({
     }, [isMenuOpen]);
 
     return (
-        <>
+        <MotionConfig reducedMotion="user">
             <Head>
                 <title>{title}</title>
                 <link
@@ -103,6 +104,6 @@ export default function AppLayout({
             </div>
             <Toaster />
             <GuidedTour />
-        </>
+        </MotionConfig>
     );
 }

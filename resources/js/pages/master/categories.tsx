@@ -1,10 +1,17 @@
 import { Form } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import {
     ConfirmDeleteDialog,
     RowActions,
 } from '@/components/confirm-delete-dialog';
-import { BoxIcon, LaptopIcon, PlusIcon, TagIcon } from '@/components/icons';
+import {
+    BoxIcon,
+    ChevronRightIcon,
+    LaptopIcon,
+    PlusIcon,
+    TagIcon,
+} from '@/components/icons';
 import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
@@ -75,14 +82,43 @@ export default function Categories({ categories }: { categories: Category[] }) {
     const [type, setType] = useState<CategoryType>('persediaan');
     const [editing, setEditing] = useState<Editing | null>(null);
     const [deleting, setDeleting] = useState<Category | null>(null);
+    const [collapsedIds, setCollapsedIds] = useState<number[]>([]);
+    const [toggledId, setToggledId] = useState<number | null>(null);
 
     const ofType = categories.filter((category) => category.type === type);
     const mainCategories = ofType.filter((category) => !category.parent_id);
-    const rows = mainCategories.flatMap((main) => [
+    // Paginate whole groups so an item type always shows under its category.
+    const groups = mainCategories.map((main) => [
         main,
         ...ofType.filter((category) => category.parent_id === main.id),
     ]);
-    const paginated = usePaginatedRows(rows, 'master.categories', type);
+    const paginated = usePaginatedRows(groups, 'master.categories', type);
+    const rows = paginated.rows.flatMap(([main, ...children]) =>
+        collapsedIds.includes(main.id)
+            ? [
+                  {
+                      category: main,
+                      isLastChild: false,
+                      childIndex: -1,
+                      childCount: children.length,
+                  },
+              ]
+            : [main, ...children].map((category, index) => ({
+                  category,
+                  isLastChild: index === children.length,
+                  childIndex: index - 1,
+                  childCount: children.length,
+              })),
+    );
+
+    function toggleGroup(id: number) {
+        setToggledId(id);
+        setCollapsedIds((ids) =>
+            ids.includes(id)
+                ? ids.filter((collapsedId) => collapsedId !== id)
+                : [...ids, id],
+        );
+    }
 
     return (
         <MasterLayout
@@ -129,7 +165,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
             <MasterTable
                 minWidth="620px"
                 empty={
-                    rows.length === 0 && (
+                    groups.length === 0 && (
                         <EmptyState
                             icon={TagIcon}
                             title={`Belum ada kategori ${typeInfo[type].label.toLowerCase()}`}
@@ -157,9 +193,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                         <th className="py-3.5 pr-3 pl-5 font-medium">Nama</th>
                         <th className="px-3 py-3.5 font-medium">Kode</th>
-                        <th className="px-3 py-3.5 font-medium">
-                            Kode Barang Jadi Seperti
-                        </th>
+                        <th className="px-3 py-3.5 font-medium">Kode Barang</th>
                         <th className="px-3 py-3.5 text-right font-medium">
                             {type === 'aset' ? 'Jumlah Unit' : 'Jumlah Barang'}
                         </th>
@@ -169,110 +203,224 @@ export default function Categories({ categories }: { categories: Category[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {paginated.rows.map((category) => {
-                        const isSub = Boolean(category.parent_id);
+                    <AnimatePresence initial={false} custom={toggledId}>
+                        {rows.map(
+                            ({
+                                category,
+                                isLastChild,
+                                childIndex,
+                                childCount,
+                            }) => {
+                                const isSub = Boolean(category.parent_id);
+                                const hasChildren =
+                                    !isSub && category.children_count > 0;
+                                const isCollapsed = collapsedIds.includes(
+                                    category.id,
+                                );
+                                const isRevealing =
+                                    isSub && category.parent_id === toggledId;
 
-                        return (
-                            <tr
-                                key={category.id}
-                                className={isSub ? 'bg-ink-50/40' : undefined}
-                            >
-                                <td
-                                    className={cn(
-                                        'py-3 pr-3',
-                                        isSub ? 'pl-12' : 'pl-5',
-                                    )}
-                                >
-                                    <span className="flex flex-col">
-                                        <span
-                                            className={cn(
-                                                'flex items-center gap-2',
-                                                isSub
-                                                    ? 'text-ink-700'
-                                                    : 'font-semibold text-ink-900',
-                                            )}
-                                        >
-                                            {isSub && (
+                                return (
+                                    <motion.tr
+                                        key={category.id}
+                                        initial={
+                                            isRevealing
+                                                ? { opacity: 0, y: -6 }
+                                                : false
+                                        }
+                                        animate={{ opacity: 1, y: 0 }}
+                                        custom={toggledId}
+                                        variants={{
+                                            collapse: (
+                                                collapsingId: number | null,
+                                            ) =>
+                                                isSub &&
+                                                category.parent_id ===
+                                                    collapsingId
+                                                    ? {
+                                                          opacity: 0,
+                                                          y: -8,
+                                                          transition: {
+                                                              duration: 0.18,
+                                                              ease: 'easeIn',
+                                                              delay:
+                                                                  Math.min(
+                                                                      childCount -
+                                                                          1 -
+                                                                          childIndex,
+                                                                      8,
+                                                                  ) * 0.03,
+                                                          },
+                                                      }
+                                                    : {
+                                                          opacity: 0,
+                                                          transition: {
+                                                              duration: 0,
+                                                          },
+                                                      },
+                                        }}
+                                        exit="collapse"
+                                        transition={{
+                                            duration: 0.22,
+                                            ease: 'easeOut',
+                                            delay: isRevealing
+                                                ? Math.min(childIndex, 8) *
+                                                  0.035
+                                                : 0,
+                                        }}
+                                        onClick={(event) => {
+                                            if (
+                                                hasChildren &&
+                                                !(
+                                                    event.target as HTMLElement
+                                                ).closest('button, a')
+                                            ) {
+                                                toggleGroup(category.id);
+                                            }
+                                        }}
+                                        className={cn(
+                                            isSub && 'bg-brand-50/40',
+                                            hasChildren &&
+                                                'cursor-pointer hover:bg-brand-50/60',
+                                        )}
+                                    >
+                                        {isSub ? (
+                                            <td className="relative py-3 pr-3 pl-14">
                                                 <span
                                                     aria-hidden="true"
-                                                    className="text-ink-300"
-                                                >
-                                                    └
+                                                    className={cn(
+                                                        'absolute -top-px left-[31px] w-0.5 bg-brand-300',
+                                                        isLastChild
+                                                            ? 'h-[calc(50%+1px)] rounded-b-full'
+                                                            : '-bottom-px',
+                                                    )}
+                                                />
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="absolute top-1/2 left-[31px] h-0.5 w-5 -translate-y-1/2 rounded-r-full bg-brand-300"
+                                                />
+                                                <span className="text-ink-700">
+                                                    {category.name}
                                                 </span>
-                                            )}
-                                            {category.name}
-                                        </span>
-                                        {isSub ? (
-                                            <span className="sr-only">
-                                                Jenis barang dari{' '}
-                                                {category.parent_name}
-                                            </span>
+                                                <span className="sr-only">
+                                                    {' '}
+                                                    (jenis barang dari{' '}
+                                                    {category.parent_name})
+                                                </span>
+                                            </td>
                                         ) : (
-                                            category.children_count > 0 && (
-                                                <span className="text-xs text-ink-500">
-                                                    {category.children_count}{' '}
-                                                    jenis barang
-                                                </span>
-                                            )
-                                        )}
-                                    </span>
-                                </td>
-                                <td className="px-3 py-3">
-                                    <span className="rounded-md bg-ink-100 px-2 py-1 font-mono text-xs font-semibold text-ink-900">
-                                        {category.code}
-                                    </span>
-                                </td>
-                                <td className="px-3 py-3 font-mono text-xs text-ink-500">
-                                    {codeExample(
-                                        category.type,
-                                        category.code,
-                                        category.parent_code,
-                                    )}
-                                </td>
-                                <td className="px-3 py-3 text-right text-ink-700 tabular-nums">
-                                    {category.type === 'aset'
-                                        ? category.assets_count
-                                        : category.items_count}
-                                </td>
-                                <td className="py-3 pr-5 pl-3">
-                                    <RowActions
-                                        extraAction={
-                                            !isSub ? (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    icon={
-                                                        <PlusIcon className="size-4" />
-                                                    }
+                                            <td className="relative py-3 pr-3 pl-5">
+                                                {hasChildren &&
+                                                    !isCollapsed && (
+                                                        <span
+                                                            aria-hidden="true"
+                                                            className="absolute top-[calc(50%+12px)] -bottom-px left-[31px] w-0.5 bg-brand-300"
+                                                        />
+                                                    )}
+                                                <button
+                                                    type="button"
                                                     onClick={() =>
-                                                        setEditing({
-                                                            mode: 'new-sub',
-                                                            parent: category,
-                                                        })
+                                                        toggleGroup(category.id)
                                                     }
+                                                    disabled={!hasChildren}
+                                                    aria-expanded={
+                                                        hasChildren
+                                                            ? !isCollapsed
+                                                            : undefined
+                                                    }
+                                                    className="flex items-center gap-3 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-default"
                                                 >
-                                                    Jenis barang
-                                                </Button>
-                                            ) : undefined
-                                        }
-                                        onEdit={() =>
-                                            setEditing({
-                                                mode: 'edit',
-                                                category,
-                                            })
-                                        }
-                                        onDelete={() => setDeleting(category)}
-                                        canDelete={!category.is_used}
-                                        deleteHint={
-                                            category.children_count > 0
-                                                ? 'Masih punya jenis barang.'
-                                                : 'Masih dipakai oleh perlengkapan atau peralatan.'
-                                        }
-                                    />
-                                </td>
-                            </tr>
-                        );
-                    })}
+                                                    <span
+                                                        aria-hidden="true"
+                                                        className={cn(
+                                                            'flex size-6 shrink-0 items-center justify-center rounded-md',
+                                                            hasChildren
+                                                                ? 'bg-brand-100 text-brand-700'
+                                                                : 'bg-ink-100 text-ink-300',
+                                                        )}
+                                                    >
+                                                        <ChevronRightIcon
+                                                            className={cn(
+                                                                'size-4 transition-transform motion-reduce:transition-none',
+                                                                hasChildren &&
+                                                                    !isCollapsed &&
+                                                                    'rotate-90',
+                                                            )}
+                                                        />
+                                                    </span>
+                                                    <span className="flex flex-col">
+                                                        <span className="font-semibold text-ink-900">
+                                                            {category.name}
+                                                        </span>
+                                                        <span className="text-xs text-ink-500">
+                                                            {hasChildren
+                                                                ? `${category.children_count} jenis barang${isCollapsed ? ' · disembunyikan' : ''}`
+                                                                : 'Belum ada jenis barang'}
+                                                        </span>
+                                                    </span>
+                                                </button>
+                                            </td>
+                                        )}
+                                        <td className="px-3 py-3">
+                                            <span className="rounded-md bg-ink-100 px-2 py-1 font-mono text-xs font-semibold text-ink-900">
+                                                {category.code}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-3 font-mono text-xs text-ink-500">
+                                            {codeExample(
+                                                category.type,
+                                                category.code,
+                                                category.parent_code,
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-3 text-right text-ink-700 tabular-nums">
+                                            {category.type === 'aset'
+                                                ? category.assets_count
+                                                : category.items_count}
+                                        </td>
+                                        <td className="py-3 pr-5 pl-3">
+                                            <RowActions
+                                                extraAction={
+                                                    !isSub ? (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            icon={
+                                                                <PlusIcon className="size-4" />
+                                                            }
+                                                            onClick={() =>
+                                                                setEditing({
+                                                                    mode: 'new-sub',
+                                                                    parent: category,
+                                                                })
+                                                            }
+                                                        >
+                                                            Jenis barang
+                                                        </Button>
+                                                    ) : undefined
+                                                }
+                                                onEdit={() =>
+                                                    setEditing({
+                                                        mode: 'edit',
+                                                        category,
+                                                    })
+                                                }
+                                                onDelete={() =>
+                                                    setDeleting(category)
+                                                }
+                                                canDelete={!category.is_used}
+                                                deleteHint={
+                                                    category.children_count > 0
+                                                        ? 'Masih punya jenis barang.'
+                                                        : 'Masih dipakai oleh perlengkapan atau peralatan.'
+                                                }
+                                            />
+                                        </td>
+                                    </motion.tr>
+                                );
+                            },
+                        )}
+                    </AnimatePresence>
                 </tbody>
             </MasterTable>
             <ListPagination paginated={paginated} noun="kategori" />

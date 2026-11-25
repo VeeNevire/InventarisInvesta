@@ -5,6 +5,6 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     progress: {
-        color: '#0FA89A',
+        color: '#1E96E8',
     },
 });
