@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { destroy, store, update } from '@/routes/master/divisions';
 
 type Division = {
@@ -20,6 +21,7 @@ type Division = {
 };
 
 export default function Divisions({ divisions }: { divisions: Division[] }) {
+    const paginated = usePaginatedRows(divisions, 'master.divisions');
     const [editing, setEditing] = useState<Division | 'new' | null>(null);
     const [deleting, setDeleting] = useState<Division | null>(null);
     const current = editing === 'new' ? null : editing;
@@ -62,7 +64,7 @@ export default function Divisions({ divisions }: { divisions: Division[] }) {
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                         <th className="py-3.5 pr-3 pl-5 font-medium">Divisi</th>
                         <th className="px-3 py-3.5 text-right font-medium">
-                            Jumlah karyawan
+                            Jumlah Karyawan
                         </th>
                         <th className="py-3.5 pr-5 pl-3">
                             <span className="sr-only">Aksi</span>
@@ -70,7 +72,7 @@ export default function Divisions({ divisions }: { divisions: Division[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {divisions.map((division) => (
+                    {paginated.rows.map((division) => (
                         <tr key={division.id}>
                             <td className="py-3 pr-3 pl-5 font-semibold text-ink-900">
                                 {division.name}
@@ -90,6 +92,7 @@ export default function Divisions({ divisions }: { divisions: Division[] }) {
                     ))}
                 </tbody>
             </MasterTable>
+            <ListPagination paginated={paginated} noun="divisi" />
 
             <Dialog
                 open={editing !== null}

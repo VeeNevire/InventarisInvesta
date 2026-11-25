@@ -17,6 +17,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { SearchInput } from '@/components/ui/search-input';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Badge, transactionTone } from '@/components/ui/status-badge';
+import { Pagination } from '@/components/ui/pagination';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate, formatNumber, formatRupiah } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -28,14 +29,14 @@ import {
 import { create as incomingCreate } from '@/routes/transactions/incoming';
 import { create as outgoingCreate } from '@/routes/transactions/outgoing';
 import type {
-    Pagination,
+    Pagination as PaginationMeta,
     TransactionHistoryEntry,
     TransactionType,
 } from '@/types';
 
 type TransactionsIndexProps = {
     transactions: TransactionHistoryEntry[];
-    pagination: Pagination;
+    pagination: PaginationMeta;
     filters: { search: string; type: string; status: string };
     typeCounts: Record<TransactionType, number>;
     canCancel: boolean;
@@ -79,6 +80,22 @@ export default function TransactionsIndex({
                 Object.entries(next).filter(([, value]) => value !== ''),
             ),
             { preserveState: true, preserveScroll: true, replace: true },
+        );
+    }
+
+    function goToPage(page: number) {
+        const active = Object.fromEntries(
+            Object.entries(filters).filter(([, value]) => value !== ''),
+        );
+
+        router.get(
+            transactionsIndex.url(),
+            { ...active, page },
+            {
+                preserveState: true,
+                onSuccess: () =>
+                    window.scrollTo({ top: 0, behavior: 'smooth' }),
+            },
         );
     }
 
@@ -214,41 +231,36 @@ export default function TransactionsIndex({
                     )}
                 </div>
             ) : (
-                <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
-                    <ul className="divide-y divide-ink-100">
-                        {transactions.map((transaction) => (
-                            <TransactionRow
-                                key={transaction.id}
-                                transaction={transaction}
-                                isExpanded={expanded === transaction.id}
-                                onToggle={() =>
-                                    setExpanded((current) =>
-                                        current === transaction.id
-                                            ? null
-                                            : transaction.id,
-                                    )
-                                }
-                                onCancel={() => setCancelling(transaction)}
-                            />
-                        ))}
-                    </ul>
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 px-5 py-3 text-sm text-ink-500">
-                        <span>
-                            Menampilkan {pagination.from}–{pagination.to} dari{' '}
-                            {pagination.total} transaksi
-                        </span>
-                        <div className="flex gap-2">
-                            <PageLink
-                                href={pagination.prev_url}
-                                label="Sebelumnya"
-                            />
-                            <PageLink
-                                href={pagination.next_url}
-                                label="Berikutnya"
-                            />
-                        </div>
+                <>
+                    <div className="overflow-hidden rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
+                        <ul className="divide-y divide-ink-100">
+                            {transactions.map((transaction) => (
+                                <TransactionRow
+                                    key={transaction.id}
+                                    transaction={transaction}
+                                    isExpanded={expanded === transaction.id}
+                                    onToggle={() =>
+                                        setExpanded((current) =>
+                                            current === transaction.id
+                                                ? null
+                                                : transaction.id,
+                                        )
+                                    }
+                                    onCancel={() => setCancelling(transaction)}
+                                />
+                            ))}
+                        </ul>
                     </div>
-                </div>
+                    <Pagination
+                        page={pagination.current_page}
+                        pageCount={pagination.last_page}
+                        total={pagination.total}
+                        from={pagination.from}
+                        to={pagination.to}
+                        onPageChange={goToPage}
+                        noun="transaksi"
+                    />
+                </>
             )}
 
             {!canCancel && (
@@ -265,26 +277,6 @@ export default function TransactionsIndex({
                 />
             )}
         </AppLayout>
-    );
-}
-
-function PageLink({ href, label }: { href: string | null; label: string }) {
-    if (!href) {
-        return (
-            <span className="inline-flex h-9 items-center rounded-lg border border-ink-100 px-3 text-ink-400">
-                {label}
-            </span>
-        );
-    }
-
-    return (
-        <Link
-            href={href}
-            preserveScroll
-            className="inline-flex h-9 items-center rounded-lg border border-ink-200 bg-white px-3 font-medium text-ink-700 hover:border-ink-400"
-        >
-            {label}
-        </Link>
     );
 }
 
@@ -402,7 +394,7 @@ function TransactionRow({
                                         Jumlah
                                     </th>
                                     <th className="pb-2 text-right font-medium">
-                                        Harga satuan
+                                        Harga Satuan
                                     </th>
                                     <th className="pb-2 text-right font-medium">
                                         Subtotal
@@ -520,7 +512,7 @@ function TransactionRow({
                                 size="sm"
                                 onClick={onCancel}
                                 icon={<BanIcon className="size-4" />}
-                                className="text-[#c52c32] hover:bg-low/10"
+                                className="text-low-ink hover:bg-low/10"
                             >
                                 Batalkan transaksi
                             </Button>
@@ -635,7 +627,7 @@ function CancelDialog({ transaction, onClose }: CancelDialogProps) {
                                     className="rounded-xl border border-ink-200 px-3.5 py-3 text-sm text-ink-900 outline-none placeholder:text-ink-400 focus:border-brand-500 focus:ring-3 focus:ring-brand-100"
                                 />
                                 {errors.reason && (
-                                    <p className="text-sm text-[#c52c32]">
+                                    <p className="text-sm text-low-ink">
                                         {errors.reason}
                                     </p>
                                 )}
@@ -647,7 +639,7 @@ function CancelDialog({ transaction, onClose }: CancelDialogProps) {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="bg-low shadow-none hover:bg-[#c52c32]"
+                                    className="bg-low shadow-none hover:bg-low-ink"
                                 >
                                     {processing
                                         ? 'Membatalkan…'

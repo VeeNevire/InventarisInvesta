@@ -15,17 +15,17 @@ beforeEach(function () {
     $this->seed(DatabaseSeeder::class);
     $this->secretary = User::query()->where('email', 'sekretaris@inventarisinvesta.test')->firstOrFail();
     $this->admin = User::query()->where('email', 'admin@inventarisinvesta.test')->firstOrFail();
-    $this->calendar = Item::query()->where('code', 'MRC-001')->firstOrFail();
+    $this->calendar = Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->firstOrFail();
 });
 
 test('forms show the preselected item', function () {
     $this->actingAs($this->secretary)
-        ->get(route('transactions.outgoing.create', ['barang' => 'MRC-001']))
+        ->get(route('transactions.outgoing.create', ['barang' => 'INVESTA-PLK-2026-PRM-KAL-001']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/create')
             ->where('type', 'keluar')
-            ->where('preselectedItem', 'MRC-001')
+            ->where('preselectedItem', 'INVESTA-PLK-2026-PRM-KAL-001')
             ->has('employees', 7)
         );
 });
@@ -345,7 +345,7 @@ test('the receipt must be an image', function () {
 });
 
 test('a new item can be created while recording incoming goods', function () {
-    $merchandise = Category::query()->where('code', 'MRC')->firstOrFail();
+    $calendarType = Category::query()->where('code', 'KAL')->firstOrFail();
 
     $this->actingAs($this->secretary)
         ->post(route('transactions.incoming.store'), [
@@ -358,7 +358,7 @@ test('a new item can be created while recording incoming goods', function () {
                     'new_item' => [
                         'name' => 'Kalender Meja 2028',
                         'variant' => 'Meja',
-                        'category_id' => $merchandise->id,
+                        'category_id' => $calendarType->id,
                         'unit' => 'PCS',
                         'location' => 'Rak A5',
                         'minimum_stock' => 50,
@@ -373,7 +373,7 @@ test('a new item can be created while recording incoming goods', function () {
 
     $item = Item::query()->where('name', 'Kalender Meja 2028')->firstOrFail();
 
-    expect($item->code)->toBe('MRC-007')
+    expect($item->code)->toBe('INVESTA-PLK-'.now()->year.'-PRM-KAL-004')
         ->and($item->unit)->toBe('pcs')
         ->and($item->minimum_stock)->toBe(50)
         ->and($item->current_stock)->toBe(300)
@@ -394,7 +394,7 @@ test('a new item that already exists is rejected', function () {
                 'new_item' => [
                     'name' => 'kalender meja 2027',
                     'variant' => 'meja',
-                    'category_id' => Category::query()->where('code', 'MRC')->value('id'),
+                    'category_id' => Category::query()->where('code', 'KAL')->value('id'),
                     'unit' => 'pcs',
                 ],
                 'quantity' => 1,
@@ -430,7 +430,7 @@ test('a photo can be attached to a new item while recording incoming goods', fun
             'lines' => [[
                 'new_item' => [
                     'name' => 'Payung Logo',
-                    'category_id' => Category::query()->where('code', 'MRC')->value('id'),
+                    'category_id' => Category::query()->where('code', 'KAL')->value('id'),
                     'unit' => 'pcs',
                 ],
                 'quantity' => 20,

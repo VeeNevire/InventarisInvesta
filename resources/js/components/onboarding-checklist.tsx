@@ -70,12 +70,12 @@ export function OnboardingChecklist({
             : []),
         {
             key: 'has_items',
-            title: 'Daftarkan barang persediaan',
+            title: 'Daftarkan perlengkapan kantor',
             body: can['items.create']
                 ? 'Barang habis pakai seperti ATK, kalender, atau merchandise. Stok awalnya diisi lewat Barang Masuk.'
                 : 'Buka Barang Masuk, ketik nama barangnya, lalu pilih "Tambah barang baru".',
             href: can['items.create'] ? itemCreate.url() : incomingCreate.url(),
-            actionLabel: 'Tambah barang',
+            actionLabel: 'Tambah perlengkapan',
         },
         {
             key: 'has_incoming',
@@ -93,10 +93,10 @@ export function OnboardingChecklist({
         },
         {
             key: 'has_assets',
-            title: 'Daftarkan aset kantor',
+            title: 'Daftarkan peralatan kantor',
             body: 'Laptop, printer, proyektor, dan barang lain yang dipakai bergantian. Dicatat per unit beserta pemegangnya.',
             href: assetCreate.url(),
-            actionLabel: 'Tambah aset',
+            actionLabel: 'Tambah peralatan',
         },
     ];
 

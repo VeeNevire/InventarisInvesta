@@ -20,8 +20,8 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
 /**
- * Example data for InventarisInvesta: merchandise, office supplies and assets
- * with a realistic history of stock movements.
+ * Example data for tests: office supplies and equipment, grouped into
+ * category → item type, with a realistic history of stock movements.
  */
 class InventorySeeder extends Seeder
 {
@@ -30,28 +30,14 @@ class InventorySeeder extends Seeder
         $admin = User::query()->where('email', 'admin@inventarisinvesta.test')->first();
         $secretary = User::query()->where('email', 'sekretaris@inventarisinvesta.test')->first();
 
-        $itemCategories = collect([
-            'MRC' => 'Merchandise',
-            'ATK' => 'ATK',
-            'PRM' => 'Materi Promosi',
-            'KTR' => 'Perlengkapan Kantor',
-        ])->map(fn (string $name, string $code) => Category::query()->create([
-            'type' => CategoryType::Persediaan,
-            'code' => $code,
-            'name' => $name,
-        ]));
+        $itemCategories = $this->seedCategories(CategoryType::Persediaan, [
+            'ATK' => ['Alat Tulis Kantor', ['HVS' => 'Kertas HVS', 'PTH' => 'Pulpen Hitam', 'MAP' => 'Map Plastik', 'TPH' => 'Tinta Printer Hitam']],
+            'PRM' => ['Promosi', ['KAL' => 'Kalender', 'GKC' => 'Gantungan Kunci', 'TMB' => 'Tumbler', 'BRS' => 'Brosur', 'XBN' => 'X-Banner']],
+        ]);
 
-        $assetCategories = collect([
-            'LPT' => 'Laptop',
-            'PRN' => 'Printer',
-            'PRY' => 'Proyektor',
-            'MON' => 'Monitor',
-            'KMR' => 'Kamera',
-        ])->map(fn (string $name, string $code) => Category::query()->create([
-            'type' => CategoryType::Aset,
-            'code' => $code,
-            'name' => $name,
-        ]));
+        $assetCategories = $this->seedCategories(CategoryType::Aset, [
+            'ITE' => ['Perangkat IT & Elektronik', ['LPT' => 'Laptop', 'PRT' => 'Printer', 'PRY' => 'Proyektor', 'MON' => 'Monitor', 'KMR' => 'Kamera']],
+        ]);
 
         $suppliers = collect([
             'cetakPrima' => 'CV Cetak Prima',
@@ -86,18 +72,18 @@ class InventorySeeder extends Seeder
         ])->map(fn (array $room) => Room::query()->create(['name' => $room[0], 'floor' => $room[1]]));
 
         $items = collect([
-            'kalenderMeja27' => ['MRC', 'MRC-001', 'Kalender Meja 2027', 'Meja', 'pcs', 'Rak A1', 100, true],
-            'kalenderDinding27' => ['MRC', 'MRC-002', 'Kalender Dinding 2027', 'Dinding', 'pcs', 'Rak A1', 100, true],
-            'gantunganAkrilik' => ['MRC', 'MRC-003', 'Gantungan Kunci', 'Akrilik', 'pcs', 'Rak A2', 50, true],
-            'gantunganLogam' => ['MRC', 'MRC-004', 'Gantungan Kunci', 'Logam', 'pcs', 'Rak A2', 50, true],
-            'tumbler' => ['MRC', 'MRC-005', 'Tumbler Logo 500 ml', null, 'pcs', 'Rak A3', 20, true],
-            'kalenderMeja26' => ['MRC', 'MRC-006', 'Kalender Meja 2026', 'Meja', 'pcs', 'Rak A4', 0, false],
-            'kertasA4' => ['ATK', 'ATK-001', 'Kertas A4 80 gsm', null, 'rim', 'Rak B1', 20, false],
-            'pulpen' => ['ATK', 'ATK-002', 'Pulpen Hitam', null, 'box', 'Rak B2', 5, true],
-            'map' => ['ATK', 'ATK-003', 'Map Plastik Logo', null, 'pcs', 'Rak B2', 50, true],
-            'brosur' => ['PRM', 'PRM-001', 'Brosur Produk 2026', null, 'lbr', 'Rak C1', 500, true],
-            'xBanner' => ['PRM', 'PRM-002', 'X-Banner Logo', null, 'pcs', 'Rak C2', 2, true],
-            'tinta' => ['KTR', 'KTR-001', 'Tinta Printer Hitam', null, 'botol', 'Rak D1', 4, true],
+            'kalenderMeja27' => ['KAL', 'INVESTA-PLK-2026-PRM-KAL-001', 'Kalender Meja 2027', 'Meja', 'pcs', 'Rak A1', 100, true],
+            'kalenderDinding27' => ['KAL', 'INVESTA-PLK-2026-PRM-KAL-002', 'Kalender Dinding 2027', 'Dinding', 'pcs', 'Rak A1', 100, true],
+            'gantunganAkrilik' => ['GKC', 'INVESTA-PLK-2026-PRM-GKC-001', 'Gantungan Kunci', 'Akrilik', 'pcs', 'Rak A2', 50, true],
+            'gantunganLogam' => ['GKC', 'INVESTA-PLK-2026-PRM-GKC-002', 'Gantungan Kunci', 'Logam', 'pcs', 'Rak A2', 50, true],
+            'tumbler' => ['TMB', 'INVESTA-PLK-2026-PRM-TMB-001', 'Tumbler Logo 500 ml', null, 'pcs', 'Rak A3', 20, true],
+            'kalenderMeja26' => ['KAL', 'INVESTA-PLK-2026-PRM-KAL-003', 'Kalender Meja 2026', 'Meja', 'pcs', 'Rak A4', 0, false],
+            'kertasA4' => ['HVS', 'INVESTA-PLK-2026-ATK-HVS-001', 'Kertas A4 80 gsm', null, 'rim', 'Rak B1', 20, false],
+            'pulpen' => ['PTH', 'INVESTA-PLK-2026-ATK-PTH-001', 'Pulpen Hitam', null, 'box', 'Rak B2', 5, true],
+            'map' => ['MAP', 'INVESTA-PLK-2026-ATK-MAP-001', 'Map Plastik Logo', null, 'pcs', 'Rak B2', 50, true],
+            'brosur' => ['BRS', 'INVESTA-PLK-2026-PRM-BRS-001', 'Brosur Produk 2026', null, 'lbr', 'Rak C1', 500, true],
+            'xBanner' => ['XBN', 'INVESTA-PLK-2026-PRM-XBN-001', 'X-Banner Logo', null, 'pcs', 'Rak C2', 2, true],
+            'tinta' => ['TPH', 'INVESTA-PLK-2026-ATK-TPH-001', 'Tinta Printer Hitam', null, 'botol', 'Rak D1', 4, true],
         ])->map(fn (array $item) => Item::query()->create([
             'category_id' => $itemCategories[$item[0]]->id,
             'code' => $item[1],
@@ -171,6 +157,32 @@ class InventorySeeder extends Seeder
     }
 
     /**
+     * Create main categories with their item types, keyed by item type code.
+     *
+     * @param  array<string, array{0: string, 1: array<string, string>}>  $tree
+     * @return Collection<string, Category>
+     */
+    private function seedCategories(CategoryType $type, array $tree): Collection
+    {
+        $itemTypes = collect();
+
+        foreach ($tree as $code => [$name, $children]) {
+            $parent = Category::query()->create(['type' => $type, 'code' => $code, 'name' => $name]);
+
+            foreach ($children as $childCode => $childName) {
+                $itemTypes[$childCode] = Category::query()->create([
+                    'type' => $type,
+                    'code' => $childCode,
+                    'name' => $childName,
+                    'parent_id' => $parent->id,
+                ]);
+            }
+        }
+
+        return $itemTypes;
+    }
+
+    /**
      * @param  Collection<string, Category>  $categories
      * @param  Collection<string, Employee>  $employees
      * @param  Collection<string, Room>  $rooms
@@ -178,42 +190,42 @@ class InventorySeeder extends Seeder
     private function seedAssets($categories, Supplier $supplier, $employees, $rooms, ?User $recorder): void
     {
         $assets = [
-            ['LPT', 'INV-LPT-001', 'Laptop Lenovo ThinkPad E14', 'Lenovo', 'ThinkPad E14 Gen 4', 'PF3K1A2B', 'Intel Core i5-1235U · 16 GB RAM · 512 GB SSD', '2025-01-06', 11800000, AssetStatus::Dipakai, $employees['hendra'], [48, 1000000], [
+            ['LPT', 'INVESTA-PRL-2025-ITE-LPT-001', 'Laptop Lenovo ThinkPad E14', 'Lenovo', 'ThinkPad E14 Gen 4', 'PF3K1A2B', 'Intel Core i5-1235U · 16 GB RAM · 512 GB SSD', '2025-01-06', 11800000, AssetStatus::Dipakai, $employees['hendra'], [48, 1000000], [
                 [AssetHistoryType::Penyerahan, '2025-01-10', $employees['hendra'], 'Baik', null],
             ]],
-            ['LPT', 'INV-LPT-002', 'Laptop ASUS Vivobook 14', 'ASUS', 'Vivobook 14 A1404', 'R7N0CV11', 'Intel Core i5-1335U · 8 GB RAM · 512 GB SSD', '2026-02-05', 8900000, AssetStatus::Dipakai, $employees['sari'], [48, 900000], [
-                [AssetHistoryType::Penyerahan, '2026-02-11', $employees['sari'], 'Baik', 'Pengganti INV-LPT-003'],
+            ['LPT', 'INVESTA-PRL-2026-ITE-LPT-002', 'Laptop ASUS Vivobook 14', 'ASUS', 'Vivobook 14 A1404', 'R7N0CV11', 'Intel Core i5-1335U · 8 GB RAM · 512 GB SSD', '2026-02-05', 8900000, AssetStatus::Dipakai, $employees['sari'], [48, 900000], [
+                [AssetHistoryType::Penyerahan, '2026-02-11', $employees['sari'], 'Baik', 'Pengganti INVESTA-PRL-2025-ITE-LPT-003'],
             ]],
-            ['LPT', 'INV-LPT-003', 'Laptop Lenovo ThinkPad E14 Gen 5', 'Lenovo', 'ThinkPad E14 Gen 5', 'PF4M7Q9X', 'Intel Core i5-1335U · 16 GB RAM · 512 GB SSD · layar 14" WUXGA', '2025-01-14', 12500000, AssetStatus::Dipakai, $employees['budi'], [48, 1000000], [
+            ['LPT', 'INVESTA-PRL-2025-ITE-LPT-003', 'Laptop Lenovo ThinkPad E14 Gen 5', 'Lenovo', 'ThinkPad E14 Gen 5', 'PF4M7Q9X', 'Intel Core i5-1335U · 16 GB RAM · 512 GB SSD · layar 14" WUXGA', '2025-01-14', 12500000, AssetStatus::Dipakai, $employees['budi'], [48, 1000000], [
                 [AssetHistoryType::Penyerahan, '2025-01-20', $employees['sari'], 'Baik', null],
                 [AssetHistoryType::Pengembalian, '2026-02-10', $employees['sari'], 'Perlu servis', 'Beberapa tombol keyboard tidak berfungsi'],
                 [AssetHistoryType::Perbaikan, '2026-02-11', null, null, 'Ganti keyboard', 'Mitra Komputer'],
                 [AssetHistoryType::SelesaiPerbaikan, '2026-02-24', null, 'Baik', 'Keyboard sudah diganti', 'Mitra Komputer', 650000],
                 [AssetHistoryType::Penyerahan, '2026-03-03', $employees['budi'], 'Baik', null],
             ]],
-            ['LPT', 'INV-LPT-004', 'Laptop HP 240 G9', 'HP', '240 G9', '5CD3281JK', 'Intel Core i3-1215U · 8 GB RAM · 256 GB SSD', '2025-06-10', 7600000, AssetStatus::Tersedia, null, null, [
+            ['LPT', 'INVESTA-PRL-2025-ITE-LPT-004', 'Laptop HP 240 G9', 'HP', '240 G9', '5CD3281JK', 'Intel Core i3-1215U · 8 GB RAM · 256 GB SSD', '2025-06-10', 7600000, AssetStatus::Tersedia, null, null, [
                 [AssetHistoryType::Penyerahan, '2025-06-12', $employees['fajar'], 'Baik', null],
                 [AssetHistoryType::Pengembalian, '2026-09-30', $employees['fajar'], 'Baik', 'Mendapat laptop baru dari divisi IT'],
             ]],
-            ['LPT', 'INV-LPT-005', 'Laptop Acer Aspire 3', 'Acer', 'Aspire 3 A314', 'NXK6TSN00', 'AMD Ryzen 3 · 8 GB RAM · 256 GB SSD', '2023-08-15', 6900000, AssetStatus::Rusak, null, null, [
+            ['LPT', 'INVESTA-PRL-2023-ITE-LPT-005', 'Laptop Acer Aspire 3', 'Acer', 'Aspire 3 A314', 'NXK6TSN00', 'AMD Ryzen 3 · 8 GB RAM · 256 GB SSD', '2023-08-15', 6900000, AssetStatus::Rusak, null, null, [
                 [AssetHistoryType::Penyerahan, '2023-08-20', $employees['dimas'], 'Baik', null],
                 [AssetHistoryType::Pengembalian, '2026-11-02', $employees['dimas'], 'Rusak', 'Layar mati total'],
             ]],
-            ['PRN', 'INV-PRN-001', 'Printer Epson L3250', 'Epson', 'EcoTank L3250', 'X8KJ004512', 'Print, scan, copy · Wi-Fi', '2025-05-05', 2850000, AssetStatus::Dipakai, $rooms['keuangan'], null, [
+            ['PRT', 'INVESTA-PRL-2025-ITE-PRT-001', 'Printer Epson L3250', 'Epson', 'EcoTank L3250', 'X8KJ004512', 'Print, scan, copy · Wi-Fi', '2025-05-05', 2850000, AssetStatus::Dipakai, $rooms['keuangan'], null, [
                 [AssetHistoryType::Penyerahan, '2025-05-06', $rooms['keuangan'], 'Baik', null],
             ]],
-            ['PRN', 'INV-PRN-002', 'Printer Canon G2010', 'Canon', 'PIXMA G2010', 'KMQ09921', 'Print, scan, copy', '2024-11-11', 2400000, AssetStatus::Diperbaiki, null, null, [
+            ['PRT', 'INVESTA-PRL-2024-ITE-PRT-002', 'Printer Canon G2010', 'Canon', 'PIXMA G2010', 'KMQ09921', 'Print, scan, copy', '2024-11-11', 2400000, AssetStatus::Diperbaiki, null, null, [
                 [AssetHistoryType::Penyerahan, '2024-11-12', $rooms['marketing'], 'Baik', null],
                 [AssetHistoryType::Pengembalian, '2026-11-11', $rooms['marketing'], 'Perlu servis', 'Hasil cetak bergaris'],
                 [AssetHistoryType::Perbaikan, '2026-11-12', null, null, 'Hasil cetak bergaris', 'Mitra Komputer'],
             ]],
-            ['PRY', 'INV-PRY-001', 'Proyektor Epson EB-X51', 'Epson', 'EB-X51', 'X5DF220188', '3.800 lumen · XGA · HDMI', '2025-06-20', 6750000, AssetStatus::Dipakai, $rooms['rapat'], [60, 500000], [
+            ['PRY', 'INVESTA-PRL-2025-ITE-PRY-001', 'Proyektor Epson EB-X51', 'Epson', 'EB-X51', 'X5DF220188', '3.800 lumen · XGA · HDMI', '2025-06-20', 6750000, AssetStatus::Dipakai, $rooms['rapat'], [60, 500000], [
                 [AssetHistoryType::Penyerahan, '2025-06-21', $rooms['rapat'], 'Baik', null],
             ]],
-            ['MON', 'INV-MON-001', 'Monitor LG 24MP400', 'LG', '24MP400-B', '305NTQD4K', '24" IPS · Full HD · 75 Hz', '2025-08-08', 1650000, AssetStatus::Dipakai, $employees['dimas'], null, [
+            ['MON', 'INVESTA-PRL-2025-ITE-MON-001', 'Monitor LG 24MP400', 'LG', '24MP400-B', '305NTQD4K', '24" IPS · Full HD · 75 Hz', '2025-08-08', 1650000, AssetStatus::Dipakai, $employees['dimas'], null, [
                 [AssetHistoryType::Penyerahan, '2025-08-09', $employees['dimas'], 'Baik', null],
             ]],
-            ['KMR', 'INV-KMR-001', 'Kamera Canon EOS M50 Mark II', 'Canon', 'EOS M50 Mark II', '0831009921', '24,1 MP · lensa kit 15-45 mm', '2024-03-12', 9200000, AssetStatus::Tersedia, null, [48, 1500000], []],
+            ['KMR', 'INVESTA-PRL-2024-ITE-KMR-001', 'Kamera Canon EOS M50 Mark II', 'Canon', 'EOS M50 Mark II', '0831009921', '24,1 MP · lensa kit 15-45 mm', '2024-03-12', 9200000, AssetStatus::Tersedia, null, [48, 1500000], []],
         ];
 
         foreach ($assets as [$categoryCode, $code, $name, $brand, $model, $serial, $specification, $purchasedOn, $price, $status, $holder, $depreciation, $histories]) {

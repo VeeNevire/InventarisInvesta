@@ -79,11 +79,11 @@ export default function AssetShow({
     const [action, setAction] = useState<AssetAction | null>(null);
 
     const details: { label: string; value: string }[] = [
-        { label: 'Kode aset', value: asset.code },
+        { label: 'Kode peralatan', value: asset.code },
         {
             label: 'Kategori',
             value: asset.category?.parent_name
-                ? `${asset.category.name} (Subkategori ${asset.category.parent_name})`
+                ? `${asset.category.parent_name} › ${asset.category.name}`
                 : (asset.category?.name ?? '—'),
         },
         { label: 'Merek', value: asset.brand ?? '—' },
@@ -101,7 +101,7 @@ export default function AssetShow({
             title={asset.name}
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Aset', href: assetsIndex.url() },
+                { title: 'Peralatan Kantor', href: assetsIndex.url() },
                 { title: asset.code },
             ]}
         >
@@ -125,7 +125,7 @@ export default function AssetShow({
                                 href={assetEdit.url(asset.code)}
                                 variant="soft"
                             >
-                                Edit aset
+                                Edit peralatan
                             </ButtonLink>
                         )}
                         {canDispose &&
@@ -134,7 +134,7 @@ export default function AssetShow({
                                     variant="ghost"
                                     icon={<BanIcon className="size-4" />}
                                     onClick={() => setAction('dispose')}
-                                    className="text-[#c52c32] hover:bg-low/10"
+                                    className="text-low-ink hover:bg-low/10"
                                 >
                                     Hapuskan
                                 </Button>
@@ -197,7 +197,7 @@ export default function AssetShow({
                     </Card>
 
                     <Card>
-                        <CardHeader title="Informasi aset" />
+                        <CardHeader title="Informasi peralatan" />
                         <dl className="flex flex-col divide-y divide-ink-100 px-5 pb-3 text-sm">
                             {details.map((detail) => (
                                 <div
@@ -258,7 +258,7 @@ export default function AssetShow({
 
                     <Card>
                         <CardHeader
-                            title="Riwayat aset"
+                            title="Riwayat peralatan"
                             description="Pembelian, penyerahan, pengembalian, dan perbaikan"
                         />
                         <ol className="flex flex-col px-5 pb-5">
@@ -333,7 +333,7 @@ function historyTitle(history: AssetHistory): string {
         case 'selesai_perbaikan':
             return 'Selesai servis';
         case 'penghapusan':
-            return 'Dihapuskan dari daftar aset';
+            return 'Dihapuskan dari daftar peralatan';
         default:
             return 'Dibeli';
     }
@@ -389,14 +389,14 @@ function DepreciationCard({
         return (
             <Card className="flex flex-col gap-3 p-5">
                 <span className="text-[13px] font-medium text-ink-500">
-                    Nilai aset
+                    Nilai peralatan
                 </span>
                 <span className="text-2xl font-semibold tracking-[-0.01em] text-ink-900 tabular-nums">
                     {formatRupiah(purchasePrice)}
                 </span>
                 <p className="text-[13px] text-ink-500">
-                    Penyusutan tidak diaktifkan untuk aset ini, jadi nilainya
-                    dicatat sebesar harga perolehan.
+                    Penyusutan tidak diaktifkan untuk peralatan ini, jadi
+                    nilainya dicatat sebesar harga perolehan.
                 </p>
                 {serviceCost > 0 && (
                     <p className="border-t border-ink-100 pt-3 text-[13px] text-ink-500">

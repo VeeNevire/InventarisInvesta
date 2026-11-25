@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -27,10 +28,11 @@ type Category = {
     is_used: boolean;
     parent_id: number | null;
     parent_name: string | null;
+    parent_code: string | null;
     children_count: number;
 };
 
-/** What the dialog is doing: a new main category, a new subcategory, or an edit. */
+/** What the dialog is doing: a new main category, a new item type, or an edit. */
 type Editing =
     | { mode: 'new'; type: CategoryType }
     | { mode: 'new-sub'; parent: Category }
@@ -38,19 +40,36 @@ type Editing =
 
 const typeInfo: Record<
     CategoryType,
-    { label: string; hint: string; codeExample: (code: string) => string }
+    { label: string; hint: string; module: string }
 > = {
     persediaan: {
-        label: 'Barang persediaan',
-        hint: 'Barang habis pakai yang dihitung jumlahnya, seperti ATK atau merchandise. Bisa punya subkategori.',
-        codeExample: (code) => `${code}-001`,
+        label: 'Perlengkapan Kantor',
+        hint: 'Barang habis pakai yang dihitung jumlahnya, seperti ATK atau tisu. Setiap kategori berisi jenis barang (mis. ATK → Kertas HVS).',
+        module: 'PLK',
     },
     aset: {
-        label: 'Aset',
-        hint: 'Barang yang dipakai dan dicatat per unit, seperti laptop atau printer.',
-        codeExample: (code) => `INV-${code}-001`,
+        label: 'Peralatan Kantor',
+        hint: 'Barang yang dipakai dan dicatat per unit. Setiap kategori berisi jenis barang (mis. Perangkat IT → Laptop).',
+        module: 'PRL',
     },
 };
+
+const currentYear = new Date().getFullYear();
+
+/**
+ * Example code for a category row: a main category shows where its types go,
+ * an item type shows the full code, e.g. INVESTA-PRL-2025-ITE-LPT-001.
+ */
+function codeExample(
+    type: CategoryType,
+    code: string,
+    parentCode: string | null,
+    sequence = 1,
+): string {
+    const typePath = parentCode ? `${parentCode}-${code}` : `${code}-JENIS`;
+
+    return `INVESTA-${typeInfo[type].module}-${currentYear}-${typePath}-${String(sequence).padStart(3, '0')}`;
+}
 
 export default function Categories({ categories }: { categories: Category[] }) {
     const [type, setType] = useState<CategoryType>('persediaan');
@@ -63,11 +82,12 @@ export default function Categories({ categories }: { categories: Category[] }) {
         main,
         ...ofType.filter((category) => category.parent_id === main.id),
     ]);
+    const paginated = usePaginatedRows(rows, 'master.categories', type);
 
     return (
         <MasterLayout
             title="Kategori"
-            description="Kelompok barang dan aset. Setiap kategori punya kode singkat yang menjadi awalan kode barangnya."
+            description="Kategori dan jenis barang untuk Perlengkapan dan Peralatan Kantor. Kode kategori dan kode jenis menjadi bagian kode barang."
             actions={
                 <Button
                     icon={<PlusIcon className="size-[18px]" />}
@@ -79,7 +99,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
         >
             <div className="flex flex-col gap-3 rounded-2xl bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between">
                 <SegmentedControl<CategoryType>
-                    label="Jenis kategori"
+                    label="Kelompok"
                     value={type}
                     onChange={setType}
                     segments={(['persediaan', 'aset'] as const).map(
@@ -115,8 +135,8 @@ export default function Categories({ categories }: { categories: Category[] }) {
                             title={`Belum ada kategori ${typeInfo[type].label.toLowerCase()}`}
                             description={
                                 type === 'aset'
-                                    ? 'Contoh: Laptop (kode LPT), Printer (kode PRN). Kategori aset juga bisa dibuat langsung saat menambah aset.'
-                                    : 'Contoh: Alat Tulis Kantor (kode ATK), Merchandise (kode MRC).'
+                                    ? 'Contoh: Perangkat IT & Elektronik (kode ITE), Furnitur (kode FUR).'
+                                    : 'Contoh: Alat Tulis Kantor (kode ATK), Promosi (kode PRM).'
                             }
                             action={
                                 <Button
@@ -138,11 +158,10 @@ export default function Categories({ categories }: { categories: Category[] }) {
                         <th className="py-3.5 pr-3 pl-5 font-medium">Nama</th>
                         <th className="px-3 py-3.5 font-medium">Kode</th>
                         <th className="px-3 py-3.5 font-medium">
-                            Kode {type === 'aset' ? 'aset' : 'barang'} jadi
-                            seperti
+                            Kode Barang Jadi Seperti
                         </th>
                         <th className="px-3 py-3.5 text-right font-medium">
-                            {type === 'aset' ? 'Jumlah aset' : 'Jumlah barang'}
+                            {type === 'aset' ? 'Jumlah Unit' : 'Jumlah Barang'}
                         </th>
                         <th className="py-3.5 pr-5 pl-3">
                             <span className="sr-only">Aksi</span>
@@ -150,7 +169,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {rows.map((category) => {
+                    {paginated.rows.map((category) => {
                         const isSub = Boolean(category.parent_id);
 
                         return (
@@ -185,14 +204,14 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                         </span>
                                         {isSub ? (
                                             <span className="sr-only">
-                                                Subkategori dari{' '}
+                                                Jenis barang dari{' '}
                                                 {category.parent_name}
                                             </span>
                                         ) : (
                                             category.children_count > 0 && (
                                                 <span className="text-xs text-ink-500">
                                                     {category.children_count}{' '}
-                                                    subkategori
+                                                    jenis barang
                                                 </span>
                                             )
                                         )}
@@ -204,8 +223,10 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                     </span>
                                 </td>
                                 <td className="px-3 py-3 font-mono text-xs text-ink-500">
-                                    {typeInfo[category.type].codeExample(
+                                    {codeExample(
+                                        category.type,
                                         category.code,
+                                        category.parent_code,
                                     )}
                                 </td>
                                 <td className="px-3 py-3 text-right text-ink-700 tabular-nums">
@@ -216,7 +237,6 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                 <td className="py-3 pr-5 pl-3">
                                     <RowActions
                                         extraAction={
-                                            category.type === 'persediaan' &&
                                             !isSub ? (
                                                 <Button
                                                     variant="ghost"
@@ -231,7 +251,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                                         })
                                                     }
                                                 >
-                                                    Subkategori
+                                                    Jenis barang
                                                 </Button>
                                             ) : undefined
                                         }
@@ -245,8 +265,8 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                         canDelete={!category.is_used}
                                         deleteHint={
                                             category.children_count > 0
-                                                ? 'Masih punya subkategori.'
-                                                : 'Masih dipakai oleh barang atau aset.'
+                                                ? 'Masih punya jenis barang.'
+                                                : 'Masih dipakai oleh perlengkapan atau peralatan.'
                                         }
                                     />
                                 </td>
@@ -255,14 +275,13 @@ export default function Categories({ categories }: { categories: Category[] }) {
                     })}
                 </tbody>
             </MasterTable>
+            <ListPagination paginated={paginated} noun="kategori" />
 
             {editing && (
                 <CategoryDialog
                     editing={editing}
                     mainCategories={categories.filter(
-                        (category) =>
-                            category.type === 'persediaan' &&
-                            !category.parent_id,
+                        (category) => !category.parent_id,
                     )}
                     onClose={() => setEditing(null)}
                 />
@@ -282,8 +301,8 @@ export default function Categories({ categories }: { categories: Category[] }) {
 }
 
 /**
- * One form for every case: new category, new subcategory, or edit. Choosing a
- * main category turns it into a subcategory; choosing none makes it a main one.
+ * One form for every case: new category, new item type, or edit. Choosing a
+ * main category turns it into an item type; choosing none makes it a main one.
  */
 function CategoryDialog({
     editing,
@@ -313,16 +332,18 @@ function CategoryDialog({
     const [code, setCode] = useState(current?.code ?? '');
 
     const isCodeLocked = current?.is_used ?? false;
-    const canChooseParent =
-        type === 'persediaan' && (current?.children_count ?? 0) === 0;
+    const canChooseParent = !isCodeLocked;
     const parentOptions = mainCategories.filter(
-        (category) => category.id !== current?.id,
+        (category) => category.type === type && category.id !== current?.id,
     );
+    const parentCode =
+        parentOptions.find((category) => String(category.id) === parentId)
+            ?.code ?? null;
     const title =
         editing.mode === 'edit'
             ? `Ubah ${editing.category.name}`
             : editing.mode === 'new-sub'
-              ? `Tambah subkategori ${editing.parent.name}`
+              ? `Tambah jenis barang ${editing.parent.name}`
               : 'Tambah kategori';
     const previewCode = code.trim().toUpperCase() || 'KODE';
 
@@ -340,7 +361,7 @@ function CategoryDialog({
                             <input type="hidden" name="type" value={type} />
                         ) : (
                             <Field
-                                label="Jenis"
+                                label="Kelompok"
                                 htmlFor="category-type"
                                 hint={
                                     current?.is_used
@@ -361,13 +382,13 @@ function CategoryDialog({
                                     options={[
                                         {
                                             value: 'persediaan',
-                                            label: 'Barang persediaan',
+                                            label: 'Perlengkapan Kantor',
                                             description:
                                                 'Habis pakai, dihitung jumlahnya',
                                         },
                                         {
                                             value: 'aset',
-                                            label: 'Aset',
+                                            label: 'Peralatan Kantor',
                                             description:
                                                 'Dipakai, dicatat per unit',
                                         },
@@ -377,7 +398,9 @@ function CategoryDialog({
                         )}
 
                         <Field
-                            label="Nama kategori"
+                            label={
+                                parentId ? 'Nama jenis barang' : 'Nama kategori'
+                            }
                             htmlFor="category-name"
                             error={errors.name}
                         >
@@ -388,9 +411,13 @@ function CategoryDialog({
                                 required
                                 autoFocus
                                 placeholder={
-                                    type === 'aset'
-                                        ? 'Contoh: Laptop'
-                                        : 'Contoh: Alat Tulis Kantor'
+                                    parentId
+                                        ? type === 'aset'
+                                            ? 'Contoh: Laptop'
+                                            : 'Contoh: Kertas HVS'
+                                        : type === 'aset'
+                                          ? 'Contoh: Perangkat IT & Elektronik'
+                                          : 'Contoh: Alat Tulis Kantor'
                                 }
                                 aria-invalid={Boolean(errors.name)}
                                 className={inputClasses}
@@ -421,7 +448,15 @@ function CategoryDialog({
                                 readOnly={isCodeLocked}
                                 required
                                 maxLength={5}
-                                placeholder={type === 'aset' ? 'LPT' : 'ATK'}
+                                placeholder={
+                                    parentId
+                                        ? type === 'aset'
+                                            ? 'LPT'
+                                            : 'HVS'
+                                        : type === 'aset'
+                                          ? 'ITE'
+                                          : 'ATK'
+                                }
                                 aria-invalid={Boolean(errors.code)}
                                 aria-describedby="category-code-preview"
                                 className={`${inputClasses} font-mono uppercase read-only:bg-ink-50 read-only:text-ink-500`}
@@ -430,16 +465,19 @@ function CategoryDialog({
                                 id="category-code-preview"
                                 className="text-xs text-ink-500"
                             >
-                                {type === 'aset' ? 'Aset' : 'Barang'} di
-                                kategori ini akan berkode{' '}
+                                Barang {parentId ? 'jenis' : 'kategori'} ini
+                                akan berkode{' '}
                                 <span className="rounded bg-ink-100 px-1.5 py-0.5 font-mono font-semibold text-ink-900">
-                                    {typeInfo[type].codeExample(previewCode)}
+                                    {codeExample(type, previewCode, parentCode)}
                                 </span>
                                 ,{' '}
                                 <span className="font-mono">
-                                    {typeInfo[type]
-                                        .codeExample(previewCode)
-                                        .replace(/001$/, '002')}
+                                    {codeExample(
+                                        type,
+                                        previewCode,
+                                        parentCode,
+                                        2,
+                                    )}
                                 </span>
                                 , dan seterusnya.
                             </p>
@@ -453,9 +491,9 @@ function CategoryDialog({
                             />
                         ) : canChooseParent && parentOptions.length > 0 ? (
                             <Field
-                                label="Masuk ke kategori utama"
+                                label="Masuk ke kategori"
                                 htmlFor="category-parent"
-                                hint="Opsional"
+                                hint="Pilih kategori bila ini jenis barang"
                                 error={errors.parent_id}
                             >
                                 <Select
@@ -466,22 +504,26 @@ function CategoryDialog({
                                     options={[
                                         {
                                             value: '',
-                                            label: 'Tidak, ini kategori utama',
+                                            label: 'Tidak, ini kategori',
                                         },
                                         ...parentOptions.map((category) => ({
                                             value: String(category.id),
                                             label: category.name,
-                                            description: `Jadikan subkategori ${category.name}`,
+                                            description: `Jadikan jenis barang ${category.name}`,
                                         })),
                                     ]}
                                 />
                             </Field>
                         ) : (
-                            <input type="hidden" name="parent_id" value="" />
+                            <input
+                                type="hidden"
+                                name="parent_id"
+                                value={current?.parent_id ?? ''}
+                            />
                         )}
 
                         {errors.parent_id && editing.mode === 'new-sub' && (
-                            <p className="text-sm text-[#c52c32]">
+                            <p className="text-sm text-low-ink">
                                 {errors.parent_id}
                             </p>
                         )}

@@ -25,8 +25,8 @@ use RuntimeException;
  * template into checked rows, and saves the valid rows (plus one incoming
  * transaction for any opening stock).
  *
- * @phpstan-type ImportValues array{code: string|null, name: string|null, variant: string|null, category: string|null, unit: string|null, location: string|null, minimum_stock: string|null, notify_low_stock: string|null, description: string|null, opening_stock: string|null, unit_price: string|null}
- * @phpstan-type ImportAttributes array{code: string|null, category_id: int, name: string, variant: string|null, unit: string, location: string|null, minimum_stock: int, notify_low_stock: bool, description: string|null, opening_stock: int, unit_price: float|null}
+ * @phpstan-type ImportValues array{name: string|null, variant: string|null, category: string|null, unit: string|null, location: string|null, minimum_stock: string|null, notify_low_stock: string|null, description: string|null, opening_stock: string|null, unit_price: string|null}
+ * @phpstan-type ImportAttributes array{category_id: int, name: string, variant: string|null, unit: string, location: string|null, minimum_stock: int, notify_low_stock: bool, description: string|null, opening_stock: int, unit_price: float|null}
  * @phpstan-type ImportRow array{row: int, status: 'valid'|'duplicate'|'error', messages: list<string>, values: ImportValues, attributes: ImportAttributes|null}
  */
 class ItemImporter
@@ -39,10 +39,9 @@ class ItemImporter
      * @var array<string, array{0: string, 1: int, 2: string}>
      */
     public const COLUMNS = [
-        'code' => ['Kode Barang', 16, 'text'],
         'name' => ['Nama Barang*', 30, 'text'],
         'variant' => ['Varian', 18, 'text'],
-        'category' => ['Kategori*', 14, 'text'],
+        'category' => ['Jenis Barang*', 16, 'text'],
         'unit' => ['Satuan*', 10, 'text'],
         'location' => ['Lokasi Rak', 14, 'text'],
         'minimum_stock' => ['Stok Minimum', 13, 'int'],
@@ -65,14 +64,14 @@ class ItemImporter
      */
     public function template(): string
     {
-        $items = (new Sheet('Barang', 'Template Import Barang'))
+        $items = (new Sheet('Barang', 'Template Import Perlengkapan Kantor'))
             ->subtitle('Isi mulai baris di bawah judul kolom. Kolom bertanda * wajib diisi. Petunjuk lengkap ada di sheet "Petunjuk".')
             ->columns(array_values(self::COLUMNS))
             ->emptyMessage(null)
             ->landscape();
 
         $guide = (new Sheet('Petunjuk', 'Petunjuk Pengisian'))
-            ->subtitle('Satu baris = satu barang. Baris kosong dilewati. Maksimal '.self::MAX_ROWS.' baris per file.')
+            ->subtitle('Satu baris = satu jenis perlengkapan. Baris kosong dilewati. Maksimal '.self::MAX_ROWS.' baris per file.')
             ->columns([['Kolom', 22], ['Wajib', 9], ['Cara mengisi', 62], ['Contoh', 18]])
             ->emptyMessage(null);
 
@@ -80,16 +79,17 @@ class ItemImporter
             $guide->row($row);
         }
 
-        $guide->note('Barang yang nama dan variannya (atau kodenya) sudah ada di sistem akan dilewati, tidak ditimpa.')
+        $guide->note('Barang yang nama dan variannya sudah ada di sistem akan dilewati, tidak ditimpa.')
+            ->note('Kode dibuat otomatis, mis. INVESTA-PLK-'.now()->year.'-ATK-HVS-001.')
             ->note('Sebelum disimpan, sistem menampilkan pratinjau supaya Anda bisa memeriksa baris yang bermasalah.');
 
-        $categories = (new Sheet('Daftar Kategori', 'Daftar Kategori Persediaan'))
-            ->subtitle('Tulis kode kategori (kolom pertama) di kolom Kategori pada sheet "Barang".')
-            ->columns([['Kode', 12], ['Nama Kategori', 32], ['Kategori Induk', 28]])
-            ->emptyMessage('Belum ada kategori persediaan. Tambahkan dulu di Master Data → Kategori.');
+        $categories = (new Sheet('Daftar Kategori', 'Daftar Jenis Perlengkapan Kantor'))
+            ->subtitle('Tulis kode jenis (kolom pertama) di kolom Jenis Barang pada sheet "Barang".')
+            ->columns([['Kode Jenis', 12], ['Jenis Barang', 32], ['Kode Kategori', 14], ['Kategori', 32]])
+            ->emptyMessage('Belum ada jenis perlengkapan. Tambahkan dulu di Master Data → Kategori.');
 
         foreach ($this->categories() as $category) {
-            $categories->row([$category->code, $category->name, $category->parent?->name]);
+            $categories->row([$category->code, $category->name, $category->parent?->code, $category->parent?->name]);
         }
 
         return (new XlsxWriter(config('app.name')))
@@ -117,12 +117,9 @@ class ItemImporter
 
         $existingItems = Item::query()->get(['code', 'name', 'variant']);
         $existingByKey = $existingItems->keyBy(fn (Item $item): string => $this->duplicateKey($item->name, $item->variant));
-        $existingByCode = $existingItems->keyBy(fn (Item $item): string => Str::upper($item->code));
 
         /** @var array<string, int> $seenKeys */
         $seenKeys = [];
-        /** @var array<string, int> $seenCodes */
-        $seenCodes = [];
         $rows = [];
 
         foreach (array_slice($sheetRows, $headerIndex + 1, preserve_keys: true) as $index => $cells) {
@@ -142,26 +139,15 @@ class ItemImporter
 
             if ($attributes !== null) {
                 $key = $this->duplicateKey($attributes['name'], $attributes['variant']);
-                $code = $attributes['code'];
 
                 if ($existing = $existingByKey->get($key)) {
                     $status = 'duplicate';
                     $messages[] = "Sudah ada di sistem ({$existing->code}).";
-                } elseif ($code !== null && $existingByCode->has($code)) {
-                    $status = 'duplicate';
-                    $messages[] = "Kode {$code} sudah dipakai barang lain.";
                 } elseif (isset($seenKeys[$key])) {
                     $status = 'duplicate';
                     $messages[] = "Sama dengan baris {$seenKeys[$key]} di file ini.";
-                } elseif ($code !== null && isset($seenCodes[$code])) {
-                    $status = 'duplicate';
-                    $messages[] = "Kode {$code} sudah dipakai di baris {$seenCodes[$code]}.";
                 } else {
                     $seenKeys[$key] = $rowNumber;
-
-                    if ($code !== null) {
-                        $seenCodes[$code] = $rowNumber;
-                    }
                 }
             }
 
@@ -195,20 +181,14 @@ class ItemImporter
         }
 
         return DB::transaction(function () use ($validRows, $openingDate, $recorder): array {
-            $categories = Category::query()->whereIn('id', array_column($validRows, 'category_id'))->get()->keyBy('id');
-
-            // Rows with their own code go first so generated codes never take them.
-            $order = array_keys($validRows);
-            usort($order, fn (int $a, int $b): int => [$validRows[$a]['code'] === null, $a] <=> [$validRows[$b]['code'] === null, $b]);
+            $categories = Category::query()->with('parent')->whereIn('id', array_column($validRows, 'category_id'))->get()->keyBy('id');
 
             $itemIds = [];
 
-            foreach ($order as $position) {
-                $attributes = $validRows[$position];
-
+            foreach ($validRows as $position => $attributes) {
                 $itemIds[$position] = Item::query()->create([
                     'category_id' => $attributes['category_id'],
-                    'code' => $attributes['code'] ?? $this->codes->next($categories[$attributes['category_id']]),
+                    'code' => $this->codes->next($categories[$attributes['category_id']]),
                     'name' => $attributes['name'],
                     'variant' => $attributes['variant'],
                     'unit' => $attributes['unit'],
@@ -294,7 +274,6 @@ class ItemImporter
         $value = fn (string $key): ?string => $columnMap[$key] === null ? null : ($cells[$columnMap[$key]] ?? null);
 
         return [
-            'code' => $value('code'),
             'name' => $value('name'),
             'variant' => $value('variant'),
             'category' => $value('category'),
@@ -324,9 +303,9 @@ class ItemImporter
             : ($categoriesByCode->get(Str::upper($categoryText)) ?? $categoriesByName->get(Str::lower($categoryText)));
 
         if ($categoryText === null) {
-            $messages[] = 'Kategori wajib diisi.';
+            $messages[] = 'Jenis barang wajib diisi.';
         } elseif ($category === null) {
-            $messages[] = "Kategori \"{$categoryText}\" tidak ditemukan. Lihat sheet \"Daftar Kategori\".";
+            $messages[] = "Jenis barang \"{$categoryText}\" tidak ditemukan. Lihat sheet \"Daftar Kategori\".";
         }
 
         $notify = $this->yesNo($values['notify_low_stock']);
@@ -336,7 +315,6 @@ class ItemImporter
         }
 
         $data = [
-            'code' => $values['code'] === null ? null : Str::upper($values['code']),
             'name' => $values['name'] === null ? null : Str::squish($values['name']),
             'variant' => $values['variant'] === null ? null : Str::squish($values['variant']),
             'unit' => $values['unit'] === null ? null : Str::squish($values['unit']),
@@ -349,7 +327,6 @@ class ItemImporter
         ];
 
         $validator = Validator::make($data, [
-            'code' => ['nullable', ...SaveItemRequest::codeRules()],
             ...SaveItemRequest::attributeRules(),
             'opening_stock' => ['integer', 'min:0', 'max:1000000'],
             'unit_price' => ['nullable', 'required_unless:opening_stock,0', 'numeric', 'min:0', 'max:999999999999'],
@@ -363,7 +340,6 @@ class ItemImporter
             'unit_price.numeric' => 'Harga satuan harus berupa angka.',
             'unit_price.min' => 'Harga satuan tidak boleh negatif.',
         ], [
-            'code' => 'kode barang',
             'name' => 'nama barang',
             'variant' => 'varian',
             'unit' => 'satuan',
@@ -381,7 +357,6 @@ class ItemImporter
         }
 
         return [[
-            'code' => $data['code'],
             'category_id' => $category->id,
             'name' => (string) $data['name'],
             'variant' => $data['variant'],
@@ -402,7 +377,8 @@ class ItemImporter
     {
         return Category::query()
             ->where('type', CategoryType::Persediaan)
-            ->with('parent:id,name')
+            ->whereNotNull('parent_id')
+            ->with('parent:id,code,name')
             ->orderBy('code')
             ->get();
     }
@@ -413,17 +389,16 @@ class ItemImporter
     private function columnGuide(): array
     {
         return [
-            ['Kode Barang', 'Tidak', 'Kosongkan agar dibuat otomatis dari kode kategori (mis. ATK-005). Isi hanya bila ingin kode sendiri: huruf, angka, tanda hubung.', 'ATK-020'],
             ['Nama Barang', 'Ya', 'Nama barang.', 'Kertas HVS'],
             ['Varian', 'Tidak', 'Ukuran, warna, atau tipe. Nama + varian yang sama dianggap barang yang sama.', 'A4 80 gram'],
-            ['Kategori', 'Ya', 'Kode kategori dari sheet "Daftar Kategori" (nama kategori juga diterima).', 'ATK'],
+            ['Jenis Barang', 'Ya', 'Kode jenis dari sheet "Daftar Kategori" (nama jenis juga diterima). Kode barang dibuat otomatis dari kategori dan jenis ini.', 'HVS'],
             ['Satuan', 'Ya', 'Satuan hitung, maksimal 20 huruf.', 'rim'],
             ['Lokasi Rak', 'Tidak', 'Tempat penyimpanan di gudang.', 'Rak A-2'],
             ['Stok Minimum', 'Tidak', 'Batas stok rendah. Kosong = 0.', '5'],
             ['Notifikasi Stok Rendah', 'Tidak', 'Ya atau Tidak. Kosong = Ya.', 'Ya'],
             ['Keterangan', 'Tidak', 'Catatan tambahan.', ''],
             ['Stok Awal', 'Tidak', 'Jumlah stok yang sudah ada sekarang. Akan dicatat sebagai satu transaksi Barang Masuk "Stok awal". Kosong = 0.', '20'],
-            ['Harga Satuan', 'Bila ada stok awal', 'Harga per satuan dalam rupiah, tanpa titik/Rp (boleh 0). Dipakai untuk nilai persediaan.', '45000'],
+            ['Harga Satuan', 'Bila ada stok awal', 'Harga per satuan dalam rupiah, tanpa titik/Rp (boleh 0). Dipakai untuk nilai perlengkapan.', '45000'],
         ];
     }
 

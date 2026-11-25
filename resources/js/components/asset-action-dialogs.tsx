@@ -32,11 +32,7 @@ import { Select } from '@/components/ui/select';
 import { Autocomplete } from '@/components/ui/autocomplete';
 
 export type AssetAction =
-    | 'assign'
-    | 'return'
-    | 'service'
-    | 'complete'
-    | 'dispose';
+    'assign' | 'return' | 'service' | 'complete' | 'dispose';
 
 type AssetActionDialogsProps = {
     action: AssetAction | null;
@@ -83,8 +79,8 @@ export function AssetActionDialogs({
                 }
                 description={
                     isMove
-                        ? `Saat ini dipegang ${asset.holder?.name}. Aset otomatis tercatat dikembalikan oleh pemegang lama lalu diserahkan ke pemegang baru.`
-                        : 'Pilih karyawan atau ruangan yang akan memegang aset ini.'
+                        ? `Saat ini dipegang ${asset.holder?.name}. Peralatan otomatis tercatat dikembalikan oleh pemegang lama lalu diserahkan ke pemegang baru.`
+                        : 'Pilih karyawan atau ruangan yang akan memegang peralatan ini.'
                 }
                 icon={<DialogIcon tone="brand" icon={<ArrowUpTrayIcon />} />}
             >
@@ -103,7 +99,7 @@ export function AssetActionDialogs({
                 open={action === 'return'}
                 onClose={onClose}
                 title={`Kembalikan ${asset.code}`}
-                description={`Dari ${asset.holder?.name ?? 'pemegang saat ini'}. Pilih kondisi aset saat diterima kembali.`}
+                description={`Dari ${asset.holder?.name ?? 'pemegang saat ini'}. Pilih kondisi peralatan saat diterima kembali.`}
                 icon={<DialogIcon tone="green" icon={<ArrowDownTrayIcon />} />}
             >
                 <Form
@@ -136,7 +132,7 @@ export function AssetActionDialogs({
                                     {
                                         value: 'Rusak',
                                         label: 'Rusak',
-                                        hint: 'Status aset menjadi Rusak',
+                                        hint: 'Status peralatan menjadi Rusak',
                                     },
                                 ]}
                                 defaultValue="Baik"
@@ -176,7 +172,7 @@ export function AssetActionDialogs({
                 open={action === 'service'}
                 onClose={onClose}
                 title={`Kirim ${asset.code} ke servis`}
-                description="Status aset menjadi Diperbaiki sampai servisnya dicatat selesai."
+                description="Status peralatan menjadi Diperbaiki sampai servisnya dicatat selesai."
                 icon={<DialogIcon tone="amber" icon={<WrenchIcon />} />}
             >
                 <Form
@@ -267,12 +263,12 @@ export function AssetActionDialogs({
                                     {
                                         value: 'Baik',
                                         label: 'Berhasil diperbaiki',
-                                        hint: 'Aset kembali Tersedia',
+                                        hint: 'Peralatan kembali Tersedia',
                                     },
                                     {
                                         value: 'Rusak',
                                         label: 'Tidak bisa diperbaiki',
-                                        hint: 'Status aset menjadi Rusak',
+                                        hint: 'Status peralatan menjadi Rusak',
                                     },
                                 ]}
                                 defaultValue="Baik"
@@ -329,7 +325,7 @@ export function AssetActionDialogs({
                 open={action === 'dispose'}
                 onClose={onClose}
                 title={`Hapuskan ${asset.code}?`}
-                description="Aset tidak dipakai lagi (dijual, dibuang, atau hilang). Datanya tetap tersimpan dengan status Dihapuskan."
+                description="Peralatan tidak dipakai lagi (dijual, dibuang, atau hilang). Datanya tetap tersimpan dengan status Dihapuskan."
                 icon={<DialogIcon tone="red" icon={<BanIcon />} />}
             >
                 <Form
@@ -343,7 +339,7 @@ export function AssetActionDialogs({
                             <DialogNotes
                                 dos={[]}
                                 donts={[
-                                    'Menghapuskan aset yang masih bisa dipakai. Penghapusan tidak bisa dibatalkan.',
+                                    'Menghapuskan peralatan yang masih bisa dipakai. Penghapusan tidak bisa dibatalkan.',
                                 ]}
                             />
                             <Field
@@ -375,11 +371,11 @@ export function AssetActionDialogs({
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="bg-low shadow-none hover:bg-[#c52c32]"
+                                    className="bg-low shadow-none hover:bg-low-ink"
                                 >
                                     {processing
                                         ? 'Menyimpan…'
-                                        : 'Ya, hapuskan aset'}
+                                        : 'Ya, hapuskan peralatan'}
                                 </Button>
                             </DialogFooter>
                         </>
@@ -425,9 +421,9 @@ function AssignForm({
                 <>
                     <DialogNotes
                         dos={[
-                            'Periksa kondisi dan kelengkapan aset bersama penerima sebelum diserahkan.',
+                            'Periksa kondisi dan kelengkapan peralatan bersama penerima sebelum diserahkan.',
                         ]}
-                        donts={['Menyerahkan aset tanpa dicatat di sini.']}
+                        donts={['Menyerahkan peralatan tanpa dicatat di sini.']}
                     />
                     <input
                         type="hidden"
@@ -572,8 +568,8 @@ function AssignForm({
                         processing={processing}
                         label={
                             asset.status.value === 'dipakai'
-                                ? 'Pindahkan aset'
-                                : 'Serahkan aset'
+                                ? 'Pindahkan peralatan'
+                                : 'Serahkan peralatan'
                         }
                     />
                 </>
@@ -648,7 +644,7 @@ function ConditionChoice({
                     </span>
                 </label>
             ))}
-            {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+            {error && <p className="text-sm text-low-ink">{error}</p>}
         </fieldset>
     );
 }
@@ -680,7 +676,7 @@ function StatusError({ message }: { message?: string }) {
     }
 
     return (
-        <p className="rounded-xl bg-low/10 px-3.5 py-3 text-sm text-[#a8262c]">
+        <p className="rounded-xl bg-low/10 px-3.5 py-3 text-sm text-low-ink">
             {message}
         </p>
     );

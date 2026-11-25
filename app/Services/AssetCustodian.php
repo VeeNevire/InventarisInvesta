@@ -37,10 +37,10 @@ class AssetCustodian
      */
     public function assign(Asset $asset, Employee|Room $holder, string $date, string $condition, ?string $notes, ?User $recorder): void
     {
-        $this->ensureStatus($asset, [AssetStatus::Tersedia, AssetStatus::Dipakai], 'Aset hanya bisa diserahkan saat tersedia atau sedang dipakai.');
+        $this->ensureStatus($asset, [AssetStatus::Tersedia, AssetStatus::Dipakai], 'Peralatan hanya bisa diserahkan saat tersedia atau sedang dipakai.');
 
         if ($asset->holder_type === $holder->getMorphClass() && $asset->holder_id === $holder->getKey()) {
-            throw ValidationException::withMessages(['holder_id' => 'Aset ini sudah dipegang oleh pemegang yang sama.']);
+            throw ValidationException::withMessages(['holder_id' => 'Peralatan ini sudah dipegang oleh pemegang yang sama.']);
         }
 
         DB::transaction(function () use ($asset, $holder, $date, $condition, $notes, $recorder): void {
@@ -75,7 +75,7 @@ class AssetCustodian
      */
     public function return(Asset $asset, string $date, string $condition, ?string $notes, ?User $recorder): void
     {
-        $this->ensureStatus($asset, [AssetStatus::Dipakai], 'Hanya aset yang sedang dipakai yang bisa dikembalikan.');
+        $this->ensureStatus($asset, [AssetStatus::Dipakai], 'Hanya peralatan yang sedang dipakai yang bisa dikembalikan.');
 
         DB::transaction(function () use ($asset, $date, $condition, $notes, $recorder): void {
             $this->record($asset, AssetHistoryType::Pengembalian, $date, $recorder, [
@@ -96,7 +96,7 @@ class AssetCustodian
 
     public function sendToService(Asset $asset, string $date, string $vendor, string $issue, ?User $recorder): void
     {
-        $this->ensureStatus($asset, [AssetStatus::Tersedia, AssetStatus::Rusak], 'Kembalikan aset dulu sebelum dikirim servis.');
+        $this->ensureStatus($asset, [AssetStatus::Tersedia, AssetStatus::Rusak], 'Kembalikan peralatan dulu sebelum dikirim servis.');
 
         DB::transaction(function () use ($asset, $date, $vendor, $issue, $recorder): void {
             $this->record($asset, AssetHistoryType::Perbaikan, $date, $recorder, [
@@ -113,7 +113,7 @@ class AssetCustodian
 
     public function completeService(Asset $asset, string $date, float $cost, string $condition, ?string $notes, ?User $recorder): void
     {
-        $this->ensureStatus($asset, [AssetStatus::Diperbaiki], 'Aset ini tidak sedang diservis.');
+        $this->ensureStatus($asset, [AssetStatus::Diperbaiki], 'Peralatan ini tidak sedang diservis.');
 
         DB::transaction(function () use ($asset, $date, $cost, $condition, $notes, $recorder): void {
             $vendor = $asset->histories()
@@ -138,7 +138,7 @@ class AssetCustodian
 
     public function dispose(Asset $asset, string $date, string $reason, ?User $recorder): void
     {
-        $this->ensureStatus($asset, [AssetStatus::Tersedia, AssetStatus::Rusak], 'Kembalikan atau selesaikan servis aset dulu sebelum dihapuskan.');
+        $this->ensureStatus($asset, [AssetStatus::Tersedia, AssetStatus::Rusak], 'Kembalikan atau selesaikan servis peralatan dulu sebelum dihapuskan.');
 
         DB::transaction(function () use ($asset, $date, $reason, $recorder): void {
             $this->record($asset, AssetHistoryType::Penghapusan, $date, $recorder, [

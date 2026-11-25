@@ -32,7 +32,7 @@ type ItemFormProps = {
         code: string;
         name: string;
         parent_id: number | null;
-        next_code: string;
+        next_code: string | null;
     }[];
     units: string[];
 };
@@ -62,8 +62,6 @@ export default function ItemForm({
     const [subcategoryId, setSubcategoryId] = useState(
         initialCategory?.parent_id ? String(initialCategory.id) : '',
     );
-    const [itemCode, setItemCode] = useState('');
-    const [codeWasEdited, setCodeWasEdited] = useState(false);
     const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     useEffect(() => {
@@ -117,8 +115,15 @@ export default function ItemForm({
         }
     }
 
+    const mainCategories = categories.filter((category) => !category.parent_id);
+    const itemTypes = categories.filter(
+        (category) => String(category.parent_id) === mainCategoryId,
+    );
+    const nextCode = categories.find(
+        (category) => String(category.id) === subcategoryId,
+    )?.next_code;
     const shownPhoto = preview ?? (removePhoto ? null : item?.image_url);
-    const title = isEditing ? `Edit ${item.name}` : 'Tambah Barang';
+    const title = isEditing ? `Edit ${item.name}` : 'Tambah Perlengkapan';
     const formDefinition = isEditing
         ? itemUpdate.form(item.code)
         : itemStore.form();
@@ -128,7 +133,7 @@ export default function ItemForm({
             title={title}
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Barang', href: itemsIndex.url() },
+                { title: 'Perlengkapan Kantor', href: itemsIndex.url() },
                 ...(isEditing
                     ? [{ title: item.name, href: itemShow.url(item.code) }]
                     : []),
@@ -137,17 +142,19 @@ export default function ItemForm({
         >
             <PageHeader
                 eyebrow={
-                    isEditing ? (
-                        <span className="text-sm text-ink-500">
-                            {item.code}
-                        </span>
-                    ) : undefined
+                    <span className="text-sm text-ink-500">
+                        {isEditing
+                            ? item.code
+                            : nextCode
+                              ? `Kode otomatis: ${nextCode}`
+                              : 'Kode dibuat otomatis setelah jenis barang dipilih'}
+                    </span>
                 }
                 title={title}
                 description={
                     isEditing
-                        ? 'Ubah data barang. Stok tidak diubah di sini, melainkan lewat barang masuk, keluar, atau cek stok.'
-                        : 'Daftarkan barang baru dengan stok 0. Stoknya diisi lewat Barang Masuk.'
+                        ? 'Ubah data perlengkapan. Stok tidak diubah di sini, melainkan lewat barang masuk, keluar, atau cek stok.'
+                        : 'Daftarkan perlengkapan kantor baru dengan stok 0. Stoknya diisi lewat Barang Masuk.'
                 }
                 actions={
                     isEditing &&
@@ -159,12 +166,12 @@ export default function ItemForm({
                             disabled={item.has_transactions}
                             title={
                                 item.has_transactions
-                                    ? 'Barang yang sudah punya transaksi tidak bisa dihapus'
+                                    ? 'Perlengkapan yang sudah punya transaksi tidak bisa dihapus'
                                     : undefined
                             }
-                            className="text-[#c52c32] hover:bg-low/10"
+                            className="text-low-ink hover:bg-low/10"
                         >
-                            Hapus barang
+                            Hapus perlengkapan
                         </Button>
                     )
                 }
@@ -177,7 +184,7 @@ export default function ItemForm({
                     'Isi stok minimum agar lonceng mengingatkan sebelum barang habis.',
                 ]}
                 donts={[
-                    'Membuat barang yang sama dua kali. Cari dulu di Daftar Barang.',
+                    'Membuat perlengkapan yang sama dua kali. Cari dulu di daftar Perlengkapan Kantor.',
                     'Mengisi stok di sini. Stok diisi lewat Barang Masuk.',
                 ]}
             />
@@ -249,14 +256,14 @@ export default function ItemForm({
                                 Opsional · JPG, PNG, WEBP · maks. 5 MB
                             </p>
                             {(photoError ?? errors.photo) && (
-                                <p className="text-sm text-[#c52c32]">
+                                <p className="text-sm text-low-ink">
                                     {photoError ?? errors.photo}
                                 </p>
                             )}
                         </Card>
 
                         <Card>
-                            <CardHeader title="Data barang" />
+                            <CardHeader title="Data perlengkapan" />
                             <div className="grid grid-cols-1 gap-4 px-5 pb-5 md:grid-cols-2">
                                 <Field
                                     label="Nama barang"
@@ -288,9 +295,13 @@ export default function ItemForm({
                                     />
                                 </Field>
                                 <Field
-                                    label="Kategori utama"
+                                    label="Kategori"
                                     htmlFor="main_category"
-                                    error={errors.category_id}
+                                    error={
+                                        mainCategoryId
+                                            ? undefined
+                                            : errors.category_id
+                                    }
                                 >
                                     <Select
                                         id="main_category"
@@ -298,110 +309,54 @@ export default function ItemForm({
                                         onChange={(value) => {
                                             setMainCategoryId(value);
                                             setSubcategoryId('');
-                                            if (!codeWasEdited)
-                                                setItemCode(
-                                                    categories.find(
-                                                        (category) =>
-                                                            String(
-                                                                category.id,
-                                                            ) === value,
-                                                    )?.next_code ?? '',
-                                                );
                                         }}
-                                        placeholder="Pilih kategori utama"
-                                        options={categories
-                                            .filter(
-                                                (category) =>
-                                                    !category.parent_id,
-                                            )
-                                            .map((category) => ({
+                                        placeholder="Pilih kategori"
+                                        options={mainCategories.map(
+                                            (category) => ({
                                                 value: String(category.id),
                                                 label: category.name,
-                                            }))}
+                                                description: category.code,
+                                            }),
+                                        )}
                                     />
                                 </Field>
-                                {mainCategoryId &&
-                                    categories.some(
-                                        (category) =>
-                                            String(category.parent_id) ===
-                                            mainCategoryId,
-                                    ) && (
-                                        <Field
-                                            label="Subkategori"
-                                            htmlFor="subcategory"
-                                            hint="Pilih subkategori bila diperlukan."
-                                        >
-                                            <Select
-                                                id="subcategory"
-                                                value={subcategoryId}
-                                                onChange={(value) => {
-                                                    setSubcategoryId(value);
-                                                    if (!codeWasEdited)
-                                                        setItemCode(
-                                                            categories.find(
-                                                                (category) =>
-                                                                    String(
-                                                                        category.id,
-                                                                    ) ===
-                                                                    (value ||
-                                                                        mainCategoryId),
-                                                            )?.next_code ?? '',
-                                                        );
-                                                }}
-                                                placeholder="Pilih subkategori"
-                                                options={[
-                                                    {
-                                                        value: '',
-                                                        label: 'Tanpa subkategori',
-                                                    },
-                                                    ...categories
-                                                        .filter(
-                                                            (category) =>
-                                                                String(
-                                                                    category.parent_id,
-                                                                ) ===
-                                                                mainCategoryId,
-                                                        )
-                                                        .map((category) => ({
-                                                            value: String(
-                                                                category.id,
-                                                            ),
-                                                            label: category.name,
-                                                        })),
-                                                ]}
-                                            />
-                                        </Field>
-                                    )}
+                                <Field
+                                    label="Jenis barang"
+                                    htmlFor="subcategory"
+                                    hint={
+                                        mainCategoryId && itemTypes.length === 0
+                                            ? 'Kategori ini belum punya jenis barang. Tambahkan di Master Data → Kategori.'
+                                            : 'Kode barang dibuat otomatis dari kategori dan jenis ini.'
+                                    }
+                                    error={
+                                        mainCategoryId
+                                            ? errors.category_id
+                                            : undefined
+                                    }
+                                >
+                                    <Select
+                                        id="subcategory"
+                                        value={subcategoryId}
+                                        onChange={setSubcategoryId}
+                                        disabled={!mainCategoryId}
+                                        invalid={Boolean(errors.category_id)}
+                                        placeholder={
+                                            mainCategoryId
+                                                ? 'Pilih jenis barang'
+                                                : 'Pilih kategori dulu'
+                                        }
+                                        options={itemTypes.map((category) => ({
+                                            value: String(category.id),
+                                            label: category.name,
+                                            description: category.code,
+                                        }))}
+                                    />
+                                </Field>
                                 <input
                                     type="hidden"
                                     name="category_id"
-                                    value={subcategoryId || mainCategoryId}
+                                    value={subcategoryId}
                                 />
-                                {!isEditing && (
-                                    <Field
-                                        label="Kode barang"
-                                        htmlFor="code"
-                                        hint="Kode otomatis dapat diubah mengikuti kode gudang."
-                                        error={errors.code}
-                                    >
-                                        <input
-                                            id="code"
-                                            name="code"
-                                            value={itemCode}
-                                            onChange={(event) => {
-                                                setItemCode(
-                                                    event.target.value.toUpperCase(),
-                                                );
-                                                setCodeWasEdited(true);
-                                            }}
-                                            required
-                                            maxLength={100}
-                                            className={inputClasses}
-                                            placeholder="Pilih kategori atau isi kode"
-                                            aria-invalid={Boolean(errors.code)}
-                                        />
-                                    </Field>
-                                )}
                                 <Field
                                     label="Satuan"
                                     htmlFor="unit"
@@ -509,7 +464,7 @@ export default function ItemForm({
                                         ? 'Menyimpan…'
                                         : isEditing
                                           ? 'Simpan perubahan'
-                                          : 'Tambah barang'}
+                                          : 'Tambah perlengkapan'}
                                 </Button>
                             </div>
                         </Card>
@@ -522,7 +477,7 @@ export default function ItemForm({
                     open={confirmingDelete}
                     onClose={() => setConfirmingDelete(false)}
                     title={`Hapus ${item.name}?`}
-                    description="Barang ini belum punya transaksi, jadi bisa dihapus permanen."
+                    description="Perlengkapan ini belum punya transaksi, jadi bisa dihapus permanen."
                     url={itemDestroy.url(item.code)}
                 />
             )}

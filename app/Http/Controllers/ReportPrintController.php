@@ -16,8 +16,8 @@ class ReportPrintController extends Controller
         'ringkasan' => 'Ringkasan Gudang',
         'mutasi' => 'Laporan Mutasi Barang',
         'pemakaian' => 'Laporan Pemakaian Barang per Divisi',
-        'persediaan' => 'Laporan Nilai Persediaan',
-        'aset' => 'Laporan Aset per Pemegang',
+        'persediaan' => 'Laporan Nilai Perlengkapan',
+        'aset' => 'Laporan Peralatan per Pemegang',
     ];
 
     /**

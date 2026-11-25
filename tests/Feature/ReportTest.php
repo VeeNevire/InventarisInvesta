@@ -29,7 +29,7 @@ test('the stock movement report reconciles opening and closing stock', function 
         ->assertOk()
         ->assertInertia(function (Assert $page) {
             $rows = collect($page->toArray()['props']['data']['rows'])->keyBy('code');
-            $calendar = $rows['MRC-001'];
+            $calendar = $rows['INVESTA-PLK-2026-PRM-KAL-001'];
 
             expect($calendar['opening'])->toBe(330)
                 ->and($calendar['incoming'])->toBe(200)
@@ -42,7 +42,7 @@ test('the stock movement report reconciles opening and closing stock', function 
 test('cancelled transactions are left out of reports', function () {
     $this->get(route('reports.index', ['laporan' => 'mutasi', 'dari' => '2026-11-07', 'sampai' => '2026-11-07']))
         ->assertInertia(function (Assert $page) {
-            $calendar = collect($page->toArray()['props']['data']['rows'])->firstWhere('code', 'MRC-001');
+            $calendar = collect($page->toArray()['props']['data']['rows'])->firstWhere('code', 'INVESTA-PLK-2026-PRM-KAL-001');
 
             expect($calendar['outgoing'])->toBe(10);
         });
@@ -62,7 +62,7 @@ test('the inventory and asset reports use current data', function () {
     $this->get(route('reports.index', ['laporan' => 'persediaan']))
         ->assertInertia(fn (Assert $page) => $page
             ->has('data.items', 12)
-            ->has('data.categories', 4)
+            ->has('data.categories', 2)
         );
 
     $this->get(route('reports.index', ['laporan' => 'aset']))
@@ -106,8 +106,8 @@ test('reports can be downloaded as a styled excel workbook', function (string $r
     'ringkasan' => ['ringkasan', ['Ringkasan Gudang', 'Pemakaian Barang per Divisi', 'Barang Paling Banyak Keluar']],
     'mutasi' => ['mutasi', ['Laporan Mutasi Barang', 'Kalender Meja 2027 Meja', 'orientation="landscape"']],
     'pemakaian' => ['pemakaian', ['Pemakaian Barang per Karyawan', 'Budi Santoso']],
-    'persediaan' => ['persediaan', ['Nilai Persediaan per Kategori', 'Nilai Persediaan per Barang']],
-    'aset' => ['aset', ['Karyawan: Budi Santoso', 'INV-LPT-003', 'Aset Tanpa Pemegang']],
+    'persediaan' => ['persediaan', ['Nilai Perlengkapan per Kategori', 'Nilai Perlengkapan per Barang']],
+    'aset' => ['aset', ['Karyawan: Budi Santoso', 'INVESTA-PRL-2025-ITE-LPT-003', 'Peralatan Tanpa Pemegang']],
 ]);
 
 test('unknown report downloads return not found', function () {
@@ -125,8 +125,8 @@ test('every report has a print-ready page', function (string $report, string $ti
     ['ringkasan', 'Ringkasan Gudang'],
     ['mutasi', 'Laporan Mutasi Barang'],
     ['pemakaian', 'Laporan Pemakaian Barang per Divisi'],
-    ['persediaan', 'Laporan Nilai Persediaan'],
-    ['aset', 'Laporan Aset per Pemegang'],
+    ['persediaan', 'Laporan Nilai Perlengkapan'],
+    ['aset', 'Laporan Peralatan per Pemegang'],
 ]);
 
 test('the print page shows the period in words', function () {

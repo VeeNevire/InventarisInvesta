@@ -27,7 +27,7 @@ test('secretaries cannot open master data or edit items', function (string $rout
     ['master.employees.index', []],
     ['master.users.index', []],
     ['items.create', []],
-    ['items.edit', ['item' => 'MRC-001']],
+    ['items.edit', ['item' => 'INVESTA-PLK-2026-PRM-KAL-001']],
 ]);
 
 test('admins can open every master data page', function (string $route, string $component) {
@@ -127,16 +127,16 @@ test('category codes are stored uppercase', function () {
 });
 
 test('the code of a category in use cannot change', function () {
-    $category = Category::query()->where('code', 'MRC')->firstOrFail();
+    $category = Category::query()->where('code', 'PRM')->firstOrFail();
 
     $this->actingAs($this->admin)
-        ->put(route('master.categories.update', $category), ['type' => 'persediaan', 'code' => 'MER', 'name' => 'Merchandise Kantor'])
+        ->put(route('master.categories.update', $category), ['type' => 'persediaan', 'code' => 'PRO', 'name' => 'Promosi Kantor'])
         ->assertSessionHasErrors('code');
 
-    $this->put(route('master.categories.update', $category), ['type' => 'persediaan', 'code' => 'MRC', 'name' => 'Merchandise Kantor'])
+    $this->put(route('master.categories.update', $category), ['type' => 'persediaan', 'code' => 'PRM', 'name' => 'Promosi Kantor'])
         ->assertSessionHasNoErrors();
 
-    expect($category->refresh()->name)->toBe('Merchandise Kantor');
+    expect($category->refresh()->name)->toBe('Promosi Kantor');
 });
 
 test('admins can create users and reset passwords', function () {
@@ -205,20 +205,25 @@ test('an admin can demote another admin while one admin remains', function () {
 
 test('admins can add an item with a photo', function () {
     Storage::fake('public');
-    $category = Category::query()->where('code', 'ATK')->firstOrFail();
+    $stapler = Category::query()->create([
+        'type' => CategoryType::Persediaan,
+        'code' => 'STP',
+        'name' => 'Stapler',
+        'parent_id' => Category::query()->where('code', 'ATK')->value('id'),
+    ]);
 
     $this->actingAs($this->admin)
         ->post(route('items.store'), [
-            'category_id' => $category->id,
+            'category_id' => $stapler->id,
             'name' => 'Stapler',
             'unit' => 'pcs',
             'minimum_stock' => 3,
             'notify_low_stock' => '1',
             'photo' => UploadedFile::fake()->image('stapler.jpg'),
         ])
-        ->assertRedirect(route('items.show', 'ATK-004'));
+        ->assertRedirect(route('items.show', 'INVESTA-PLK-'.now()->year.'-ATK-STP-001'));
 
-    $item = Item::query()->where('code', 'ATK-004')->firstOrFail();
+    $item = Item::query()->where('code', 'INVESTA-PLK-'.now()->year.'-ATK-STP-001')->firstOrFail();
 
     expect($item->current_stock)->toBe(0)
         ->and($item->notify_low_stock)->toBeTrue();
@@ -228,7 +233,7 @@ test('admins can add an item with a photo', function () {
 test('admins can edit an item and replace its photo', function () {
     Storage::fake('public');
     Storage::disk('public')->put('items/lama.jpg', 'x');
-    $item = Item::query()->where('code', 'MRC-001')->firstOrFail();
+    $item = Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->firstOrFail();
     $item->update(['image_path' => 'items/lama.jpg']);
 
     $this->actingAs($this->admin)
@@ -253,15 +258,15 @@ test('admins can edit an item and replace its photo', function () {
 });
 
 test('items with transactions cannot be deleted', function () {
-    $this->actingAs($this->admin)->delete(route('items.destroy', 'MRC-001'));
+    $this->actingAs($this->admin)->delete(route('items.destroy', 'INVESTA-PLK-2026-PRM-KAL-001'));
 
-    expect(Item::query()->where('code', 'MRC-001')->exists())->toBeTrue();
+    expect(Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->exists())->toBeTrue();
 });
 
 test('duplicate item names are rejected', function () {
     $this->actingAs($this->admin)
         ->post(route('items.store'), [
-            'category_id' => Category::query()->where('code', 'ATK')->value('id'),
+            'category_id' => Category::query()->where('code', 'PTH')->value('id'),
             'name' => 'pulpen hitam',
             'unit' => 'box',
             'minimum_stock' => 0,
@@ -279,7 +284,7 @@ test('employees can be saved without a division', function () {
     $this->get(route('master.employees.index'))->assertOk();
 });
 
-test('subcategories group goods under a parent and generate short item codes', function () {
+test('item types group goods under a category and build the item code', function () {
     $parent = Category::factory()->create(['type' => CategoryType::Persediaan, 'code' => 'PK', 'name' => 'Perlengkapan Kantor']);
 
     $this->actingAs($this->admin)->post(route('master.categories.store'), [
@@ -289,10 +294,10 @@ test('subcategories group goods under a parent and generate short item codes', f
     $child = Category::query()->where('code', 'XYZ')->firstOrFail();
     $this->post(route('items.store'), [
         'category_id' => $child->id, 'name' => 'Pulpen Baru', 'unit' => 'pcs', 'minimum_stock' => 0,
-    ])->assertRedirect(route('items.show', 'XYZ-001'));
+    ])->assertRedirect(route('items.show', 'INVESTA-PLK-'.now()->year.'-PK-XYZ-001'));
 
     $this->get(route('items.index', ['category' => 'PK']))
-        ->assertInertia(fn (Assert $page) => $page->where('items.0.code', 'XYZ-001')->where('items.0.category.parent_name', 'Perlengkapan Kantor'));
+        ->assertInertia(fn (Assert $page) => $page->where('items.0.code', 'INVESTA-PLK-'.now()->year.'-PK-XYZ-001')->where('items.0.category.parent_name', 'Perlengkapan Kantor'));
 });
 
 test('categories cannot have a parent of another type or form a cycle', function () {
@@ -310,54 +315,55 @@ test('categories cannot have a parent of another type or form a cycle', function
     expect($parent->fresh())->not->toBeNull();
 });
 
-test('an existing category can be placed under a main category without changing item codes', function () {
+test('an unused category can be placed under a main category', function () {
     $parent = Category::factory()->create(['type' => CategoryType::Persediaan]);
-    $child = Category::query()->where('code', 'MRC')->firstOrFail();
-    $item = Item::query()->where('code', 'MRC-001')->firstOrFail();
+    $unused = Category::factory()->create(['type' => CategoryType::Persediaan]);
 
-    $this->actingAs($this->admin)->put(route('master.categories.update', $child), [
-        'type' => 'persediaan', 'code' => $child->code, 'name' => $child->name, 'parent_id' => $parent->id,
+    $this->actingAs($this->admin)->put(route('master.categories.update', $unused), [
+        'type' => 'persediaan', 'code' => $unused->code, 'name' => $unused->name, 'parent_id' => $parent->id,
     ])->assertSessionHasNoErrors();
 
-    expect($child->refresh()->parent_id)->toBe($parent->id)
-        ->and($item->refresh()->code)->toBe('MRC-001');
+    expect($unused->refresh()->parent_id)->toBe($parent->id);
 });
 
-test('item codes can be entered manually and must be unique', function () {
-    $category = Category::query()->where('code', 'MRC')->firstOrFail();
-    $data = ['category_id' => $category->id, 'name' => 'Pulpen manual', 'unit' => 'pcs', 'minimum_stock' => 0, 'code' => 'gudang-025'];
-
-    $this->actingAs($this->admin)->post(route('items.store'), $data)
-        ->assertRedirect(route('items.show', 'GUDANG-025'));
-    $this->post(route('items.store'), [...$data, 'name' => 'Barang lain'])
-        ->assertSessionHasErrors('code');
-    $this->post(route('items.store'), [...$data, 'name' => 'Barang lain', 'code' => ''])
-        ->assertSessionHasErrors('code');
-
-    expect(Item::query()->where('code', 'GUDANG-025')->count())->toBe(1);
-});
-
-test('a subcategory can be detached without changing its items', function () {
+test('an item type in use cannot move to another category or be detached', function () {
     $parent = Category::factory()->create(['type' => CategoryType::Persediaan]);
-    $child = Category::query()->where('code', 'MRC')->firstOrFail();
-    $child->update(['parent_id' => $parent->id]);
-    $item = Item::query()->where('code', 'MRC-001')->firstOrFail();
+    $calendar = Category::query()->where('code', 'KAL')->firstOrFail();
+    $originalParent = $calendar->parent_id;
 
-    $this->actingAs($this->admin)->put(route('master.categories.update', $child), [
-        'type' => 'persediaan', 'code' => $child->code, 'name' => $child->name, 'parent_id' => '',
+    $this->actingAs($this->admin)->put(route('master.categories.update', $calendar), [
+        'type' => 'persediaan', 'code' => $calendar->code, 'name' => $calendar->name, 'parent_id' => $parent->id,
+    ])->assertSessionHasErrors('parent_id');
+    $this->put(route('master.categories.update', $calendar), [
+        'type' => 'persediaan', 'code' => $calendar->code, 'name' => $calendar->name, 'parent_id' => '',
+    ])->assertSessionHasErrors('parent_id');
+    $this->put(route('master.categories.update', $calendar), [
+        'type' => 'persediaan', 'code' => $calendar->code, 'name' => 'Kalender Kantor', 'parent_id' => $originalParent,
     ])->assertSessionHasNoErrors();
 
-    expect($child->refresh()->parent_id)->toBeNull()
-        ->and($item->refresh()->category_id)->toBe($child->id)
-        ->and($item->code)->toBe('MRC-001');
+    expect($calendar->refresh()->parent_id)->toBe($originalParent);
 });
 
-test('asset categories cannot be assigned a parent', function () {
-    $parent = Category::query()->where('type', CategoryType::Aset)->firstOrFail();
+test('item codes are always generated and need an item type', function () {
+    $calendar = Category::query()->where('code', 'KAL')->firstOrFail();
+    $data = ['category_id' => $calendar->id, 'name' => 'Kalender Dinding 2028', 'unit' => 'pcs', 'minimum_stock' => 0];
+
+    $this->actingAs($this->admin)->post(route('items.store'), [...$data, 'code' => 'GUDANG-025'])
+        ->assertSessionHasErrors('code');
+    $this->post(route('items.store'), [...$data, 'category_id' => $calendar->parent_id])
+        ->assertSessionHasErrors('category_id');
+    $this->post(route('items.store'), $data)
+        ->assertRedirect(route('items.show', 'INVESTA-PLK-'.now()->year.'-PRM-KAL-004'));
+});
+
+test('asset categories can have item types', function () {
+    $parent = Category::query()->where('type', CategoryType::Aset)->where('code', 'ITE')->firstOrFail();
 
     $this->actingAs($this->admin)->post(route('master.categories.store'), [
-        'type' => 'aset', 'code' => 'ZZZ', 'name' => 'Kategori aset', 'parent_id' => $parent->id,
-    ])->assertSessionHasErrors('parent_id');
+        'type' => 'aset', 'code' => 'ZZZ', 'name' => 'Tablet', 'parent_id' => $parent->id,
+    ])->assertSessionHasNoErrors();
+
+    expect(Category::query()->where('code', 'ZZZ')->value('parent_id'))->toBe($parent->id);
 });
 
 test('item category filters include subcategories and can select a subcategory', function () {

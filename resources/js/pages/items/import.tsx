@@ -29,7 +29,6 @@ type ImportRow = {
     status: RowStatus;
     messages: string[];
     values: {
-        code: string | null;
         name: string | null;
         variant: string | null;
         category: string | null;
@@ -75,16 +74,16 @@ export default function ItemImport({
 }: ItemImportProps) {
     return (
         <AppLayout
-            title="Import Barang"
+            title="Import Perlengkapan"
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Barang', href: itemsIndex.url() },
+                { title: 'Perlengkapan Kantor', href: itemsIndex.url() },
                 { title: 'Import Excel' },
             ]}
         >
             <PageHeader
-                title="Import Barang dari Excel"
-                description="Tambahkan banyak barang sekaligus: unduh template, isi di Excel, lalu unggah kembali."
+                title="Import Perlengkapan dari Excel"
+                description="Tambahkan banyak perlengkapan kantor sekaligus: unduh template, isi di Excel, lalu unggah kembali."
                 actions={
                     <a
                         href={importTemplate.url()}
@@ -156,16 +155,16 @@ function UploadStep({ maxRows }: { maxRows: number }) {
                 <ol className="flex list-decimal flex-col gap-2 px-5 pb-5 pl-10 text-sm text-ink-700">
                     <li>
                         Unduh template. Sheet <b>Daftar Kategori</b> berisi kode
-                        kategori yang bisa dipakai.
+                        jenis barang yang bisa dipakai (mis. HVS, TSU).
                     </li>
                     <li>
                         Isi satu barang per baris di sheet <b>Barang</b>. Kolom
                         bertanda * wajib diisi.
                     </li>
                     <li>
-                        Kosongkan Kode Barang agar dibuat otomatis. Isi{' '}
-                        <b>Stok Awal</b> dan <b>Harga Satuan</b> bila barang
-                        sudah ada di gudang.
+                        Kode barang dibuat otomatis, mis.
+                        INVESTA-PLK-2025-ATK-HVS-001. Isi <b>Stok Awal</b> dan{' '}
+                        <b>Harga Satuan</b> bila barang sudah ada di gudang.
                     </li>
                     <li>
                         Unggah file. Anda akan melihat pratinjau sebelum data
@@ -211,7 +210,7 @@ function PreviewStep({ preview, today }: { preview: Preview; today: string }) {
                 <SummaryButton
                     label="Perlu diperbaiki (dilewati)"
                     count={preview.counts.error}
-                    tone="text-[#c52c32]"
+                    tone="text-low-ink"
                     active={filter === 'error'}
                     onClick={() =>
                         setFilter(filter === 'error' ? 'all' : 'error')
@@ -228,14 +227,14 @@ function PreviewStep({ preview, today }: { preview: Preview; today: string }) {
                             </th>
                             <th className="px-3 py-3.5 font-medium">Barang</th>
                             <th className="px-3 py-3.5 font-medium">
-                                Kategori
+                                Jenis Barang
                             </th>
                             <th className="px-3 py-3.5 font-medium">Satuan</th>
                             <th className="px-3 py-3.5 text-right font-medium">
-                                Stok awal
+                                Stok Awal
                             </th>
                             <th className="px-3 py-3.5 text-right font-medium">
-                                Harga satuan
+                                Harga Satuan
                             </th>
                             <th className="py-3.5 pr-5 pl-3 font-medium">
                                 Status
@@ -275,9 +274,7 @@ function PreviewStep({ preview, today }: { preview: Preview; today: string }) {
                                         )}
                                     </div>
                                     <div className="text-xs text-ink-400">
-                                        {row.values.code
-                                            ? row.values.code.toUpperCase()
-                                            : 'Kode otomatis'}
+                                        Kode otomatis
                                     </div>
                                 </td>
                                 <td className="px-3 py-3 text-ink-700">

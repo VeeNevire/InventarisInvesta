@@ -36,8 +36,16 @@ class IncomingTransactionController extends Controller
             'divisions' => [],
             'categories' => Category::query()
                 ->where('type', CategoryType::Persediaan)
-                ->orderBy('name')
-                ->get(['id', 'code', 'name']),
+                ->whereNotNull('parent_id')
+                ->with('parent:id,code,name')
+                ->get(['id', 'code', 'name', 'parent_id'])
+                ->map(fn (Category $category): array => [
+                    'id' => $category->id,
+                    'code' => $category->parent->code.'-'.$category->code,
+                    'name' => $category->parent->name.' › '.$category->name,
+                ])
+                ->sortBy('name')
+                ->values(),
             'units' => Item::query()->distinct()->orderBy('unit')->pluck('unit'),
         ]);
     }

@@ -61,7 +61,7 @@
             cursor: pointer;
         }
 
-        .toolbar .primary { background: #2a38b0; color: #fff; }
+        .toolbar .primary { background: #1679c9; color: #fff; }
         .toolbar .secondary { background: #374151; color: #e5e7eb; }
 
         .sheet {
@@ -91,13 +91,13 @@
             width: 42px;
             height: 42px;
             border-radius: 10px;
-            background: #2a38b0;
+            background: #1679c9;
             color: #fff;
             font: 700 15pt Arial, Helvetica, sans-serif;
         }
 
         .brand-name { font-size: 15pt; font-weight: 700; letter-spacing: -.01em; }
-        .brand-name span { color: #2a38b0; }
+        .brand-name span { color: #1679c9; }
         .brand-tagline { font-size: 8.5pt; color: #4b5563; }
 
         .meta { text-align: right; font-size: 8.5pt; color: #374151; line-height: 1.6; }
@@ -113,7 +113,7 @@
         tr { break-inside: avoid; }
 
         th, td { padding: 5px 7px; border: 1px solid #9ca3af; vertical-align: top; }
-        th { background: #e8ecf8; font-weight: 700; text-align: left; }
+        th { background: #e6f4fe; font-weight: 700; text-align: left; }
         td.num, th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
         td.center, th.center { text-align: center; }
         td.muted { color: #6b7280; }

@@ -180,13 +180,16 @@ export function Select({
                         onHover={() => setActive(index)}
                     >
                         {option.indent && (
-                            <span aria-hidden="true" className="ml-3 text-ink-400">
+                            <span
+                                aria-hidden="true"
+                                className="ml-3 text-ink-400"
+                            >
                                 └
                             </span>
                         )}
                         {option.icon}
                         {option.indent && (
-                            <span className="sr-only">Subkategori: </span>
+                            <span className="sr-only">Jenis barang: </span>
                         )}
                         <span className="flex min-w-0 flex-1 flex-col">
                             <span className="truncate">{option.label}</span>

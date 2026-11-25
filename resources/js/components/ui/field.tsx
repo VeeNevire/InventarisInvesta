@@ -24,7 +24,7 @@ export function Field({ label, htmlFor, hint, error, children }: FieldProps) {
                 {hint && <span className="text-xs text-ink-500">{hint}</span>}
             </div>
             {children}
-            {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+            {error && <p className="text-sm text-low-ink">{error}</p>}
         </div>
     );
 }

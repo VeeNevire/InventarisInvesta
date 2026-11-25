@@ -20,6 +20,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Select } from '@/components/ui/select';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Badge, stockStatusTone } from '@/components/ui/status-badge';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import AppLayout from '@/layouts/app-layout';
 import { create as itemCreate } from '@/routes/items';
 import { create as itemImport } from '@/routes/items/import';
@@ -58,6 +59,7 @@ export default function ItemsIndex({
 }: ItemsIndexProps) {
     const canCreateItems = usePage().props.auth.can['items.create'];
     const [search, setSearch] = useState(filters.search);
+    const paginated = usePaginatedRows(items, 'items', JSON.stringify(filters));
     const [viewMode, setViewMode] = useState<ViewMode>('table');
     const isFirstRender = useRef(true);
 
@@ -121,15 +123,15 @@ export default function ItemsIndex({
 
     return (
         <AppLayout
-            title="Daftar Barang"
+            title="Daftar Perlengkapan Kantor"
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Barang' },
+                { title: 'Perlengkapan Kantor' },
             ]}
         >
             <PageHeader
-                title="Semua Barang Persediaan"
-                description="Barang habis pakai di gudang: merchandise, ATK, materi promosi, dan perlengkapan kantor."
+                title="Semua Perlengkapan Kantor"
+                description="Barang habis pakai di gudang: alat tulis kantor, perlengkapan kebersihan, dan materi promosi."
                 actions={
                     <>
                         {canCreateItems && (
@@ -138,7 +140,7 @@ export default function ItemsIndex({
                                 variant="soft"
                                 icon={<PlusIcon className="size-[18px]" />}
                             >
-                                Tambah barang
+                                Tambah perlengkapan
                             </ButtonLink>
                         )}
                         {canCreateItems && (
@@ -287,7 +289,7 @@ export default function ItemsIndex({
                 <div className="rounded-2xl bg-white">
                     {summary.item_count === 0 ? (
                         <EmptyState
-                            title="Belum ada barang persediaan"
+                            title="Belum ada perlengkapan kantor"
                             description="Barang habis pakai seperti ATK, kalender, atau merchandise. Daftarkan barangnya, lalu isi stok awal lewat Barang Masuk."
                             action={
                                 <ButtonLink
@@ -300,7 +302,7 @@ export default function ItemsIndex({
                                     icon={<PlusIcon className="size-4" />}
                                 >
                                     {canCreateItems
-                                        ? 'Tambah barang pertama'
+                                        ? 'Tambah perlengkapan pertama'
                                         : 'Catat barang masuk'}
                                 </ButtonLink>
                             }
@@ -321,10 +323,15 @@ export default function ItemsIndex({
                         />
                     )}
                 </div>
-            ) : viewMode === 'cards' ? (
-                <ItemCards items={items} />
             ) : (
-                <ItemTable items={items} />
+                <>
+                    {viewMode === 'cards' ? (
+                        <ItemCards items={paginated.rows} />
+                    ) : (
+                        <ItemTable items={paginated.rows} />
+                    )}
+                    <ListPagination paginated={paginated} noun="barang" />
+                </>
             )}
         </AppLayout>
     );
@@ -363,9 +370,9 @@ function ItemTable({ items }: { items: Item[] }) {
                         <th className="py-3.5 pr-3 pl-5 font-medium">Barang</th>
                         <th className="px-3 py-3.5 font-medium">Kategori</th>
                         <th className="px-3 py-3.5 font-medium">Lokasi</th>
-                        <th className="px-3 py-3.5 font-medium">Sisa stok</th>
+                        <th className="px-3 py-3.5 font-medium">Sisa Stok</th>
                         <th className="px-3 py-3.5 text-right font-medium">
-                            Harga rata-rata
+                            Harga Rata-Rata
                         </th>
                         <th className="px-3 py-3.5 text-right font-medium">
                             Nilai
@@ -411,7 +418,7 @@ function ItemTable({ items }: { items: Item[] }) {
                             </td>
                             <td className="px-3 py-3 text-ink-700">
                                 {item.category?.parent_name
-                                    ? `${item.category.name} (Subkategori ${item.category.parent_name})`
+                                    ? `${item.category.parent_name} › ${item.category.name}`
                                     : item.category?.name}
                             </td>
                             <td className="px-3 py-3 text-ink-700">

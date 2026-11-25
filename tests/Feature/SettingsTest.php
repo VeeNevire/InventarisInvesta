@@ -17,7 +17,7 @@ test('secretaries see the extra access an admin gave them', function () {
     $this->actingAs($user)
         ->get(route('settings.edit'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('grantedPermissions', ['Tambah barang', 'Batalkan transaksi'])
+            ->where('grantedPermissions', ['Tambah perlengkapan', 'Batalkan transaksi'])
         );
 });
 

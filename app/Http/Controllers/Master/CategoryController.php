@@ -26,6 +26,7 @@ class CategoryController extends Controller
                     'name' => $category->name,
                     'parent_id' => $category->parent_id,
                     'parent_name' => $category->parent?->name,
+                    'parent_code' => $category->parent?->code,
                     'children_count' => $category->children_count,
                     'items_count' => $category->items_count,
                     'assets_count' => $category->assets_count,

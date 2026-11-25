@@ -37,10 +37,10 @@ class AssignAssetRequest extends AssetMovementRequest
     {
         return [
             ...parent::messages(),
-            'holder_id.required' => 'Pilih penerima aset.',
+            'holder_id.required' => 'Pilih penerima peralatan.',
             'holder_id.required_without' => 'Pilih karyawan atau tambahkan karyawan baru.',
             'holder_id.exists' => 'Penerima tidak ditemukan atau sudah nonaktif.',
-            'condition.required' => 'Isi kondisi aset saat diserahkan.',
+            'condition.required' => 'Isi kondisi peralatan saat diserahkan.',
         ];
     }
 }

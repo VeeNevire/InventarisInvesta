@@ -6,6 +6,7 @@ import { MasterLayout, MasterTable } from '@/components/master-layout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { Field, inputClasses } from '@/components/ui/field';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { Badge } from '@/components/ui/status-badge';
 import { initials } from '@/lib/format';
 import { destroy, store, update } from '@/routes/master/users';
@@ -35,6 +36,7 @@ type UsersProps = {
 };
 
 export default function Users({ users, permissionOptions }: UsersProps) {
+    const paginated = usePaginatedRows(users, 'master.users');
     const [editing, setEditing] = useState<Account | 'new' | null>(null);
     const [deleting, setDeleting] = useState<Account | null>(null);
     const [role, setRole] = useState<Account['role']>('sekretaris');
@@ -70,7 +72,7 @@ export default function Users({ users, permissionOptions }: UsersProps) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {users.map((account) => (
+                    {paginated.rows.map((account) => (
                         <tr key={account.id}>
                             <td className="py-3 pr-3 pl-5">
                                 <span className="flex items-center gap-3">
@@ -132,7 +134,7 @@ export default function Users({ users, permissionOptions }: UsersProps) {
                                                   ? 'Hapus'
                                                   : 'Harus ada minimal satu Admin'
                                         }
-                                        className="text-[#c52c32] hover:bg-low/10"
+                                        className="text-low-ink hover:bg-low/10"
                                     >
                                         Hapus
                                     </Button>
@@ -142,6 +144,7 @@ export default function Users({ users, permissionOptions }: UsersProps) {
                     ))}
                 </tbody>
             </MasterTable>
+            <ListPagination paginated={paginated} noun="pengguna" />
 
             <Dialog
                 open={editing !== null}
@@ -212,7 +215,7 @@ export default function Users({ users, permissionOptions }: UsersProps) {
                                             value: 'sekretaris',
                                             label: 'Sekretaris',
                                             description:
-                                                'Mencatat transaksi dan aset',
+                                                'Mencatat transaksi dan peralatan',
                                         },
                                         {
                                             value: 'admin',
@@ -347,7 +350,7 @@ function PermissionChecklist({
             </legend>
             <p className="-mt-1 text-xs text-ink-500">
                 Tanpa centang, Sekretaris tetap bisa mencatat barang masuk dan
-                keluar, aset, cek stok, dan melihat laporan. Mengelola akun
+                keluar, peralatan, cek stok, dan melihat laporan. Mengelola akun
                 pengguna tetap khusus Admin.
             </p>
             <div className="flex max-h-[42vh] flex-col gap-4 overflow-y-auto rounded-xl border border-ink-100 p-3.5">
@@ -411,7 +414,7 @@ function PermissionChecklist({
                     </div>
                 ))}
             </div>
-            {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+            {error && <p className="text-sm text-low-ink">{error}</p>}
         </fieldset>
     );
 }

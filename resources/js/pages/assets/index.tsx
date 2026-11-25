@@ -6,6 +6,7 @@ import { ButtonLink } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MediaFrame } from '@/components/ui/media-frame';
 import { PageHeader } from '@/components/ui/page-header';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { assetStatusTone, Badge } from '@/components/ui/status-badge';
@@ -44,6 +45,11 @@ export default function AssetsIndex({
     summary,
 }: AssetsIndexProps) {
     const [search, setSearch] = useState(filters.search);
+    const paginated = usePaginatedRows(
+        assets,
+        'assets',
+        JSON.stringify(filters),
+    );
     const isFirstRender = useRef(true);
 
     useEffect(() => {
@@ -75,21 +81,21 @@ export default function AssetsIndex({
 
     return (
         <AppLayout
-            title="Daftar Aset"
+            title="Daftar Peralatan Kantor"
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Aset' },
+                { title: 'Peralatan' },
             ]}
         >
             <PageHeader
-                title="Semua Aset Perusahaan"
-                description="Barang yang dipakai, bukan dihabiskan: laptop, printer, proyektor, dan lainnya. Pemegangnya bisa karyawan atau ruangan."
+                title="Semua Peralatan Kantor"
+                description="Barang yang dipakai, bukan dihabiskan: laptop, printer, AC, meja, kursi, dan lainnya. Pemegangnya bisa karyawan atau ruangan."
                 actions={
                     <ButtonLink
                         href={assetCreate.url()}
                         icon={<PlusIcon className="size-[18px]" />}
                     >
-                        Tambah Aset
+                        Tambah Peralatan
                     </ButtonLink>
                 }
             />
@@ -98,7 +104,7 @@ export default function AssetsIndex({
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <SearchInput
                         id="asset-search"
-                        label="Cari aset"
+                        label="Cari peralatan"
                         value={search}
                         onChange={setSearch}
                         placeholder="Cari nama, kode, atau nomor seri"
@@ -124,7 +130,7 @@ export default function AssetsIndex({
 
                 <div className="rounded-2xl bg-white/70 p-3">
                     <SegmentedControl
-                        label="Status aset"
+                        label="Status peralatan"
                         value={filters.status}
                         onChange={(status) => applyFilters({ status })}
                         segments={[
@@ -163,22 +169,22 @@ export default function AssetsIndex({
                     {summary.total === 0 ? (
                         <EmptyState
                             icon={LaptopIcon}
-                            title="Belum ada aset"
-                            description="Aset adalah barang yang dipakai bergantian dan dicatat per unit, misalnya laptop, printer, atau proyektor."
+                            title="Belum ada peralatan"
+                            description="Peralatan adalah barang yang dipakai bergantian dan dicatat per unit, misalnya laptop, printer, atau proyektor."
                             action={
                                 <ButtonLink
                                     href={assetCreate.url()}
                                     size="sm"
                                     icon={<PlusIcon className="size-4" />}
                                 >
-                                    Tambah aset pertama
+                                    Tambah peralatan pertama
                                 </ButtonLink>
                             }
                         />
                     ) : (
                         <EmptyState
                             icon={LaptopIcon}
-                            title="Tidak ada aset yang cocok"
+                            title="Tidak ada peralatan yang cocok"
                             description="Coba kata kunci lain atau hapus filter."
                             action={
                                 <ButtonLink
@@ -193,93 +199,98 @@ export default function AssetsIndex({
                     )}
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
-                    <table className="w-full min-w-[860px] text-sm">
-                        <thead>
-                            <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
-                                <th className="py-3.5 pr-3 pl-5 font-medium">
-                                    Aset
-                                </th>
-                                <th className="px-3 py-3.5 font-medium">
-                                    Pemegang
-                                </th>
-                                <th className="px-3 py-3.5 font-medium">
-                                    Status
-                                </th>
-                                <th className="px-3 py-3.5 font-medium">
-                                    Kondisi
-                                </th>
-                                <th className="px-3 py-3.5 font-medium">
-                                    Tanggal beli
-                                </th>
-                                <th className="py-3.5 pr-5 pl-3 text-right font-medium">
-                                    Harga perolehan
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-ink-100">
-                            {assets.map((asset) => (
-                                <tr
-                                    key={asset.id}
-                                    className="group relative transition-colors hover:bg-brand-50/40"
-                                >
-                                    <td className="py-3 pr-3 pl-5">
-                                        <div className="flex items-center gap-3">
-                                            <MediaFrame
-                                                src={asset.image_url}
-                                                alt=""
-                                                fallbackIcon={LaptopIcon}
-                                                className="size-12 shrink-0 rounded-lg [&_span]:hidden [&_svg]:size-5"
-                                            />
-                                            <div className="flex min-w-0 flex-col gap-0.5">
-                                                <Link
-                                                    href={assetShow.url(
-                                                        asset.code,
-                                                    )}
-                                                    className="font-semibold text-ink-900 group-hover:text-brand-700 after:absolute after:inset-0"
-                                                >
-                                                    {asset.name}
-                                                </Link>
-                                                <span className="text-xs text-ink-400">
-                                                    {asset.code} ·{' '}
-                                                    {asset.category?.parent_name
-                                                        ? `${asset.category.name} (Subkategori ${asset.category.parent_name})`
-                                                        : asset.category?.name}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-3">
-                                        <HolderLabel
-                                            holder={asset.holder ?? null}
-                                            status={asset.status.value}
-                                        />
-                                    </td>
-                                    <td className="px-3 py-3">
-                                        <Badge
-                                            tone={
-                                                assetStatusTone[
-                                                    asset.status.value
-                                                ]
-                                            }
-                                        >
-                                            {asset.status.label}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-3 py-3 text-ink-700">
-                                        {asset.condition ?? '—'}
-                                    </td>
-                                    <td className="px-3 py-3 whitespace-nowrap text-ink-700">
-                                        {formatDate(asset.purchased_on)}
-                                    </td>
-                                    <td className="py-3 pr-5 pl-3 text-right font-medium text-ink-900 tabular-nums">
-                                        {formatRupiah(asset.purchase_price)}
-                                    </td>
+                <>
+                    <div className="overflow-x-auto rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
+                        <table className="w-full min-w-[860px] text-sm">
+                            <thead>
+                                <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
+                                    <th className="py-3.5 pr-3 pl-5 font-medium">
+                                        Peralatan
+                                    </th>
+                                    <th className="px-3 py-3.5 font-medium">
+                                        Pemegang
+                                    </th>
+                                    <th className="px-3 py-3.5 font-medium">
+                                        Status
+                                    </th>
+                                    <th className="px-3 py-3.5 font-medium">
+                                        Kondisi
+                                    </th>
+                                    <th className="px-3 py-3.5 font-medium">
+                                        Tanggal Beli
+                                    </th>
+                                    <th className="py-3.5 pr-5 pl-3 text-right font-medium">
+                                        Harga Perolehan
+                                    </th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-ink-100">
+                                {paginated.rows.map((asset) => (
+                                    <tr
+                                        key={asset.id}
+                                        className="group relative transition-colors hover:bg-brand-50/40"
+                                    >
+                                        <td className="py-3 pr-3 pl-5">
+                                            <div className="flex items-center gap-3">
+                                                <MediaFrame
+                                                    src={asset.image_url}
+                                                    alt=""
+                                                    fallbackIcon={LaptopIcon}
+                                                    className="size-12 shrink-0 rounded-lg [&_span]:hidden [&_svg]:size-5"
+                                                />
+                                                <div className="flex min-w-0 flex-col gap-0.5">
+                                                    <Link
+                                                        href={assetShow.url(
+                                                            asset.code,
+                                                        )}
+                                                        className="font-semibold text-ink-900 group-hover:text-brand-700 after:absolute after:inset-0"
+                                                    >
+                                                        {asset.name}
+                                                    </Link>
+                                                    <span className="text-xs text-ink-400">
+                                                        {asset.code} ·{' '}
+                                                        {asset.category
+                                                            ?.parent_name
+                                                            ? `${asset.category.parent_name} › ${asset.category.name}`
+                                                            : asset.category
+                                                                  ?.name}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            <HolderLabel
+                                                holder={asset.holder ?? null}
+                                                status={asset.status.value}
+                                            />
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            <Badge
+                                                tone={
+                                                    assetStatusTone[
+                                                        asset.status.value
+                                                    ]
+                                                }
+                                            >
+                                                {asset.status.label}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-3 py-3 text-ink-700">
+                                            {asset.condition ?? '—'}
+                                        </td>
+                                        <td className="px-3 py-3 whitespace-nowrap text-ink-700">
+                                            {formatDate(asset.purchased_on)}
+                                        </td>
+                                        <td className="py-3 pr-5 pl-3 text-right font-medium text-ink-900 tabular-nums">
+                                            {formatRupiah(asset.purchase_price)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <ListPagination paginated={paginated} noun="peralatan" />
+                </>
             )}
         </AppLayout>
     );

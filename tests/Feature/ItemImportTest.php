@@ -58,14 +58,15 @@ test('the template lists the columns and the consumable categories', function ()
     $sheetRows = app(XlsxReader::class)->firstSheet($response->getFile()->getPathname());
     $labels = array_merge(...$sheetRows);
 
-    expect($labels)->toContain('Nama Barang*', 'Kategori*', 'Stok Awal', 'Harga Satuan');
+    expect($labels)->toContain('Nama Barang*', 'Jenis Barang*', 'Stok Awal', 'Harga Satuan')
+        ->not->toContain('Kode Barang');
 
     $zip = new ZipArchive;
     $zip->open($response->getFile()->getPathname());
     $categorySheet = (string) $zip->getFromName('xl/worksheets/sheet3.xml');
     $zip->close();
 
-    expect($categorySheet)->toContain('>ATK<');
+    expect($categorySheet)->toContain('>HVS<', '>Alat Tulis Kantor<');
 });
 
 test('the preview marks valid, duplicate and invalid rows', function () {
@@ -73,12 +74,12 @@ test('the preview marks valid, duplicate and invalid rows', function () {
 
     $response = $this->actingAs($this->admin)->post(route('items.import.upload'), [
         'file' => importFile([
-            ['name' => 'Stapler Besar', 'category' => 'ATK', 'unit' => 'pcs', 'opening_stock' => 5, 'unit_price' => 25000],
-            ['name' => $existing->name, 'variant' => $existing->variant, 'category' => 'ATK', 'unit' => 'pcs'],
-            ['name' => 'stapler besar', 'category' => 'atk', 'unit' => 'pcs'],
+            ['name' => 'Stapler Besar', 'category' => 'PTH', 'unit' => 'pcs', 'opening_stock' => 5, 'unit_price' => 25000],
+            ['name' => $existing->name, 'variant' => $existing->variant, 'category' => 'PTH', 'unit' => 'pcs'],
+            ['name' => 'stapler besar', 'category' => 'pth', 'unit' => 'pcs'],
             ['name' => 'Penggaris', 'category' => 'TIDAKADA', 'unit' => 'pcs'],
-            ['name' => 'Spidol', 'category' => 'ATK', 'unit' => 'pcs', 'opening_stock' => 3],
-            ['category' => 'ATK', 'unit' => 'pcs', 'notify_low_stock' => 'mungkin'],
+            ['name' => 'Spidol', 'category' => 'PTH', 'unit' => 'pcs', 'opening_stock' => 3],
+            ['category' => 'PTH', 'unit' => 'pcs', 'notify_low_stock' => 'mungkin'],
         ]),
     ]);
 
@@ -108,9 +109,9 @@ test('confirming saves valid rows and records opening stock as one incoming tran
 
     $response = $this->actingAs($this->admin)->post(route('items.import.upload'), [
         'file' => importFile([
-            ['name' => 'Stapler Besar', 'category' => 'ATK', 'unit' => 'pcs', 'minimum_stock' => 2, 'notify_low_stock' => 'Tidak', 'opening_stock' => 5, 'unit_price' => 'Rp 25.000'],
-            ['name' => 'Penggaris', 'variant' => '30 cm', 'category' => 'ATK', 'unit' => 'pcs'],
-            ['code' => 'atk-004', 'name' => 'Lakban', 'category' => 'ATK', 'unit' => 'roll', 'opening_stock' => 10, 'unit_price' => 12000],
+            ['name' => 'Stapler Besar', 'category' => 'PTH', 'unit' => 'pcs', 'minimum_stock' => 2, 'notify_low_stock' => 'Tidak', 'opening_stock' => 5, 'unit_price' => 'Rp 25.000'],
+            ['name' => 'Penggaris', 'variant' => '30 cm', 'category' => 'PTH', 'unit' => 'pcs'],
+            ['name' => 'Lakban', 'category' => 'PTH', 'unit' => 'roll', 'opening_stock' => 10, 'unit_price' => 12000],
             ['name' => 'Salah', 'category' => 'TIDAKADA', 'unit' => 'pcs'],
         ]),
     ]);
@@ -123,14 +124,15 @@ test('confirming saves valid rows and records opening stock as one incoming tran
 
     expect(Item::query()->count())->toBe($itemsBefore + 3);
 
-    $lakban = Item::query()->where('code', 'ATK-004')->firstOrFail();
+    $year = now()->year;
+    $lakban = Item::query()->where('name', 'Lakban')->firstOrFail();
     $stapler = Item::query()->where('name', 'Stapler Besar')->firstOrFail();
     $penggaris = Item::query()->where('name', 'Penggaris')->firstOrFail();
 
-    expect($lakban->name)->toBe('Lakban')
+    expect($lakban->code)->toBe("INVESTA-PLK-{$year}-ATK-PTH-004")
         ->and($lakban->current_stock)->toBe(10)
-        ->and($stapler->code)->toBe('ATK-005')
-        ->and($penggaris->code)->toBe('ATK-006')
+        ->and($stapler->code)->toBe("INVESTA-PLK-{$year}-ATK-PTH-002")
+        ->and($penggaris->code)->toBe("INVESTA-PLK-{$year}-ATK-PTH-003")
         ->and($stapler->current_stock)->toBe(5)
         ->and($stapler->average_price)->toBe('25000.00')
         ->and($stapler->minimum_stock)->toBe(2)

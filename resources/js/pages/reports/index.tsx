@@ -149,13 +149,13 @@ const reports: { key: ReportKey; title: string; description: string }[] = [
     },
     {
         key: 'persediaan',
-        title: 'Nilai Persediaan',
+        title: 'Nilai Perlengkapan',
         description: 'Nilai barang yang ada di gudang hari ini',
     },
     {
         key: 'aset',
-        title: 'Aset per Pemegang',
-        description: 'Aset yang sedang dipegang karyawan dan ruangan',
+        title: 'Peralatan per Pemegang',
+        description: 'Peralatan yang sedang dipegang karyawan dan ruangan',
     },
 ];
 
@@ -532,7 +532,7 @@ function SummaryReport({ summary, usage }: { summary: Summary; usage: Usage }) {
                     tone="amber"
                 />
                 <StatCard
-                    label="Nilai persediaan hari ini"
+                    label="Nilai perlengkapan hari ini"
                     value={formatRupiahCompact(summary.inventory_value)}
                     hint={`${summary.item_count} jenis barang · ${summary.low_stock_count} stok kritis`}
                     icon={BoxIcon}
@@ -637,12 +637,12 @@ function MovementReport({ rows }: { rows: MovementRow[] }) {
                     <thead>
                         <tr className="border-y border-ink-100 bg-ink-50">
                             <th className={`${th} pl-5`}>Barang</th>
-                            <th className={thRight}>Stok awal</th>
+                            <th className={thRight}>Stok Awal</th>
                             <th className={thRight}>Masuk</th>
                             <th className={thRight}>Keluar</th>
                             <th className={thRight}>Penyesuaian</th>
-                            <th className={thRight}>Stok akhir</th>
-                            <th className={`${thRight} pr-5`}>Nilai keluar</th>
+                            <th className={thRight}>Stok Akhir</th>
+                            <th className={`${thRight} pr-5`}>Nilai Keluar</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-100">
@@ -789,7 +789,7 @@ function InventoryReport({ inventory }: { inventory: InventoryValue }) {
             <Card className="print:break-inside-avoid print:shadow-none">
                 <CardHeader
                     title="Nilai per kategori"
-                    description={`Total nilai persediaan ${formatRupiah(inventory.total)}`}
+                    description={`Total nilai perlengkapan ${formatRupiah(inventory.total)}`}
                 />
                 <BarList
                     items={inventory.categories.map((category) => ({
@@ -810,7 +810,7 @@ function InventoryReport({ inventory }: { inventory: InventoryValue }) {
                         <th className={`${th} pl-5`}>Barang</th>
                         <th className={th}>Kategori</th>
                         <th className={thRight}>Stok</th>
-                        <th className={thRight}>Harga rata-rata</th>
+                        <th className={thRight}>Harga Rata-Rata</th>
                         <th className={`${thRight} pr-5`}>Nilai</th>
                     </tr>
                 </thead>
@@ -849,7 +849,7 @@ function InventoryReport({ inventory }: { inventory: InventoryValue }) {
                 <tfoot>
                     <tr className="border-t-2 border-ink-200 bg-ink-50 font-semibold">
                         <td className={`${td} pl-5 text-ink-900`} colSpan={4}>
-                            Total nilai persediaan
+                            Total nilai perlengkapan
                         </td>
                         <td className={`${tdRight} pr-5`}>
                             {formatRupiah(inventory.total)}
@@ -917,7 +917,7 @@ function AssetReport({ assets }: { assets: AssetsByHolder }) {
                                 </span>
                             </span>
                             <span className="text-right text-xs text-ink-500">
-                                {holder.assets.length} aset
+                                {holder.assets.length} peralatan
                                 <br />
                                 <span className="font-semibold text-ink-900">
                                     {formatRupiah(holder.value)}
@@ -949,16 +949,16 @@ function AssetReport({ assets }: { assets: AssetsByHolder }) {
             </div>
 
             <TableCard
-                title="Aset tanpa pemegang"
+                title="Peralatan tanpa pemegang"
                 description="Di gudang, sedang diservis, atau rusak"
                 minWidth="560px"
             >
                 <thead>
                     <tr className="border-y border-ink-100 bg-ink-50">
-                        <th className={`${th} pl-5`}>Aset</th>
+                        <th className={`${th} pl-5`}>Peralatan</th>
                         <th className={th}>Kategori</th>
                         <th className={th}>Status</th>
-                        <th className={`${thRight} pr-5`}>Harga perolehan</th>
+                        <th className={`${thRight} pr-5`}>Harga Perolehan</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
@@ -968,7 +968,7 @@ function AssetReport({ assets }: { assets: AssetsByHolder }) {
                                 colSpan={4}
                                 className="px-5 py-6 text-center text-ink-500"
                             >
-                                Semua aset sedang dipakai.
+                                Semua peralatan sedang dipakai.
                             </td>
                         </tr>
                     )}

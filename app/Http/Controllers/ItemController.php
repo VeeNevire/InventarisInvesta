@@ -120,12 +120,12 @@ class ItemController extends Controller
 
         $item = Item::query()->create([
             ...$request->safe()->except(['photo', 'remove_photo']),
-            'code' => $request->validated('code') ?? $codes->next($category),
+            'code' => $codes->next($category),
             'notify_low_stock' => $request->boolean('notify_low_stock'),
             'image_path' => $request->file('photo')?->store('items', 'public'),
         ]);
 
-        $this->toast("Barang {$item->name} ({$item->code}) ditambahkan dengan stok 0. Catat barang masuk untuk mengisi stoknya.");
+        $this->toast("Perlengkapan {$item->name} ({$item->code}) ditambahkan dengan stok 0. Catat barang masuk untuk mengisi stoknya.");
 
         return to_route('items.show', $item);
     }
@@ -164,7 +164,7 @@ class ItemController extends Controller
             Storage::disk('public')->delete($oldPhoto);
         }
 
-        $this->toast("Barang {$item->name} diperbarui.");
+        $this->toast("Perlengkapan {$item->name} diperbarui.");
 
         return to_route('items.show', $item);
     }
@@ -182,7 +182,7 @@ class ItemController extends Controller
         }
 
         $item->delete();
-        $this->toast("Barang {$item->name} dihapus.");
+        $this->toast("Perlengkapan {$item->name} dihapus.");
 
         return to_route('items.index');
     }
@@ -196,10 +196,11 @@ class ItemController extends Controller
             'categories' => Category::query()
                 ->where('type', CategoryType::Persediaan)
                 ->orderBy('name')
-                ->with('parent:id,name')->get(['id', 'code', 'name', 'parent_id'])
+                ->with('parent:id,code,name')->get(['id', 'code', 'name', 'parent_id'])
                 ->map(fn (Category $category): array => [
                     'id' => $category->id, 'code' => $category->code, 'name' => $category->name,
-                    'parent_id' => $category->parent_id, 'next_code' => app(ItemCodeGenerator::class)->next($category),
+                    'parent_id' => $category->parent_id,
+                    'next_code' => $category->parent_id ? app(ItemCodeGenerator::class)->next($category) : null,
                 ]),
             'units' => Item::query()->distinct()->orderBy('unit')->pluck('unit'),
         ];

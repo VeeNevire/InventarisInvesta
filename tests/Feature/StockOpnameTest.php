@@ -40,13 +40,13 @@ test('starting an opname for one category lists only its items', function () {
 
     expect($opname->number)->toStartWith('CEK-'.now()->format('ym'))
         ->and($opname->status)->toBe(StockOpnameStatus::Draf)
-        ->and($opname->lines()->count())->toBe(3);
+        ->and($opname->lines()->count())->toBe(4);
 
     $this->get(route('stock-opnames.show', $opname->number))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('opnames/show')
-            ->has('lines', 3)
+            ->has('lines', 4)
             ->where('opname.counted_count', 0)
         );
 });
@@ -56,14 +56,14 @@ test('counts can be saved as a draft without changing stock', function () {
     $opname = StockOpname::query()->latest('id')->firstOrFail();
 
     $this->put(route('stock-opnames.update', $opname->number), [
-        'lines' => countsFor($opname, ['MRC-001' => [75, 'Rusak']]),
+        'lines' => countsFor($opname, ['INVESTA-PLK-2026-PRM-KAL-001' => [75, 'Rusak']]),
     ])->assertRedirect();
 
-    $line = $opname->lines()->whereRelation('item', 'code', 'MRC-001')->firstOrFail();
+    $line = $opname->lines()->whereRelation('item', 'code', 'INVESTA-PLK-2026-PRM-KAL-001')->firstOrFail();
 
     expect($line->counted_stock)->toBe(75)
         ->and($line->reason)->toBe('Rusak')
-        ->and(Item::query()->where('code', 'MRC-001')->value('current_stock'))->toBe(78);
+        ->and(Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->value('current_stock'))->toBe(78);
 });
 
 test('completing an opname books the differences as one adjustment', function () {
@@ -72,9 +72,9 @@ test('completing an opname books the differences as one adjustment', function ()
 
     $this->post(route('stock-opnames.complete', $opname->number), [
         'lines' => countsFor($opname, [
-            'MRC-001' => [75, 'Rusak'],
-            'ATK-001' => [13, 'Lupa dicatat masuk'],
-            'ATK-002' => [8],
+            'INVESTA-PLK-2026-PRM-KAL-001' => [75, 'Rusak'],
+            'INVESTA-PLK-2026-ATK-HVS-001' => [13, 'Lupa dicatat masuk'],
+            'INVESTA-PLK-2026-ATK-PTH-001' => [8],
         ]),
     ])->assertRedirect(route('stock-opnames.show', $opname->number));
 
@@ -84,16 +84,16 @@ test('completing an opname books the differences as one adjustment', function ()
     expect($opname->status)->toBe(StockOpnameStatus::Selesai)
         ->and($adjustment->type)->toBe(StockTransactionType::Penyesuaian)
         ->and($adjustment->lines()->count())->toBe(2)
-        ->and(Item::query()->where('code', 'MRC-001')->value('current_stock'))->toBe(75)
-        ->and(Item::query()->where('code', 'ATK-001')->value('current_stock'))->toBe(13)
-        ->and(Item::query()->where('code', 'ATK-002')->value('current_stock'))->toBe(8)
-        ->and(Item::query()->where('code', 'MRC-002')->value('current_stock'))->toBe(240);
+        ->and(Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->value('current_stock'))->toBe(75)
+        ->and(Item::query()->where('code', 'INVESTA-PLK-2026-ATK-HVS-001')->value('current_stock'))->toBe(13)
+        ->and(Item::query()->where('code', 'INVESTA-PLK-2026-ATK-PTH-001')->value('current_stock'))->toBe(8)
+        ->and(Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-002')->value('current_stock'))->toBe(240);
 
-    $line = $opname->lines()->whereRelation('item', 'code', 'MRC-001')->firstOrFail();
+    $line = $opname->lines()->whereRelation('item', 'code', 'INVESTA-PLK-2026-PRM-KAL-001')->firstOrFail();
 
     expect($line->system_stock)->toBe(78);
 
-    $this->get(route('items.show', 'MRC-001'))
+    $this->get(route('items.show', 'INVESTA-PLK-2026-PRM-KAL-001'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('stockCard.9.description', "Cek stok {$opname->number} · Rusak")
             ->where('stockCard.9.balance_after', 75)
@@ -103,14 +103,14 @@ test('completing an opname books the differences as one adjustment', function ()
 test('differences need a reason before completing', function () {
     $this->post(route('stock-opnames.store'), ['counted_on' => now()->toDateString()]);
     $opname = StockOpname::query()->latest('id')->firstOrFail();
-    $lines = countsFor($opname, ['MRC-001' => [70]]);
+    $lines = countsFor($opname, ['INVESTA-PLK-2026-PRM-KAL-001' => [70]]);
     $index = collect($lines)->search(fn ($line) => $line['counted_stock'] === 70);
 
     $this->post(route('stock-opnames.complete', $opname->number), ['lines' => $lines])
         ->assertSessionHasErrors("lines.{$index}.reason");
 
     expect($opname->refresh()->status)->toBe(StockOpnameStatus::Draf)
-        ->and(Item::query()->where('code', 'MRC-001')->value('current_stock'))->toBe(78);
+        ->and(Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->value('current_stock'))->toBe(78);
 });
 
 test('an opname needs at least one counted item', function () {
@@ -126,7 +126,7 @@ test('an opname without differences completes without an adjustment', function (
     $opname = StockOpname::query()->latest('id')->firstOrFail();
 
     $this->post(route('stock-opnames.complete', $opname->number), [
-        'lines' => countsFor($opname, ['MRC-001' => [78]]),
+        'lines' => countsFor($opname, ['INVESTA-PLK-2026-PRM-KAL-001' => [78]]),
     ])->assertRedirect();
 
     expect($opname->refresh()->status)->toBe(StockOpnameStatus::Selesai)
@@ -136,9 +136,9 @@ test('an opname without differences completes without an adjustment', function (
 test('a completed opname cannot be changed or deleted', function () {
     $this->post(route('stock-opnames.store'), ['counted_on' => now()->toDateString()]);
     $opname = StockOpname::query()->latest('id')->firstOrFail();
-    $this->post(route('stock-opnames.complete', $opname->number), ['lines' => countsFor($opname, ['MRC-001' => [78]])]);
+    $this->post(route('stock-opnames.complete', $opname->number), ['lines' => countsFor($opname, ['INVESTA-PLK-2026-PRM-KAL-001' => [78]])]);
 
-    $this->put(route('stock-opnames.update', $opname->number), ['lines' => countsFor($opname, ['MRC-001' => [1]])])
+    $this->put(route('stock-opnames.update', $opname->number), ['lines' => countsFor($opname, ['INVESTA-PLK-2026-PRM-KAL-001' => [1]])])
         ->assertSessionHasErrors('lines');
     $this->delete(route('stock-opnames.destroy', $opname->number));
 

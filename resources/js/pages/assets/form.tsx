@@ -33,7 +33,8 @@ type AssetFormProps = {
         code: string;
         name: string;
         parent_id: number | null;
-        next_code: string;
+        code_path: string;
+        next_sequence: number;
     }[];
     suppliers: string[];
     today: string;
@@ -49,8 +50,19 @@ export default function AssetForm({
 }: AssetFormProps) {
     const isEditing = asset !== null;
     const fileInput = useRef<HTMLInputElement>(null);
+    const initialCategory = categories.find(
+        (category) => category.id === asset?.category_id,
+    );
+    const [mainCategoryId, setMainCategoryId] = useState(
+        initialCategory
+            ? String(initialCategory.parent_id ?? initialCategory.id)
+            : '',
+    );
     const [categoryId, setCategoryId] = useState(
-        asset ? String(asset.category_id) : '',
+        initialCategory?.parent_id ? String(initialCategory.id) : '',
+    );
+    const [purchasedOn, setPurchasedOn] = useState(
+        asset?.purchased_on ?? today,
     );
     const [isNewCategory, setIsNewCategory] = useState(false);
     const [categoryCode, setCategoryCode] = useState('');
@@ -124,7 +136,17 @@ export default function AssetForm({
         }
     }
 
-    const selectedCategory = categories.find(
+    const purchaseYear = purchasedOn.slice(0, 4) || today.slice(0, 4);
+    const codeFor = (codePath: string, sequence: number) =>
+        `INVESTA-PRL-${purchaseYear}-${codePath}-${String(sequence).padStart(3, '0')}`;
+    const mainCategories = categories.filter((category) => !category.parent_id);
+    const mainCategory = mainCategories.find(
+        (category) => String(category.id) === mainCategoryId,
+    );
+    const itemTypes = categories.filter(
+        (category) => String(category.parent_id) === mainCategoryId,
+    );
+    const selectedCategory = itemTypes.find(
         (category) => String(category.id) === categoryId,
     );
     const shownPhoto = preview ?? (removePhoto ? null : asset?.image_url);
@@ -133,14 +155,14 @@ export default function AssetForm({
             ? Math.max(0, (Number(price) || 0) - (Number(residual) || 0)) /
               Number(lifeMonths)
             : 0;
-    const title = isEditing ? `Edit ${asset.name}` : 'Tambah Aset';
+    const title = isEditing ? `Edit ${asset.name}` : 'Tambah Peralatan';
 
     return (
         <AppLayout
             title={title}
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Aset', href: assetsIndex.url() },
+                { title: 'Peralatan Kantor', href: assetsIndex.url() },
                 ...(isEditing
                     ? [{ title: asset.code, href: assetShow.url(asset.code) }]
                     : []),
@@ -152,32 +174,30 @@ export default function AssetForm({
                     <span className="text-sm text-ink-500">
                         {isEditing
                             ? asset.code
-                            : selectedCategory &&
-                                !isNewCategory &&
-                                !categoryCode
-                              ? `Kode otomatis: ${selectedCategory.next_code}`
-                              : categoryCode
-                                ? `Awalan kode: INV-${categoryCode.toUpperCase()}`
-                                : 'Kode dibuat otomatis setelah kategori dipilih'}
+                            : selectedCategory && !isNewCategory
+                              ? `Kode otomatis: ${codeFor(selectedCategory.code_path, selectedCategory.next_sequence)}`
+                              : isNewCategory && mainCategory && categoryCode
+                                ? `Kode otomatis: ${codeFor(`${mainCategory.code}-${categoryCode}`, 1)}`
+                                : 'Kode dibuat otomatis setelah jenis barang dipilih'}
                     </span>
                 }
                 title={title}
                 description={
                     isEditing
-                        ? 'Ubah data aset. Pemegang dan status diubah lewat tombol Serahkan, Kembalikan, atau Servis di halaman detail.'
-                        : 'Daftarkan aset baru. Setelah disimpan statusnya Tersedia, lalu bisa diserahkan ke karyawan atau ruangan.'
+                        ? 'Ubah data peralatan. Pemegang dan status diubah lewat tombol Serahkan, Kembalikan, atau Servis di halaman detail.'
+                        : 'Daftarkan peralatan kantor baru. Setelah disimpan statusnya Tersedia, lalu bisa diserahkan ke karyawan atau ruangan.'
                 }
             />
 
             <FormNotes
                 id="asset-form"
                 dos={[
-                    'Isi nomor seri supaya aset mudah dilacak dan tidak tertukar.',
+                    'Isi nomor seri supaya peralatan mudah dilacak dan tidak tertukar.',
                     'Isi harga dan tanggal beli sesuai nota pembelian.',
                 ]}
                 donts={[
-                    'Mendaftarkan aset yang sama dua kali.',
-                    'Mencatat barang habis pakai (ATK, merchandise) sebagai aset. Gunakan menu Barang.',
+                    'Mendaftarkan peralatan yang sama dua kali.',
+                    'Mencatat barang habis pakai (ATK, tisu, kalender) sebagai peralatan. Gunakan menu Perlengkapan Kantor.',
                 ]}
             />
 
@@ -194,7 +214,7 @@ export default function AssetForm({
                                 {shownPhoto ? (
                                     <img
                                         src={shownPhoto}
-                                        alt="Foto aset"
+                                        alt="Foto peralatan"
                                         className="size-full object-contain p-3"
                                     />
                                 ) : (
@@ -250,7 +270,7 @@ export default function AssetForm({
                                 Opsional · JPG, PNG, WEBP · maks. 5 MB
                             </p>
                             {(photoError ?? errors.photo) && (
-                                <p className="text-sm text-[#c52c32]">
+                                <p className="text-sm text-low-ink">
                                     {photoError ?? errors.photo}
                                 </p>
                             )}
@@ -258,107 +278,128 @@ export default function AssetForm({
 
                         <div className="flex min-w-0 flex-col gap-4">
                             <Card>
-                                <CardHeader title="Data aset" />
+                                <CardHeader title="Data peralatan" />
                                 <div className="grid grid-cols-1 gap-4 px-5 pb-5 md:grid-cols-2">
                                     <Field
                                         label="Kategori"
-                                        htmlFor="category_id"
-                                        error={errors.category_id}
+                                        htmlFor="main_category"
+                                        error={errors.category_parent_id}
                                     >
                                         <Select
-                                            id="category_id"
+                                            id="main_category"
                                             name={
                                                 isNewCategory
-                                                    ? undefined
-                                                    : 'category_id'
+                                                    ? 'category_parent_id'
+                                                    : undefined
                                             }
-                                            disabled={isNewCategory}
-                                            value={categoryId}
+                                            value={mainCategoryId}
                                             onChange={(value) => {
-                                                setCategoryId(value);
-                                                setCategoryCode('');
+                                                setMainCategoryId(value);
+                                                setCategoryId('');
                                             }}
-                                            invalid={Boolean(
-                                                errors.category_id,
-                                            )}
                                             placeholder="Pilih kategori"
-                                            options={categories.map(
+                                            options={mainCategories.map(
                                                 (category) => ({
                                                     value: String(category.id),
                                                     label: category.name,
-                                                    description: `Kode berikutnya ${category.next_code}`,
+                                                    description: category.code,
                                                 }),
                                             )}
                                         />
                                     </Field>
-                                    {!isEditing && (
-                                        <div className="flex flex-col gap-3 md:col-span-2">
-                                            <label className="flex items-center gap-2 text-sm text-ink-700">
+                                    {isNewCategory ? (
+                                        <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
+                                            <Field
+                                                label="Jenis barang baru"
+                                                htmlFor="category_name"
+                                                error={errors.category_name}
+                                            >
                                                 <input
-                                                    type="checkbox"
-                                                    name="new_category"
-                                                    value="1"
-                                                    checked={isNewCategory}
-                                                    onChange={(event) => {
-                                                        setIsNewCategory(
-                                                            event.target
-                                                                .checked,
-                                                        );
-                                                        setCategoryId('');
-                                                        setCategoryCode('');
-                                                    }}
+                                                    id="category_name"
+                                                    name="category_name"
+                                                    className={inputClasses}
+                                                    placeholder="Contoh: Laptop"
                                                 />
-                                                Tambah kategori baru
-                                            </label>
-                                            {isNewCategory && (
-                                                <Field
-                                                    label="Nama kategori baru"
-                                                    htmlFor="category_name"
-                                                    error={errors.category_name}
-                                                >
-                                                    <input
-                                                        id="category_name"
-                                                        name="category_name"
-                                                        className={inputClasses}
-                                                        placeholder="Contoh: Laptop"
-                                                    />
-                                                </Field>
-                                            )}
-                                            {(isNewCategory ||
-                                                selectedCategory) && (
-                                                <Field
-                                                    label="Kode kategori aset"
-                                                    htmlFor="category_code"
-                                                    hint={
-                                                        isNewCategory
-                                                            ? 'Awalan INV- ditambahkan otomatis.'
-                                                            : `Kosongkan untuk memakai ${selectedCategory?.code}. Perubahan berlaku untuk aset baru; kode aset lama tetap sama.`
+                                            </Field>
+                                            <Field
+                                                label="Kode"
+                                                htmlFor="category_code"
+                                                error={errors.category_code}
+                                            >
+                                                <input
+                                                    id="category_code"
+                                                    name="category_code"
+                                                    value={categoryCode}
+                                                    onChange={(event) =>
+                                                        setCategoryCode(
+                                                            event.target.value.toUpperCase(),
+                                                        )
                                                     }
-                                                    error={errors.category_code}
-                                                >
-                                                    <input
-                                                        id="category_code"
-                                                        name="category_code"
-                                                        value={categoryCode}
-                                                        onChange={(event) =>
-                                                            setCategoryCode(
-                                                                event.target.value.toUpperCase(),
-                                                            )
-                                                        }
-                                                        className={inputClasses}
-                                                        maxLength={5}
-                                                        placeholder={
-                                                            isNewCategory
-                                                                ? 'Contoh: LTP'
-                                                                : selectedCategory?.code
-                                                        }
-                                                    />
-                                                </Field>
-                                            )}
+                                                    className={inputClasses}
+                                                    maxLength={5}
+                                                    placeholder="LPT"
+                                                />
+                                            </Field>
                                         </div>
+                                    ) : (
+                                        <Field
+                                            label="Jenis barang"
+                                            htmlFor="category_id"
+                                            hint={
+                                                mainCategoryId &&
+                                                itemTypes.length === 0
+                                                    ? 'Kategori ini belum punya jenis barang. Centang "Tambah jenis barang baru".'
+                                                    : undefined
+                                            }
+                                            error={errors.category_id}
+                                        >
+                                            <Select
+                                                id="category_id"
+                                                name="category_id"
+                                                value={categoryId}
+                                                onChange={setCategoryId}
+                                                disabled={!mainCategoryId}
+                                                invalid={Boolean(
+                                                    errors.category_id,
+                                                )}
+                                                placeholder={
+                                                    mainCategoryId
+                                                        ? 'Pilih jenis barang'
+                                                        : 'Pilih kategori dulu'
+                                                }
+                                                options={itemTypes.map(
+                                                    (category) => ({
+                                                        value: String(
+                                                            category.id,
+                                                        ),
+                                                        label: category.name,
+                                                        description: `Kode berikutnya ${codeFor(category.code_path, category.next_sequence)}`,
+                                                    }),
+                                                )}
+                                            />
+                                        </Field>
+                                    )}
+                                    {!isEditing && (
+                                        <label className="flex items-center gap-2 text-sm text-ink-700 md:col-span-2">
+                                            <input
+                                                type="checkbox"
+                                                name="new_category"
+                                                value="1"
+                                                checked={isNewCategory}
+                                                onChange={(event) => {
+                                                    setIsNewCategory(
+                                                        event.target.checked,
+                                                    );
+                                                    setCategoryId('');
+                                                    setCategoryCode('');
+                                                }}
+                                            />
+                                            Tambah jenis barang baru di kategori
+                                            ini
+                                        </label>
                                     )}
                                     <Field
-                                        label="Nama aset"
+                                        label="Nama peralatan"
                                         htmlFor="name"
                                         error={errors.name}
                                     >
@@ -460,6 +501,11 @@ export default function AssetForm({
                                 <div className="grid grid-cols-1 gap-4 px-5 pb-5 md:grid-cols-2">
                                     <Field
                                         label="Tanggal beli"
+                                        hint={
+                                            isEditing
+                                                ? undefined
+                                                : 'Tahunnya menjadi Tahun Pembelian di kode.'
+                                        }
                                         htmlFor="purchased_on"
                                         error={errors.purchased_on}
                                     >
@@ -468,8 +514,11 @@ export default function AssetForm({
                                             name="purchased_on"
                                             type="date"
                                             max={today}
-                                            defaultValue={
-                                                asset?.purchased_on ?? today
+                                            value={purchasedOn}
+                                            onChange={(event) =>
+                                                setPurchasedOn(
+                                                    event.target.value,
+                                                )
                                             }
                                             required
                                             aria-invalid={Boolean(
@@ -522,9 +571,9 @@ export default function AssetForm({
                                                 Hitung penyusutan
                                             </span>
                                             <span className="text-xs text-ink-500">
-                                                Nilai buku aset berkurang tiap
-                                                bulan sampai masa manfaatnya
-                                                habis.
+                                                Nilai buku peralatan berkurang
+                                                tiap bulan sampai masa
+                                                manfaatnya habis.
                                             </span>
                                         </span>
                                     </label>
@@ -598,7 +647,7 @@ export default function AssetForm({
                                             ? 'Menyimpan…'
                                             : isEditing
                                               ? 'Simpan perubahan'
-                                              : 'Tambah aset'}
+                                              : 'Tambah peralatan'}
                                     </Button>
                                 </div>
                             </Card>

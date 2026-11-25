@@ -25,6 +25,16 @@ class CategoryFactory extends Factory
         ];
     }
 
+    /**
+     * An item type (jenis barang) under a new main category of the same type.
+     */
+    public function itemType(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'parent_id' => Category::factory()->state(['type' => $attributes['type']]),
+        ]);
+    }
+
     public function forAssets(): static
     {
         return $this->state(fn (array $attributes) => [

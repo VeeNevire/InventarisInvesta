@@ -76,12 +76,8 @@ class SaveCategoryRequest extends FormRequest
             function (Validator $validator): void {
                 $category = $this->route('category');
 
-                if ($this->input('type') === CategoryType::Aset->value && $this->filled('parent_id') && (! $category instanceof Category || (int) $this->input('parent_id') !== $category->parent_id)) {
-                    $validator->errors()->add('parent_id', 'Subkategori hanya tersedia untuk barang persediaan.');
-                }
-
                 if ($category instanceof Category && $this->filled('parent_id') && ((int) $this->input('parent_id') === $category->id || $category->children()->exists())) {
-                    $validator->errors()->add('parent_id', 'Kategori induk tidak valid atau kategori ini sudah memiliki subkategori.');
+                    $validator->errors()->add('parent_id', 'Kategori induk tidak valid atau kategori ini sudah memiliki jenis barang.');
                 }
 
                 if (! $category instanceof Category || ($category->items()->doesntExist() && $category->assets()->doesntExist() && $category->children()->doesntExist())) {
@@ -89,11 +85,15 @@ class SaveCategoryRequest extends FormRequest
                 }
 
                 if ($this->input('code') !== $category->code) {
-                    $validator->errors()->add('code', 'Kode tidak bisa diubah karena sudah dipakai di kode barang atau aset.');
+                    $validator->errors()->add('code', 'Kode tidak bisa diubah karena sudah dipakai di kode perlengkapan atau peralatan.');
+                }
+
+                if (($this->filled('parent_id') ? (int) $this->input('parent_id') : null) !== $category->parent_id) {
+                    $validator->errors()->add('parent_id', 'Kategori tidak bisa dipindah karena kodenya sudah dipakai di kode perlengkapan atau peralatan.');
                 }
 
                 if ($this->input('type') !== $category->type->value) {
-                    $validator->errors()->add('type', 'Jenis tidak bisa diubah karena kategori ini sudah dipakai.');
+                    $validator->errors()->add('type', 'Kelompok tidak bisa diubah karena kategori ini sudah dipakai.');
                 }
             },
         ];

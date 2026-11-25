@@ -540,7 +540,7 @@ export default function TransactionCreate({
                             />
 
                             {errors.lines && (
-                                <p className="text-sm text-[#c52c32]">
+                                <p className="text-sm text-low-ink">
                                     {errors.lines}
                                 </p>
                             )}
@@ -789,7 +789,7 @@ function Field({ label, htmlFor, hint, error, children }: FieldProps) {
                 {hint && <span className="text-xs text-ink-500">{hint}</span>}
             </div>
             {children}
-            {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+            {error && <p className="text-sm text-low-ink">{error}</p>}
         </div>
     );
 }
@@ -806,7 +806,7 @@ function Notice({
             className={cn(
                 'flex gap-2.5 rounded-xl px-3.5 py-3 text-[13px]',
                 tone === 'red'
-                    ? 'bg-low/10 text-[#a8262c]'
+                    ? 'bg-low/10 text-low-ink'
                     : 'bg-service/10 text-[#92400e]',
             )}
         >
@@ -965,7 +965,7 @@ function ReceiptUpload({ file, error, onChange }: ReceiptUploadProps) {
                 </label>
             )}
 
-            {message && <p className="text-sm text-[#c52c32]">{message}</p>}
+            {message && <p className="text-sm text-low-ink">{message}</p>}
         </div>
     );
 }
@@ -978,8 +978,7 @@ type ItemPickerProps = {
 };
 
 type PickerOption =
-    | { kind: 'item'; item: FormItemOption }
-    | { kind: 'create'; name: string };
+    { kind: 'item'; item: FormItemOption } | { kind: 'create'; name: string };
 
 /**
  * Searchable list of items. Type to filter, use the arrow keys and Enter to
@@ -1286,8 +1285,8 @@ function LineRow({
                                 <span className="text-xs text-ink-500">
                                     Kode dibuat otomatis
                                     {category
-                                        ? ` (${category.code}-…)`
-                                        : ' setelah kategori dipilih'}
+                                        ? ` (INVESTA-PLK-…-${category.code}-…)`
+                                        : ' setelah jenis barang dipilih'}
                                 </span>
                             </>
                         )}
@@ -1465,7 +1464,7 @@ function LineRow({
                     </MiniField>
                     <MiniField
                         id={`line-${index}-new-category`}
-                        label="Kategori"
+                        label="Jenis barang"
                         error={errorFor('new_item.category_id')}
                     >
                         <Select
@@ -1475,7 +1474,7 @@ function LineRow({
                                 updateNewItem({ category_id: categoryId })
                             }
                             invalid={Boolean(errorFor('new_item.category_id'))}
-                            placeholder="Pilih kategori"
+                            placeholder="Pilih jenis barang"
                             options={categories.map((option) => ({
                                 value: String(option.id),
                                 label: option.name,
@@ -1537,7 +1536,7 @@ function LineRow({
             )}
 
             {(lineErrors.length > 0 || isOverdrawn) && (
-                <p className="text-sm text-[#c52c32]">
+                <p className="text-sm text-low-ink">
                     {lineErrors[0] ??
                         `Melebihi sisa stok (${formatNumber(currentStock)} ${unit}).`}
                 </p>
@@ -1569,7 +1568,7 @@ function MiniField({ id, label, hint, error, children }: MiniFieldProps) {
                 )}
             </div>
             {children}
-            {error && <p className="text-xs text-[#c52c32]">{error}</p>}
+            {error && <p className="text-xs text-low-ink">{error}</p>}
         </div>
     );
 }
@@ -1700,7 +1699,7 @@ function PhotoSlot({
                 )}
             </div>
             {error && (
-                <span className="max-w-16 text-center text-[10px] leading-tight text-[#c52c32]">
+                <span className="max-w-16 text-center text-[10px] leading-tight text-low-ink">
                     {error}
                 </span>
             )}

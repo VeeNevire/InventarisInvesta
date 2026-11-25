@@ -19,8 +19,8 @@ class ItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'category_id' => Category::factory(),
-            'code' => strtoupper(fake()->unique()->bothify('BRG-###')),
+            'category_id' => Category::factory()->itemType(),
+            'code' => strtoupper(fake()->unique()->bothify('INVESTA-PLK-20##-???-???-###')),
             'name' => fake()->words(3, true),
             'variant' => null,
             'unit' => 'pcs',

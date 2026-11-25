@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -134,21 +135,18 @@ class AssetController extends Controller
             if ($request->boolean('new_category')) {
                 $category = Category::query()->create([
                     'type' => CategoryType::Aset,
+                    'parent_id' => $request->integer('category_parent_id'),
                     'name' => $request->validated('category_name'),
                     'code' => $request->validated('category_code'),
                 ]);
             } else {
                 $category = Category::query()->lockForUpdate()->findOrFail($request->integer('category_id'));
-
-                if ($request->filled('category_code')) {
-                    $category->update(['code' => $request->validated('category_code')]);
-                }
             }
 
             $asset = Asset::query()->create([
                 ...$this->assetAttributes($request),
                 'category_id' => $category->id,
-                'code' => $codes->next($category),
+                'code' => $codes->next($category, Carbon::parse($request->validated('purchased_on'))->year),
                 'supplier_id' => $supplier?->id,
                 'status' => AssetStatus::Tersedia,
                 'condition' => AssetCustodian::CONDITION_GOOD,
@@ -167,7 +165,7 @@ class AssetController extends Controller
             return $asset;
         });
 
-        $this->toast("Aset {$asset->code} ditambahkan dan tersedia di gudang. Serahkan ke karyawan atau ruangan bila sudah dipakai.");
+        $this->toast("Peralatan {$asset->code} ditambahkan dan tersedia di gudang. Serahkan ke karyawan atau ruangan bila sudah dipakai.");
 
         return to_route('assets.show', $asset);
     }
@@ -214,7 +212,7 @@ class AssetController extends Controller
             Storage::disk('public')->delete($oldPhoto);
         }
 
-        $this->toast("Aset {$asset->code} diperbarui.");
+        $this->toast("Peralatan {$asset->code} diperbarui.");
 
         return to_route('assets.show', $asset);
     }
@@ -239,17 +237,20 @@ class AssetController extends Controller
      */
     private function formOptions(): array
     {
+        $codes = app(AssetCodeGenerator::class);
+
         return [
             'categories' => Category::query()
                 ->where('type', CategoryType::Aset)
                 ->orderBy('name')
-                ->with('parent:id,name')->get(['id', 'code', 'name', 'parent_id'])
+                ->with('parent:id,code,name')->get(['id', 'code', 'name', 'parent_id'])
                 ->map(fn (Category $category): array => [
                     'id' => $category->id,
                     'code' => $category->code,
-                    'name' => $category->parent ? $category->name.' (Subkategori '.$category->parent->name.')' : $category->name,
+                    'name' => $category->name,
                     'parent_id' => $category->parent_id,
-                    'next_code' => app(AssetCodeGenerator::class)->next($category),
+                    'code_path' => $codes->typePath($category),
+                    'next_sequence' => $category->parent_id ? $codes->nextSequence($category) : 1,
                 ]),
             'suppliers' => Supplier::query()->orderBy('name')->pluck('name'),
             'today' => now()->toDateString(),

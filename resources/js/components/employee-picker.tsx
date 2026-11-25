@@ -153,7 +153,7 @@ export function EmployeePicker({
                         Ganti
                     </button>
                 </div>
-                {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+                {error && <p className="text-sm text-low-ink">{error}</p>}
             </div>
         );
     }
@@ -212,7 +212,7 @@ export function EmployeePicker({
                         />
                     </label>
                 </div>
-                {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+                {error && <p className="text-sm text-low-ink">{error}</p>}
             </div>
         );
     }
@@ -324,7 +324,7 @@ export function EmployeePicker({
                     )}
                 </ul>
             )}
-            {error && <p className="text-sm text-[#c52c32]">{error}</p>}
+            {error && <p className="text-sm text-low-ink">{error}</p>}
         </div>
     );
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Asset;
 
 use App\Enums\CategoryType;
-use App\Models\Category;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,14 +23,13 @@ class SaveAssetRequest extends FormRequest
     public function rules(): array
     {
         $isNewCategory = $this->isMethod('post') && $this->boolean('new_category');
-        $category = $isNewCategory ? null : Category::query()->where('type', CategoryType::Aset)->find($this->input('category_id'));
 
         return [
             'new_category' => ['sometimes', 'boolean'],
-            'category_parent_id' => ['prohibited'],
-            'category_name' => [$isNewCategory ? 'required' : 'nullable', 'string', 'max:100'],
-            'category_code' => [$isNewCategory ? 'required' : 'nullable', 'string', 'min:2', 'max:5', 'alpha', Rule::unique('categories', 'code')->where('type', CategoryType::Aset->value)->ignore($category)],
-            'category_id' => [$isNewCategory ? 'nullable' : 'required', 'integer', Rule::exists('categories', 'id')->where('type', CategoryType::Aset->value)],
+            'category_parent_id' => [$isNewCategory ? 'required' : 'prohibited', 'integer', Rule::exists('categories', 'id')->where('type', CategoryType::Aset->value)->whereNull('parent_id')],
+            'category_name' => [$isNewCategory ? 'required' : 'prohibited', 'string', 'max:100'],
+            'category_code' => [$isNewCategory ? 'required' : 'prohibited', 'string', 'min:2', 'max:5', 'alpha', Rule::unique('categories', 'code')->where('type', CategoryType::Aset->value)],
+            'category_id' => [$isNewCategory ? 'nullable' : 'required', 'integer', Rule::exists('categories', 'id')->where('type', CategoryType::Aset->value)->whereNotNull('parent_id')],
             'name' => ['required', 'string', 'max:255'],
             'brand' => ['nullable', 'string', 'max:100'],
             'model' => ['nullable', 'string', 'max:100'],
@@ -61,15 +59,18 @@ class SaveAssetRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_name.required' => 'Isi nama kategori baru.',
-            'category_code.required' => 'Isi kode kategori.',
+            'category_parent_id.required' => 'Pilih kategori untuk jenis barang baru.',
+            'category_parent_id.exists' => 'Pilih kategori untuk jenis barang baru.',
+            'category_name.required' => 'Isi nama jenis barang baru.',
+            'category_code.required' => 'Isi kode jenis barang.',
             'category_code.alpha' => 'Kode hanya boleh berisi huruf.',
             'category_code.min' => 'Kode minimal 2 huruf.',
             'category_code.max' => 'Kode maksimal 5 huruf.',
-            'category_code.unique' => 'Kode ini sudah dipakai kategori aset lain.',
-            'category_id.required' => 'Pilih kategori aset.',
-            'name.required' => 'Nama aset wajib diisi.',
-            'serial_number.unique' => 'Nomor seri ini sudah terdaftar di aset lain.',
+            'category_code.unique' => 'Kode ini sudah dipakai kategori atau jenis peralatan lain.',
+            'category_id.required' => 'Pilih jenis barang.',
+            'category_id.exists' => 'Pilih jenis barang.',
+            'name.required' => 'Nama peralatan wajib diisi.',
+            'serial_number.unique' => 'Nomor seri ini sudah terdaftar di peralatan lain.',
             'purchased_on.required' => 'Isi tanggal beli.',
             'purchased_on.before_or_equal' => 'Tanggal beli tidak boleh melewati hari ini.',
             'purchase_price.required' => 'Isi harga perolehan.',

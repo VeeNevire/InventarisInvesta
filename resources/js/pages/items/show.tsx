@@ -73,7 +73,7 @@ export default function ItemShow({
         {
             label: 'Kategori',
             value: item.category?.parent_name
-                ? `${item.category.name} (Subkategori ${item.category.parent_name})`
+                ? `${item.category.parent_name} › ${item.category.name}`
                 : (item.category?.name ?? '—'),
         },
         { label: 'Varian', value: item.variant ?? '—' },
@@ -90,7 +90,7 @@ export default function ItemShow({
             title={fullName}
             breadcrumbs={[
                 { title: 'Beranda', href: dashboard.url() },
-                { title: 'Barang', href: itemsIndex.url() },
+                { title: 'Perlengkapan Kantor', href: itemsIndex.url() },
                 { title: fullName },
             ]}
         >
@@ -260,7 +260,7 @@ export default function ItemShow({
                                             Tanggal
                                         </th>
                                         <th className="px-3 py-2.5 font-medium">
-                                            No. transaksi
+                                            No. Transaksi
                                         </th>
                                         <th className="px-3 py-2.5 font-medium">
                                             Keterangan

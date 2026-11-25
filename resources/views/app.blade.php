@@ -4,9 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" type="image/png" href="/logo-mark.png?v=3">
-        <link rel="icon" href="/favicon.ico?v=3" sizes="any">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3">
+        <link rel="icon" href="/favicon.ico?v=7" sizes="any">
+        <link rel="icon" type="image/svg+xml" href="/logo-mark.svg?v=7">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=7">
 
         @fonts
 

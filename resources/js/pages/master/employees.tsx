@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { Badge } from '@/components/ui/status-badge';
 import { initials } from '@/lib/format';
 import { destroy, store, update } from '@/routes/master/employees';
@@ -33,6 +34,7 @@ type EmployeesProps = {
 };
 
 export default function Employees({ employees, divisions }: EmployeesProps) {
+    const paginated = usePaginatedRows(employees, 'master.employees');
     const [editing, setEditing] = useState<Employee | 'new' | null>(null);
     const [deleting, setDeleting] = useState<Employee | null>(null);
     const current = editing === 'new' ? null : editing;
@@ -80,7 +82,7 @@ export default function Employees({ employees, divisions }: EmployeesProps) {
                             Transaksi
                         </th>
                         <th className="px-3 py-3.5 text-right font-medium">
-                            Aset dipegang
+                            Peralatan Dipegang
                         </th>
                         <th className="py-3.5 pr-5 pl-3">
                             <span className="sr-only">Aksi</span>
@@ -88,7 +90,7 @@ export default function Employees({ employees, divisions }: EmployeesProps) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {employees.map((employee) => (
+                    {paginated.rows.map((employee) => (
                         <tr
                             key={employee.id}
                             className={employee.is_active ? '' : 'bg-ink-50/60'}
@@ -144,6 +146,7 @@ export default function Employees({ employees, divisions }: EmployeesProps) {
                     ))}
                 </tbody>
             </MasterTable>
+            <ListPagination paginated={paginated} noun="karyawan" />
 
             <Dialog
                 open={editing !== null}

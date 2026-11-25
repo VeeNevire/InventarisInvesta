@@ -54,7 +54,7 @@ class SupplierController extends Controller
     public function destroy(Supplier $supplier): RedirectResponse
     {
         if ($supplier->transactions()->exists() || $supplier->assets()->exists()) {
-            $this->toast("Supplier {$supplier->name} sudah dipakai di transaksi atau aset, jadi tidak bisa dihapus.", 'error');
+            $this->toast("Supplier {$supplier->name} sudah dipakai di transaksi atau peralatan, jadi tidak bisa dihapus.", 'error');
 
             return back();
         }

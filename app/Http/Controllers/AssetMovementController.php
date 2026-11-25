@@ -101,7 +101,7 @@ class AssetMovementController extends Controller
             $request->user(),
         );
 
-        $this->toast("{$asset->code} sudah dihapuskan dari daftar aset aktif.");
+        $this->toast("{$asset->code} sudah dihapuskan dari daftar peralatan aktif.");
 
         return back();
     }

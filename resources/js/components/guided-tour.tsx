@@ -33,11 +33,11 @@ const steps: TourStep[] = [
     {
         target: 'nav-beranda',
         title: 'Beranda',
-        body: 'Ringkasan gudang hari ini: stok kritis, transaksi terakhir, aset yang perlu perhatian, dan barang yang lama tidak keluar.',
+        body: 'Ringkasan gudang hari ini: stok kritis, transaksi terakhir, peralatan yang perlu perhatian, dan barang yang lama tidak keluar.',
     },
     {
         target: 'nav-barang',
-        title: 'Barang',
+        title: 'Perlengkapan Kantor',
         body: 'Daftar barang habis pakai beserta sisa stoknya. Klik nama barang untuk melihat kartu stok, yaitu riwayat masuk dan keluarnya.',
     },
     {
@@ -47,7 +47,7 @@ const steps: TourStep[] = [
     },
     {
         target: 'nav-aset',
-        title: 'Aset',
+        title: 'Peralatan Kantor',
         body: 'Laptop, printer, proyektor, dan barang lain yang dipakai. Catat siapa pemegangnya, kapan dikembalikan, dan kapan diservis.',
     },
     {
@@ -84,7 +84,7 @@ const steps: TourStep[] = [
     {
         target: 'account',
         title: 'Akun Anda',
-        body: 'Nama dan peran Anda. Klik ikon di sebelah kanan untuk keluar dari aplikasi.',
+        body: 'Klik foto profil Anda untuk membuka pengaturan akun, panduan, atau keluar dari aplikasi.',
     },
 ];
 

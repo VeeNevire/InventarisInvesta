@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { formatDate } from '@/lib/format';
 import { destroy, store, update } from '@/routes/master/suppliers';
 
@@ -24,6 +25,7 @@ type Supplier = {
 };
 
 export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
+    const paginated = usePaginatedRows(suppliers, 'master.suppliers');
     const [editing, setEditing] = useState<Supplier | 'new' | null>(null);
     const [deleting, setDeleting] = useState<Supplier | null>(null);
     const current = editing === 'new' ? null : editing;
@@ -72,7 +74,7 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                             Transaksi
                         </th>
                         <th className="px-3 py-3.5 font-medium">
-                            Terakhir belanja
+                            Terakhir Belanja
                         </th>
                         <th className="py-3.5 pr-5 pl-3">
                             <span className="sr-only">Aksi</span>
@@ -80,7 +82,7 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {suppliers.map((supplier) => (
+                    {paginated.rows.map((supplier) => (
                         <tr key={supplier.id}>
                             <td className="py-3 pr-3 pl-5">
                                 <span className="flex flex-col">
@@ -115,6 +117,7 @@ export default function Suppliers({ suppliers }: { suppliers: Supplier[] }) {
                     ))}
                 </tbody>
             </MasterTable>
+            <ListPagination paginated={paginated} noun="supplier" />
 
             <Dialog
                 open={editing !== null}

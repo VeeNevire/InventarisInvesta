@@ -38,7 +38,10 @@ class StockOpnameService
             ]);
 
             Item::query()
-                ->when($category, fn ($query, Category $category) => $query->where('category_id', $category->id))
+                ->when($category, fn ($query, Category $category) => $query->where(
+                    fn ($query) => $query->where('category_id', $category->id)
+                        ->orWhereHas('category', fn ($query) => $query->where('parent_id', $category->id)),
+                ))
                 ->orderBy('location')
                 ->orderBy('name')
                 ->orderBy('variant')

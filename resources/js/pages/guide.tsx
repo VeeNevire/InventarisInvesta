@@ -70,7 +70,7 @@ const sections: GuideSection[] = [
         link: { label: 'Buka Beranda', href: dashboard.url() },
         steps: [
             {
-                title: 'Barang persediaan',
+                title: 'Perlengkapan Kantor',
                 body: (
                     <>
                         Barang yang <Term>habis dipakai</Term> dan dihitung
@@ -81,13 +81,13 @@ const sections: GuideSection[] = [
                 ),
             },
             {
-                title: 'Aset',
+                title: 'Peralatan Kantor',
                 body: (
                     <>
                         Barang yang <Term>dipakai, bukan dihabiskan</Term>,
-                        dicatat per unit dengan kode seperti INV-LPT-001.
-                        Contohnya laptop yang dipegang karyawan atau printer di
-                        sebuah ruangan.
+                        dicatat per unit dengan kode seperti
+                        INVESTA-PRL-2025-ITE-LPT-001. Contohnya laptop yang
+                        dipegang karyawan atau printer di sebuah ruangan.
                     </>
                 ),
             },
@@ -96,7 +96,7 @@ const sections: GuideSection[] = [
                 body: (
                     <>
                         <Term>Sekretaris</Term> mencatat barang masuk/keluar,
-                        aset, dan cek stok, serta melihat laporan.{' '}
+                        peralatan, dan cek stok, serta melihat laporan.{' '}
                         <Term>Admin</Term> bisa semua itu, ditambah mengelola
                         Master Data, membatalkan transaksi, dan menghapuskan
                         aset. Admin juga bisa memberi Sekretaris tertentu akses
@@ -288,24 +288,24 @@ const sections: GuideSection[] = [
     },
     {
         id: 'aset',
-        title: 'Mengelola aset',
+        title: 'Mengelola peralatan',
         summary:
-            'Mencatat siapa yang memegang laptop, printer, dan aset lainnya.',
+            'Mencatat siapa yang memegang laptop, printer, dan peralatan lainnya.',
         icon: LaptopIcon,
         tone: 'violet',
-        link: { label: 'Buka daftar aset', href: assetsIndex.url() },
+        link: { label: 'Buka daftar peralatan', href: assetsIndex.url() },
         steps: [
             {
-                title: 'Tambah aset',
-                body: 'Klik Tambah Aset dan isi datanya. Kode aset dibuat otomatis, dan statusnya Tersedia.',
+                title: 'Tambah peralatan',
+                body: 'Klik Tambah Peralatan dan isi datanya. Kode peralatan dibuat otomatis, dan statusnya Tersedia.',
             },
             {
                 title: 'Serahkan atau pindahkan',
-                body: 'Di halaman aset, klik Serahkan, lalu pilih karyawan atau ruangan. Untuk memindahkan, klik Pindahkan; catatan pengembalian dari pemegang lama dibuat otomatis.',
+                body: 'Di halaman peralatan, klik Serahkan, lalu pilih karyawan atau ruangan. Untuk memindahkan, klik Pindahkan; catatan pengembalian dari pemegang lama dibuat otomatis.',
             },
             {
                 title: 'Kembalikan',
-                body: 'Saat aset dikembalikan, pilih kondisinya: Baik, Perlu servis, atau Rusak.',
+                body: 'Saat peralatan dikembalikan, pilih kondisinya: Baik, Perlu servis, atau Rusak.',
             },
             {
                 title: 'Servis',
@@ -313,7 +313,7 @@ const sections: GuideSection[] = [
             },
             {
                 title: 'Hapuskan',
-                body: 'Untuk aset yang dijual, dibuang, atau hilang. Datanya tetap tersimpan dengan status Dihapuskan.',
+                body: 'Untuk peralatan yang dijual, dibuang, atau hilang. Datanya tetap tersimpan dengan status Dihapuskan.',
             },
         ],
     },
@@ -327,7 +327,7 @@ const sections: GuideSection[] = [
         steps: [
             {
                 title: 'Pilih jenis laporan',
-                body: 'Ringkasan, Mutasi Barang, Pemakaian per Divisi, Nilai Persediaan, atau Aset per Pemegang.',
+                body: 'Ringkasan, Mutasi Barang, Pemakaian per Divisi, Nilai Perlengkapan, atau Peralatan per Pemegang.',
             },
             {
                 title: 'Pilih periode',
@@ -361,7 +361,7 @@ const sections: GuideSection[] = [
             },
             {
                 title: 'Ruangan dan supplier',
-                body: 'Ruangan dipakai sebagai pemegang aset bersama. Data supplier bisa dilengkapi dengan nomor telepon dan alamat.',
+                body: 'Ruangan dipakai sebagai pemegang peralatan bersama. Data supplier bisa dilengkapi dengan nomor telepon dan alamat.',
             },
             {
                 title: 'Kategori',
@@ -395,7 +395,7 @@ const faqs: { question: string; answer: string }[] = [
     },
     {
         question: 'Karyawan resign, laptopnya bagaimana?',
-        answer: 'Buka aset laptopnya lalu klik Kembalikan. Setelah itu Admin bisa menonaktifkan karyawan tersebut di Master Data.',
+        answer: 'Buka peralatan laptopnya lalu klik Kembalikan. Setelah itu Admin bisa menonaktifkan karyawan tersebut di Master Data.',
     },
     {
         question: 'Bagaimana cara mengganti kata sandi atau email saya?',

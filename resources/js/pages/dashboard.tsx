@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     AlertIcon,
     ArrowDownTrayIcon,
@@ -75,71 +75,110 @@ export default function Dashboard({
     monthlyMovement,
     onboarding,
 }: DashboardProps) {
+    const userName = usePage().props.auth.user?.name ?? '';
+    const firstName = userName.split(' ')[0] || 'Selamat datang';
+
     return (
         <AppLayout
             title="Beranda"
             breadcrumbs={[{ title: 'Beranda', href: dashboard.url() }]}
         >
-            <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                <div className="flex items-center gap-3 mb-2 sm:mb-0">
-                    <img
-                        src="/logo-mark.png"
-                        alt="Inventaris Investa"
-                        className="size-11 object-contain drop-shadow-sm"
+            <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-400 px-6 py-7 text-white shadow-[0_24px_48px_-24px_rgba(22,121,201,0.7)] sm:px-8 sm:py-8">
+                <svg
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 size-full"
+                    preserveAspectRatio="none"
+                >
+                    <defs>
+                        <pattern
+                            id="hero-dots"
+                            width="22"
+                            height="22"
+                            patternUnits="userSpaceOnUse"
+                        >
+                            <circle cx="2" cy="2" r="1.2" fill="white" />
+                        </pattern>
+                    </defs>
+                    <rect
+                        width="100%"
+                        height="100%"
+                        fill="url(#hero-dots)"
+                        opacity="0.12"
                     />
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink-900">
-                            Beranda
+                </svg>
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-white/25 blur-3xl"
+                />
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -bottom-28 left-1/3 size-72 rounded-full bg-mint-300/30 blur-3xl"
+                />
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-6 right-8 hidden size-40 rounded-full border-[18px] border-white/10 md:block"
+                />
+
+                <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <div className="flex flex-col gap-2">
+                        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+                            <span className="size-1.5 rounded-full bg-sun-400" />
+                            {formatDate(today)}
+                        </span>
+                        <h1 className="text-[28px] leading-tight font-bold tracking-[-0.02em] sm:text-[34px]">
+                            Halo, {firstName}!
                         </h1>
-                        <p className="text-sm text-ink-500">
-                            Ringkasan gudang per {formatDate(today)}
+                        <p className="max-w-md text-[15px] text-white/85">
+                            Ini ringkasan gudang hari ini. Catat barang masuk
+                            atau keluar langsung dari sini.
                         </p>
                     </div>
+                    <div className="flex flex-wrap gap-2.5">
+                        <Link
+                            href={incomingCreate.url()}
+                            className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-brand-800 shadow-[0_8px_18px_-8px_rgba(23,82,131,0.5)] transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                        >
+                            <ArrowDownTrayIcon className="size-[18px]" />
+                            Barang Masuk
+                        </Link>
+                        <Link
+                            href={outgoingCreate.url()}
+                            className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/40 bg-white/15 px-4 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                        >
+                            <ArrowUpTrayIcon className="size-[18px]" />
+                            Barang Keluar
+                        </Link>
+                    </div>
                 </div>
-                <div className="flex gap-2 mt-2 sm:mt-0">
-                    <ButtonLink
-                        href={incomingCreate.url()}
-                        variant="outline"
-                        icon={<ArrowDownTrayIcon className="size-[18px]" />}
-                    >
-                        Barang Masuk
-                    </ButtonLink>
-                    <ButtonLink
-                        href={outgoingCreate.url()}
-                        icon={<ArrowUpTrayIcon className="size-[18px]" />}
-                    >
-                        Barang Keluar
-                    </ButtonLink>
-                </div>
-            </header>
+            </section>
 
             <OnboardingChecklist progress={onboarding} />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
-                    label="Nilai persediaan"
+                    label="Nilai Perlengkapan"
                     value={formatRupiahCompact(stats.inventory_value)}
                     hint={`${formatNumber(stats.item_count)} jenis barang`}
                     icon={BoxIcon}
                 />
                 <StatCard
-                    label="Stok kritis"
+                    label="Stok Kritis"
                     value={formatNumber(stats.low_stock)}
                     hint={`${stats.low_stock_notified} dengan notifikasi aktif`}
                     icon={AlertIcon}
-                    tone="red"
+                    tone="coral"
                 />
                 <StatCard
-                    label="Transaksi hari ini"
+                    label="Transaksi Hari Ini"
                     value={formatNumber(
                         stats.incoming_today + stats.outgoing_today,
                     )}
                     hint={`${stats.incoming_today} masuk · ${stats.outgoing_today} keluar`}
                     icon={ArrowsIcon}
-                    tone="green"
+                    tone="sun"
                 />
                 <StatCard
-                    label="Aset dipakai"
+                    label="Peralatan Dipakai"
                     value={
                         <>
                             {stats.assets_in_use}
@@ -151,14 +190,19 @@ export default function Dashboard({
                     }
                     hint="unit sedang dipegang"
                     icon={LaptopIcon}
-                    tone="amber"
+                    tone="green"
+                    progress={
+                        stats.assets_total > 0
+                            ? (stats.assets_in_use / stats.assets_total) * 100
+                            : 0
+                    }
                 />
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
                     <CardHeader
-                        title="Pergerakan nilai barang"
+                        title="Pergerakan Nilai Barang"
                         description="Nilai barang masuk dan keluar, 6 bulan terakhir"
                     />
                     <MovementChart data={monthlyMovement} />
@@ -166,7 +210,7 @@ export default function Dashboard({
 
                 <Card>
                     <CardHeader
-                        title="Stok kritis"
+                        title="Stok Kritis"
                         description="Habis atau di bawah batas minimum"
                         action={
                             <SeeAll
@@ -199,7 +243,7 @@ export default function Dashboard({
                                 <li key={item.id}>
                                     <Link
                                         href={itemShow.url(item.code)}
-                                        className="flex flex-col gap-2 rounded-xl px-2 py-2.5 hover:bg-ink-50"
+                                        className="flex flex-col gap-2 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-accent-50/60"
                                     >
                                         <span className="flex items-center justify-between gap-3">
                                             <span className="truncate text-sm font-medium text-ink-900">
@@ -224,7 +268,7 @@ export default function Dashboard({
                                         <span className="flex items-center gap-3">
                                             <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-100">
                                                 <span
-                                                    className="block h-full rounded-full bg-low"
+                                                    className="block h-full rounded-full bg-gradient-to-r from-low to-accent-400"
                                                     style={{
                                                         width: `${fill}%`,
                                                     }}
@@ -252,7 +296,7 @@ export default function Dashboard({
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <Card className="xl:col-span-2">
                     <CardHeader
-                        title="Transaksi terakhir"
+                        title="Transaksi Terakhir"
                         description="Barang masuk, keluar, dan penyesuaian stok"
                     />
                     {recentTransactions.length === 0 ? (
@@ -288,7 +332,7 @@ export default function Dashboard({
                         <div className="overflow-x-auto px-5 pb-3">
                             <table className="w-full min-w-[560px] text-sm">
                                 <thead>
-                                    <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
+                                    <tr className="border-b border-ink-100 text-left text-[11px] font-semibold tracking-[0.06em] text-ink-400 uppercase">
                                         <th className="py-2.5 pr-3 font-medium">
                                             Transaksi
                                         </th>
@@ -296,7 +340,7 @@ export default function Dashboard({
                                             Barang
                                         </th>
                                         <th className="px-3 py-2.5 font-medium">
-                                            Pihak / keperluan
+                                            Pihak / Keperluan
                                         </th>
                                         <th className="py-2.5 pl-3 text-right font-medium">
                                             Tanggal
@@ -310,7 +354,7 @@ export default function Dashboard({
                                             className={
                                                 transaction.is_cancelled
                                                     ? 'text-ink-400'
-                                                    : undefined
+                                                    : 'transition-colors hover:bg-brand-50/40'
                                             }
                                         >
                                             <td className="py-3 pr-3 align-top">
@@ -369,8 +413,8 @@ export default function Dashboard({
                                                                     className={
                                                                         line.quantity >
                                                                         0
-                                                                            ? 'font-semibold text-ok tabular-nums'
-                                                                            : 'font-semibold tabular-nums'
+                                                                            ? 'font-semibold text-brand-700 tabular-nums'
+                                                                            : 'font-semibold text-accent-700 tabular-nums'
                                                                     }
                                                                 >
                                                                     {line.quantity >
@@ -423,14 +467,14 @@ export default function Dashboard({
                 <div className="flex flex-col gap-4">
                     <Card>
                         <CardHeader
-                            title="Aset perlu perhatian"
+                            title="Peralatan Perlu Perhatian"
                             description="Sedang diservis atau rusak"
                             action={<SeeAll href={assetsIndex.url()} />}
                         />
                         <ul className="flex flex-col gap-2 px-3 pb-3">
                             {assetsNeedingAttention.length === 0 && (
                                 <li className="px-2 pb-2 text-sm text-ink-500">
-                                    Semua aset dalam kondisi baik.
+                                    Semua peralatan dalam kondisi baik.
                                 </li>
                             )}
                             {assetsNeedingAttention.map((asset) => (
@@ -439,7 +483,7 @@ export default function Dashboard({
                                         href={assetShow.url(asset.code)}
                                         className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-ink-50"
                                     >
-                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-media text-brand-600">
+                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sun-100 text-sun-700">
                                             <LaptopIcon className="size-5" />
                                         </span>
                                         <span className="flex min-w-0 flex-1 flex-col">
@@ -467,7 +511,7 @@ export default function Dashboard({
 
                     <Card>
                         <CardHeader
-                            title="Barang tidak bergerak"
+                            title="Barang Tidak Bergerak"
                             description="Tidak keluar lebih dari 90 hari"
                         />
                         <ul className="flex flex-col gap-2 px-3 pb-3">
@@ -482,7 +526,7 @@ export default function Dashboard({
                                         href={itemShow.url(item.code)}
                                         className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-ink-50"
                                     >
-                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink-100 text-ink-500">
+                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-700">
                                             <ClockIcon className="size-5" />
                                         </span>
                                         <span className="flex min-w-0 flex-1 flex-col">
@@ -521,7 +565,7 @@ function SeeAll({ href }: { href: string }) {
     return (
         <Link
             href={href}
-            className="inline-flex shrink-0 items-center gap-0.5 text-[13px] font-semibold text-brand-700 hover:text-brand-800"
+            className="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-full bg-brand-50 pr-2 pl-3 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-100"
         >
             Lihat semua
             <ChevronRightIcon className="size-4" />

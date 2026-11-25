@@ -182,13 +182,15 @@ class StockOpnameController extends Controller
     {
         return Category::query()
             ->where('type', CategoryType::Persediaan)
+            ->whereNull('parent_id')
             ->withCount('items')
+            ->with(['children' => fn ($query) => $query->withCount('items')])
             ->orderBy('name')
             ->get()
             ->map(fn (Category $category): array => [
                 'id' => $category->id,
                 'name' => $category->name,
-                'items_count' => $category->items_count,
+                'items_count' => $category->items_count + $category->children->sum('items_count'),
             ]);
     }
 }

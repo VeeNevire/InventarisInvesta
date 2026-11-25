@@ -46,7 +46,7 @@ export function HolderLabel({ holder, status, size = 'sm' }: HolderLabelProps) {
                     </span>
                     <span className="text-xs text-ink-500">
                         {isDisposed
-                            ? 'Aset sudah dihapuskan'
+                            ? 'Peralatan sudah dihapuskan'
                             : isInService
                               ? 'Belum kembali dari perbaikan'
                               : 'Belum diserahkan ke siapa pun'}

@@ -217,7 +217,7 @@ export default function Settings({
                             <p>
                                 {isAdmin
                                     ? 'Admin bisa melakukan semuanya: master data, akun pengguna, pembatalan transaksi, dan penghapusan aset.'
-                                    : 'Sekretaris mencatat barang masuk dan keluar, aset, cek stok, dan melihat laporan.'}
+                                    : 'Sekretaris mencatat barang masuk dan keluar, peralatan, cek stok, dan melihat laporan.'}
                             </p>
                             {!isAdmin && (
                                 <div className="flex flex-col gap-1.5">

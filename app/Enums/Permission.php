@@ -22,11 +22,11 @@ enum Permission: string
     public function label(): string
     {
         return match ($this) {
-            self::CreateItems => 'Tambah barang',
-            self::UpdateItems => 'Ubah data barang',
-            self::DeleteItems => 'Hapus barang',
-            self::UpdateAssets => 'Ubah data aset',
-            self::DisposeAssets => 'Hapuskan aset',
+            self::CreateItems => 'Tambah perlengkapan',
+            self::UpdateItems => 'Ubah data perlengkapan',
+            self::DeleteItems => 'Hapus perlengkapan',
+            self::UpdateAssets => 'Ubah data peralatan',
+            self::DisposeAssets => 'Hapuskan peralatan',
             self::CancelTransactions => 'Batalkan transaksi',
             self::ManageEmployees => 'Kelola karyawan & divisi',
             self::ManagePlaces => 'Kelola ruangan & supplier',
@@ -37,23 +37,23 @@ enum Permission: string
     public function description(): string
     {
         return match ($this) {
-            self::CreateItems => 'Mendaftarkan barang persediaan baru dari menu Barang.',
+            self::CreateItems => 'Mendaftarkan perlengkapan kantor baru dari menu Perlengkapan Kantor.',
             self::UpdateItems => 'Mengubah nama, kategori, harga, lokasi, dan batas minimum barang.',
             self::DeleteItems => 'Menghapus barang yang belum pernah punya transaksi.',
-            self::UpdateAssets => 'Mengubah nama, spesifikasi, harga, dan foto aset.',
-            self::DisposeAssets => 'Menandai aset sebagai dihapuskan (dijual, dibuang, hilang).',
+            self::UpdateAssets => 'Mengubah nama, spesifikasi, harga, dan foto peralatan.',
+            self::DisposeAssets => 'Menandai peralatan sebagai dihapuskan (dijual, dibuang, hilang).',
             self::CancelTransactions => 'Membatalkan barang masuk atau keluar yang salah catat, dengan alasan.',
             self::ManageEmployees => 'Menambah, mengubah, dan menghapus karyawan serta divisi.',
             self::ManagePlaces => 'Menambah, mengubah, dan menghapus ruangan serta supplier.',
-            self::ManageCategories => 'Menambah, mengubah, dan menghapus kategori barang dan aset.',
+            self::ManageCategories => 'Menambah, mengubah, dan menghapus kategori dan jenis barang.',
         };
     }
 
     public function group(): string
     {
         return match ($this) {
-            self::CreateItems, self::UpdateItems, self::DeleteItems => 'Barang',
-            self::UpdateAssets, self::DisposeAssets => 'Aset',
+            self::CreateItems, self::UpdateItems, self::DeleteItems => 'Perlengkapan Kantor',
+            self::UpdateAssets, self::DisposeAssets => 'Peralatan Kantor',
             self::CancelTransactions => 'Transaksi',
             self::ManageEmployees, self::ManagePlaces, self::ManageCategories => 'Master Data',
         };

@@ -2,24 +2,20 @@
 
 namespace App\Support;
 
-use App\Models\Category;
 use App\Models\Item;
 
 /**
- * Generates item codes from the category code, e.g. MRC-007.
+ * Generates office supply codes, e.g. INVESTA-PLK-2025-ATK-HVS-001.
  */
-class ItemCodeGenerator
+class ItemCodeGenerator extends InventoryCodeGenerator
 {
-    public function next(Category $category): string
+    protected function module(): string
     {
-        $prefix = $category->code.'-';
+        return 'PLK';
+    }
 
-        $sequence = Item::query()
-            ->where('code', 'like', $prefix.'%')
-            ->pluck('code')
-            ->map(fn (string $code): int => (int) substr($code, strlen($prefix)))
-            ->max() ?? 0;
-
-        return $prefix.str_pad((string) ($sequence + 1), 3, '0', STR_PAD_LEFT);
+    protected function model(): string
+    {
+        return Item::class;
     }
 }

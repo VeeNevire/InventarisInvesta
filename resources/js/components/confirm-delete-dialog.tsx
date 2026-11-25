@@ -52,7 +52,7 @@ export function ConfirmDeleteDialog({
                 <Button
                     onClick={confirm}
                     disabled={processing}
-                    className="bg-low shadow-none hover:bg-[#c52c32]"
+                    className="bg-low shadow-none hover:bg-low-ink"
                 >
                     {processing ? 'Menghapus…' : 'Ya, hapus'}
                 </Button>
@@ -88,7 +88,7 @@ export function RowActions({
                 onClick={onDelete}
                 disabled={!canDelete}
                 title={canDelete ? 'Hapus' : deleteHint}
-                className="text-[#c52c32] hover:bg-low/10"
+                className="text-low-ink hover:bg-low/10"
             >
                 Hapus
             </Button>

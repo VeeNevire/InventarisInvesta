@@ -20,8 +20,8 @@ class AssetFactory extends Factory
     public function definition(): array
     {
         return [
-            'category_id' => Category::factory()->forAssets(),
-            'code' => strtoupper(fake()->unique()->bothify('INV-???-###')),
+            'category_id' => Category::factory()->forAssets()->itemType(),
+            'code' => strtoupper(fake()->unique()->bothify('INVESTA-PRL-20##-???-???-###')),
             'name' => fake()->words(3, true),
             'brand' => fake()->company(),
             'model' => fake()->bothify('??-###'),

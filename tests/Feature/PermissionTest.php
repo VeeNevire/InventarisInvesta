@@ -31,8 +31,8 @@ test('a ticked permission opens its page for a secretary', function (Permission 
     $this->actingAs(grant($this->secretary, [$permission]))->get(route($route, $parameters))->assertOk();
 })->with([
     'tambah barang' => [Permission::CreateItems, 'items.create', []],
-    'ubah barang' => [Permission::UpdateItems, 'items.edit', ['item' => 'MRC-001']],
-    'ubah aset' => [Permission::UpdateAssets, 'assets.edit', ['asset' => 'INV-LPT-003']],
+    'ubah barang' => [Permission::UpdateItems, 'items.edit', ['item' => 'INVESTA-PLK-2026-PRM-KAL-001']],
+    'ubah aset' => [Permission::UpdateAssets, 'assets.edit', ['asset' => 'INVESTA-PRL-2025-ITE-LPT-003']],
     'karyawan' => [Permission::ManageEmployees, 'master.employees.index', []],
     'divisi' => [Permission::ManageEmployees, 'master.divisions.index', []],
     'ruangan' => [Permission::ManagePlaces, 'master.rooms.index', []],
@@ -43,9 +43,9 @@ test('a ticked permission opens its page for a secretary', function (Permission 
 test('a permission only opens what it names', function () {
     $this->actingAs(grant($this->secretary, [Permission::CreateItems]));
 
-    $this->get(route('items.edit', 'MRC-001'))->assertForbidden();
+    $this->get(route('items.edit', 'INVESTA-PLK-2026-PRM-KAL-001'))->assertForbidden();
     $this->get(route('master.employees.index'))->assertForbidden();
-    $this->get(route('assets.edit', 'INV-LPT-003'))->assertForbidden();
+    $this->get(route('assets.edit', 'INVESTA-PRL-2025-ITE-LPT-003'))->assertForbidden();
 });
 
 test('managing user accounts stays admin-only even with every permission', function () {
@@ -77,11 +77,11 @@ test('a secretary with the delete permission can delete an unused item', functio
 
 test('the item form only offers deleting to users who may delete', function () {
     $this->actingAs(grant($this->secretary, [Permission::UpdateItems]))
-        ->get(route('items.edit', 'MRC-001'))
+        ->get(route('items.edit', 'INVESTA-PLK-2026-PRM-KAL-001'))
         ->assertInertia(fn (Assert $page) => $page->where('canDelete', false));
 
     $this->actingAs($this->admin)
-        ->get(route('items.edit', 'MRC-001'))
+        ->get(route('items.edit', 'INVESTA-PLK-2026-PRM-KAL-001'))
         ->assertInertia(fn (Assert $page) => $page->where('canDelete', true));
 });
 
@@ -98,13 +98,13 @@ test('a secretary with the cancel permission can cancel a transaction', function
 
 test('a secretary with the dispose permission can dispose of an asset', function () {
     $this->actingAs(grant($this->secretary, [Permission::DisposeAssets]))
-        ->post(route('assets.dispose', 'INV-LPT-005'), [
+        ->post(route('assets.dispose', 'INVESTA-PRL-2023-ITE-LPT-005'), [
             'reason' => 'Rusak total',
             'occurred_on' => now()->toDateString(),
         ])
         ->assertRedirect();
 
-    expect(Asset::query()->where('code', 'INV-LPT-005')->firstOrFail()->status)->toBe(AssetStatus::Dihapuskan);
+    expect(Asset::query()->where('code', 'INVESTA-PRL-2023-ITE-LPT-005')->firstOrFail()->status)->toBe(AssetStatus::Dihapuskan);
 });
 
 test('admins can tick permissions for a secretary', function () {

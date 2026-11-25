@@ -48,7 +48,7 @@ abstract class AssetMovementRequest extends FormRequest
         return [
             'occurred_on.required' => 'Isi tanggalnya.',
             'occurred_on.before_or_equal' => 'Tanggal tidak boleh melewati hari ini.',
-            'occurred_on.after_or_equal' => 'Tanggal tidak boleh sebelum catatan terakhir aset ini.',
+            'occurred_on.after_or_equal' => 'Tanggal tidak boleh sebelum catatan terakhir peralatan ini.',
         ];
     }
 }

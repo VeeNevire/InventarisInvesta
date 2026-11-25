@@ -43,9 +43,9 @@ test('a new asset gets the next code and a purchase entry', function () {
             'residual_value' => 1000000,
             'photo' => UploadedFile::fake()->image('laptop.jpg'),
         ])
-        ->assertRedirect(route('assets.show', 'INV-LPT-006'));
+        ->assertRedirect(route('assets.show', 'INVESTA-PRL-'.now()->year.'-ITE-LPT-006'));
 
-    $asset = findAsset('INV-LPT-006');
+    $asset = findAsset('INVESTA-PRL-'.now()->year.'-ITE-LPT-006');
 
     expect($asset->status)->toBe(AssetStatus::Tersedia)
         ->and($asset->supplier->name)->toBe('Toko Komputer Jaya')
@@ -54,50 +54,61 @@ test('a new asset gets the next code and a purchase entry', function () {
     Storage::disk('public')->assertExists($asset->image_path);
 });
 
-test('a secretary can create a category while adding an asset', function () {
+test('a secretary can create an item type while adding an asset', function () {
+    $itDevices = Category::query()->where('code', 'ITE')->firstOrFail();
+
     $this->actingAs($this->secretary)->post(route('assets.store'), [
         'new_category' => '1',
-        'category_name' => 'Kamera',
+        'category_parent_id' => $itDevices->id,
+        'category_name' => 'Tablet',
         'category_code' => 'zzz',
-        'name' => 'Kamera baru',
-        'purchased_on' => now()->toDateString(),
+        'name' => 'Tablet baru',
+        'purchased_on' => '2025-03-01',
         'purchase_price' => 1000,
-    ])->assertRedirect(route('assets.show', 'INV-ZZZ-001'));
+    ])->assertRedirect(route('assets.show', 'INVESTA-PRL-2025-ITE-ZZZ-001'));
 
-    expect(findAsset('INV-ZZZ-001')->category->name)->toBe('Kamera');
+    $itemType = findAsset('INVESTA-PRL-2025-ITE-ZZZ-001')->category;
+
+    expect($itemType->name)->toBe('Tablet')
+        ->and($itemType->parent_id)->toBe($itDevices->id);
 });
 
-test('changing a category code preserves old assets and applies to future assets', function () {
-    $oldAsset = findAsset('INV-LPT-001');
+test('the code uses the purchase year and keeps counting across years', function () {
     $data = [
         'category_id' => $this->laptopCategory->id,
-        'category_code' => 'ltp',
         'name' => 'Laptop baru',
-        'purchased_on' => now()->toDateString(),
         'purchase_price' => 1000,
     ];
 
-    $this->actingAs($this->secretary)->post(route('assets.store'), $data)
-        ->assertRedirect(route('assets.show', 'INV-LTP-001'));
-    $this->post(route('assets.store'), [...$data, 'category_code' => ''])
-        ->assertRedirect(route('assets.show', 'INV-LTP-002'));
-
-    expect($oldAsset->refresh()->code)->toBe('INV-LPT-001')
-        ->and($this->laptopCategory->refresh()->code)->toBe('LTP');
+    $this->actingAs($this->secretary)->post(route('assets.store'), [...$data, 'purchased_on' => '2025-12-30'])
+        ->assertRedirect(route('assets.show', 'INVESTA-PRL-2025-ITE-LPT-006'));
+    $this->post(route('assets.store'), [...$data, 'purchased_on' => '2026-01-02'])
+        ->assertRedirect(route('assets.show', 'INVESTA-PRL-2026-ITE-LPT-007'));
 });
 
-test('category codes cannot duplicate another asset category', function () {
-    $otherCategory = Category::query()->where('type', $this->laptopCategory->type)->whereKeyNot($this->laptopCategory->id)->firstOrFail();
+test('assets must be filed under an item type, not a main category', function () {
+    $itDevices = Category::query()->where('code', 'ITE')->firstOrFail();
 
     $this->actingAs($this->secretary)->post(route('assets.store'), [
-        'category_id' => $this->laptopCategory->id,
-        'category_code' => $otherCategory->code,
+        'category_id' => $itDevices->id,
+        'name' => 'Laptop baru',
+        'purchased_on' => now()->toDateString(),
+        'purchase_price' => 1000,
+    ])->assertSessionHasErrors('category_id');
+});
+
+test('a new item type cannot reuse another code', function () {
+    $itDevices = Category::query()->where('code', 'ITE')->firstOrFail();
+
+    $this->actingAs($this->secretary)->post(route('assets.store'), [
+        'new_category' => '1',
+        'category_parent_id' => $itDevices->id,
+        'category_name' => 'Laptop lain',
+        'category_code' => 'PRT',
         'name' => 'Laptop baru',
         'purchased_on' => now()->toDateString(),
         'purchase_price' => 1000,
     ])->assertSessionHasErrors('category_code');
-
-    expect($this->laptopCategory->refresh()->code)->toBe('LPT');
 });
 
 test('serial numbers must be unique', function () {
@@ -116,7 +127,7 @@ test('an available asset can be handed to an employee', function () {
     $employee = Employee::query()->where('name', 'Fajar Nugroho')->firstOrFail();
 
     $this->actingAs($this->secretary)
-        ->post(route('assets.assign', 'INV-LPT-004'), [
+        ->post(route('assets.assign', 'INVESTA-PRL-2025-ITE-LPT-004'), [
             'holder_type' => 'employee',
             'holder_id' => $employee->id,
             'condition' => 'Baik',
@@ -125,7 +136,7 @@ test('an available asset can be handed to an employee', function () {
         ->assertRedirect()
         ->assertInertiaFlash('toast.type', 'success');
 
-    $asset = findAsset('INV-LPT-004');
+    $asset = findAsset('INVESTA-PRL-2025-ITE-LPT-004');
 
     expect($asset->status)->toBe(AssetStatus::Dipakai)
         ->and($asset->holder->is($employee))->toBeTrue();
@@ -133,10 +144,10 @@ test('an available asset can be handed to an employee', function () {
 
 test('an asset in use can be moved to a room in one step', function () {
     $room = Room::query()->where('name', 'Ruang Marketing')->firstOrFail();
-    $before = findAsset('INV-LPT-003')->histories()->count();
+    $before = findAsset('INVESTA-PRL-2025-ITE-LPT-003')->histories()->count();
 
     $this->actingAs($this->secretary)
-        ->post(route('assets.assign', 'INV-LPT-003'), [
+        ->post(route('assets.assign', 'INVESTA-PRL-2025-ITE-LPT-003'), [
             'holder_type' => 'room',
             'holder_id' => $room->id,
             'condition' => 'Baik',
@@ -144,7 +155,7 @@ test('an asset in use can be moved to a room in one step', function () {
         ])
         ->assertRedirect();
 
-    $asset = findAsset('INV-LPT-003');
+    $asset = findAsset('INVESTA-PRL-2025-ITE-LPT-003');
     $latest = $asset->histories()->latest('id')->take(2)->get();
 
     expect($asset->holder->is($room))->toBeTrue()
@@ -153,7 +164,7 @@ test('an asset in use can be moved to a room in one step', function () {
         ->and($latest[1]->holder->name)->toBe('Budi Santoso')
         ->and($latest[0]->type)->toBe(AssetHistoryType::Penyerahan);
 
-    $this->get(route('assets.show', 'INV-LPT-003'))
+    $this->get(route('assets.show', 'INVESTA-PRL-2025-ITE-LPT-003'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('asset.holder.type', 'room')
             ->where('holderSince', now()->toDateString())
@@ -165,7 +176,7 @@ test('inactive employees cannot receive assets', function () {
     $employee->update(['is_active' => false]);
 
     $this->actingAs($this->secretary)
-        ->post(route('assets.assign', 'INV-LPT-004'), [
+        ->post(route('assets.assign', 'INVESTA-PRL-2025-ITE-LPT-004'), [
             'holder_type' => 'employee',
             'holder_id' => $employee->id,
             'condition' => 'Baik',
@@ -176,14 +187,14 @@ test('inactive employees cannot receive assets', function () {
 
 test('a broken return marks the asset as broken', function () {
     $this->actingAs($this->secretary)
-        ->post(route('assets.return', 'INV-LPT-003'), [
+        ->post(route('assets.return', 'INVESTA-PRL-2025-ITE-LPT-003'), [
             'condition' => 'Rusak',
             'notes' => 'Layar retak',
             'occurred_on' => now()->toDateString(),
         ])
         ->assertRedirect();
 
-    $asset = findAsset('INV-LPT-003');
+    $asset = findAsset('INVESTA-PRL-2025-ITE-LPT-003');
 
     expect($asset->status)->toBe(AssetStatus::Rusak)
         ->and($asset->holder_id)->toBeNull();
@@ -191,34 +202,34 @@ test('a broken return marks the asset as broken', function () {
 
 test('an asset in use cannot be sent to service directly', function () {
     $this->actingAs($this->secretary)
-        ->post(route('assets.service', 'INV-LPT-003'), [
+        ->post(route('assets.service', 'INVESTA-PRL-2025-ITE-LPT-003'), [
             'vendor' => 'Mitra Komputer',
             'issue' => 'Lambat',
             'occurred_on' => now()->toDateString(),
         ])
         ->assertSessionHasErrors('status');
 
-    expect(findAsset('INV-LPT-003')->status)->toBe(AssetStatus::Dipakai);
+    expect(findAsset('INVESTA-PRL-2025-ITE-LPT-003')->status)->toBe(AssetStatus::Dipakai);
 });
 
 test('the service cycle records vendor and cost', function () {
     $this->actingAs($this->secretary)
-        ->post(route('assets.service', 'INV-LPT-005'), [
+        ->post(route('assets.service', 'INVESTA-PRL-2023-ITE-LPT-005'), [
             'vendor' => 'Mitra Komputer',
             'issue' => 'Ganti layar',
             'occurred_on' => now()->toDateString(),
         ])
         ->assertRedirect();
 
-    expect(findAsset('INV-LPT-005')->status)->toBe(AssetStatus::Diperbaiki);
+    expect(findAsset('INVESTA-PRL-2023-ITE-LPT-005')->status)->toBe(AssetStatus::Diperbaiki);
 
-    $this->post(route('assets.service.complete', 'INV-LPT-005'), [
+    $this->post(route('assets.service.complete', 'INVESTA-PRL-2023-ITE-LPT-005'), [
         'cost' => 850000,
         'condition' => 'Baik',
         'occurred_on' => now()->toDateString(),
     ])->assertRedirect();
 
-    $asset = findAsset('INV-LPT-005');
+    $asset = findAsset('INVESTA-PRL-2023-ITE-LPT-005');
     $finished = $asset->histories()->where('type', AssetHistoryType::SelesaiPerbaikan)->latest('id')->firstOrFail();
 
     expect($asset->status)->toBe(AssetStatus::Tersedia)
@@ -228,7 +239,7 @@ test('the service cycle records vendor and cost', function () {
 
 test('dates before the last history entry are rejected', function () {
     $this->actingAs($this->secretary)
-        ->post(route('assets.return', 'INV-LPT-003'), [
+        ->post(route('assets.return', 'INVESTA-PRL-2025-ITE-LPT-003'), [
             'condition' => 'Baik',
             'occurred_on' => '2026-03-01',
         ])
@@ -237,27 +248,27 @@ test('dates before the last history entry are rejected', function () {
 
 test('only admins can dispose of an asset', function () {
     $this->actingAs($this->secretary)
-        ->post(route('assets.dispose', 'INV-LPT-005'), [
+        ->post(route('assets.dispose', 'INVESTA-PRL-2023-ITE-LPT-005'), [
             'reason' => 'Rusak total',
             'occurred_on' => now()->toDateString(),
         ])
         ->assertForbidden();
 
     $this->actingAs($this->admin)
-        ->post(route('assets.dispose', 'INV-LPT-005'), [
+        ->post(route('assets.dispose', 'INVESTA-PRL-2023-ITE-LPT-005'), [
             'reason' => 'Rusak total',
             'occurred_on' => now()->toDateString(),
         ])
         ->assertRedirect();
 
-    expect(findAsset('INV-LPT-005')->status)->toBe(AssetStatus::Dihapuskan);
+    expect(findAsset('INVESTA-PRL-2023-ITE-LPT-005')->status)->toBe(AssetStatus::Dihapuskan);
 });
 
 test('only admins can edit an asset', function () {
-    $this->actingAs($this->secretary)->get(route('assets.edit', 'INV-LPT-003'))->assertForbidden();
+    $this->actingAs($this->secretary)->get(route('assets.edit', 'INVESTA-PRL-2025-ITE-LPT-003'))->assertForbidden();
 
     $this->actingAs($this->admin)
-        ->put(route('assets.update', 'INV-LPT-003'), [
+        ->put(route('assets.update', 'INVESTA-PRL-2025-ITE-LPT-003'), [
             'category_id' => $this->laptopCategory->id,
             'name' => 'Laptop Lenovo ThinkPad E14 Gen 5 (Marketing)',
             'serial_number' => 'PF4M7Q9X',
@@ -266,9 +277,9 @@ test('only admins can edit an asset', function () {
             'supplier_name' => 'mitra komputer',
             'is_depreciated' => '0',
         ])
-        ->assertRedirect(route('assets.show', 'INV-LPT-003'));
+        ->assertRedirect(route('assets.show', 'INVESTA-PRL-2025-ITE-LPT-003'));
 
-    $asset = findAsset('INV-LPT-003');
+    $asset = findAsset('INVESTA-PRL-2025-ITE-LPT-003');
 
     expect($asset->name)->toBe('Laptop Lenovo ThinkPad E14 Gen 5 (Marketing)')
         ->and($asset->is_depreciated)->toBeFalse()
@@ -278,7 +289,7 @@ test('only admins can edit an asset', function () {
 
 test('asset detail exposes the options the dialogs need', function () {
     $this->actingAs($this->secretary)
-        ->get(route('assets.show', 'INV-LPT-003'))
+        ->get(route('assets.show', 'INVESTA-PRL-2025-ITE-LPT-003'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('canEdit', false)
             ->where('canDispose', false)
@@ -292,7 +303,7 @@ test('an asset can be handed to a new employee with a division', function () {
     $division = Division::query()->where('name', 'IT')->firstOrFail();
 
     $this->actingAs($this->secretary)
-        ->post(route('assets.assign', 'INV-LPT-004'), [
+        ->post(route('assets.assign', 'INVESTA-PRL-2025-ITE-LPT-004'), [
             'holder_type' => 'employee',
             'holder_id' => '',
             'new_employee_name' => 'Rizky Pratama',
@@ -305,12 +316,12 @@ test('an asset can be handed to a new employee with a division', function () {
     $employee = Employee::query()->where('name', 'Rizky Pratama')->firstOrFail();
 
     expect($employee->division_id)->toBe($division->id)
-        ->and(findAsset('INV-LPT-004')->holder->is($employee))->toBeTrue();
+        ->and(findAsset('INVESTA-PRL-2025-ITE-LPT-004')->holder->is($employee))->toBeTrue();
 });
 
 test('assigning to an employee needs an existing or new employee', function () {
     $this->actingAs($this->secretary)
-        ->post(route('assets.assign', 'INV-LPT-004'), [
+        ->post(route('assets.assign', 'INVESTA-PRL-2025-ITE-LPT-004'), [
             'holder_type' => 'employee',
             'holder_id' => '',
             'new_employee_name' => '',
@@ -324,7 +335,7 @@ test('an employee without a division is shown without one', function () {
     $employee = Employee::factory()->create(['division_id' => null, 'name' => 'Tanpa Divisi']);
 
     $this->actingAs($this->secretary)
-        ->post(route('assets.assign', 'INV-LPT-004'), [
+        ->post(route('assets.assign', 'INVESTA-PRL-2025-ITE-LPT-004'), [
             'holder_type' => 'employee',
             'holder_id' => $employee->id,
             'condition' => 'Baik',
@@ -332,7 +343,7 @@ test('an employee without a division is shown without one', function () {
         ])
         ->assertRedirect();
 
-    $this->get(route('assets.show', 'INV-LPT-004'))
+    $this->get(route('assets.show', 'INVESTA-PRL-2025-ITE-LPT-004'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('asset.holder.name', 'Tanpa Divisi')

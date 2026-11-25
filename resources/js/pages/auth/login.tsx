@@ -79,7 +79,7 @@ export default function Login() {
             <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas px-4 py-10">
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#c3cde6_1.2px,transparent_1.2px)] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,#000_30%,transparent_100%)] bg-[size:22px_22px]"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#bfe3dc_1.2px,transparent_1.2px)] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_50%,#000_30%,transparent_100%)] bg-[size:22px_22px]"
                 />
                 <div
                     aria-hidden="true"
@@ -97,22 +97,20 @@ export default function Login() {
                         className={`pointer-events-none absolute ${tile.position} ${tile.animationClass}`}
                     >
                         <span
-                            className={`flex items-center justify-center rounded-2xl border border-white/80 bg-white/55 text-brand-400 shadow-[0_12px_30px_-14px_rgba(42,56,176,0.35)] backdrop-blur-sm ${tile.size} ${tile.rotate}`}
+                            className={`flex items-center justify-center rounded-2xl border border-white/80 bg-white/55 text-brand-400 shadow-[0_12px_30px_-14px_rgba(22,121,201,0.35)] backdrop-blur-sm ${tile.size} ${tile.rotate}`}
                         >
                             <tile.icon className="size-1/2" strokeWidth={1.4} />
                         </span>
                     </div>
                 ))}
 
-                <div className="relative flex w-full max-w-[420px] flex-col gap-7 rounded-[28px] border border-white bg-white/90 p-8 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_32px_64px_-28px_rgba(30,45,120,0.35)] backdrop-blur-md sm:p-10">
+                <div className="relative flex w-full max-w-[420px] flex-col gap-7 rounded-[28px] border border-white bg-white/90 p-8 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_32px_64px_-28px_rgba(23,82,131,0.35)] backdrop-blur-md sm:p-10">
                     <div className="flex flex-col items-center gap-5 text-center">
-                        <div className="flex size-16 items-center justify-center rounded-2xl border border-brand-100/60 bg-white p-2.5 shadow-[0_10px_24px_-10px_rgba(42,56,176,0.4)]">
-                            <img
-                                src="/logo-mark.png"
-                                alt="Inventaris Investa"
-                                className="size-full object-contain"
-                            />
-                        </div>
+                        <img
+                            src="/logo-mark.svg?v=7"
+                            alt="Inventaris Investa"
+                            className="size-16 rounded-[15px] shadow-[0_10px_24px_-10px_rgba(22,121,201,0.55)]"
+                        />
                         <div className="flex flex-col gap-1.5">
                             <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink-900">
                                 Masuk ke Inventaris{' '}
@@ -138,7 +136,10 @@ export default function Login() {
                                         className="text-sm font-medium text-ink-700"
                                     >
                                         Email{' '}
-                                        <span className="text-low" aria-hidden="true">
+                                        <span
+                                            className="text-low"
+                                            aria-hidden="true"
+                                        >
                                             *
                                         </span>
                                     </label>
@@ -163,7 +164,7 @@ export default function Login() {
                                         <p
                                             id="email-error"
                                             role="alert"
-                                            className="flex items-center gap-1.5 text-sm font-medium text-[#c52c32]"
+                                            className="flex items-center gap-1.5 text-sm font-medium text-low-ink"
                                         >
                                             <AlertIcon className="size-4 shrink-0" />
                                             <span>{errors.email}</span>
@@ -177,7 +178,10 @@ export default function Login() {
                                         className="text-sm font-medium text-ink-700"
                                     >
                                         Kata sandi{' '}
-                                        <span className="text-low" aria-hidden="true">
+                                        <span
+                                            className="text-low"
+                                            aria-hidden="true"
+                                        >
                                             *
                                         </span>
                                     </label>
@@ -185,11 +189,17 @@ export default function Login() {
                                         <input
                                             id="password"
                                             name="password"
-                                            type={showPassword ? 'text' : 'password'}
+                                            type={
+                                                showPassword
+                                                    ? 'text'
+                                                    : 'password'
+                                            }
                                             autoComplete="current-password"
                                             required
                                             aria-required="true"
-                                            aria-invalid={Boolean(errors.password)}
+                                            aria-invalid={Boolean(
+                                                errors.password,
+                                            )}
                                             aria-describedby={
                                                 errors.password
                                                     ? 'password-error'
@@ -199,7 +209,9 @@ export default function Login() {
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setShowPassword((prev) => !prev)}
+                                            onClick={() =>
+                                                setShowPassword((prev) => !prev)
+                                            }
                                             aria-label={
                                                 showPassword
                                                     ? 'Sembunyikan kata sandi'
@@ -230,7 +242,7 @@ export default function Login() {
                                         <p
                                             id="password-error"
                                             role="alert"
-                                            className="flex items-center gap-1.5 text-sm font-medium text-[#c52c32]"
+                                            className="flex items-center gap-1.5 text-sm font-medium text-low-ink"
                                         >
                                             <AlertIcon className="size-4 shrink-0" />
                                             <span>{errors.password}</span>
@@ -291,8 +303,9 @@ export default function Login() {
                             Lupa kata sandi atau mengalami kendala masuk?
                         </p>
                         <p className="mt-1">
-                                Hubungi Administrator Atau TIM IT Investa untuk mendapatkan bantuan.
-                            </p>
+                            Hubungi Administrator Atau TIM IT Investa untuk
+                            mendapatkan bantuan.
+                        </p>
                     </div>
                 </div>
             </div>

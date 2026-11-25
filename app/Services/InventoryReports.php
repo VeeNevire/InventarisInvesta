@@ -78,7 +78,7 @@ class InventoryReports
             ->groupBy('item_id');
 
         return Item::query()
-            ->with('category')
+            ->with('category.parent')
             ->orderBy('code')
             ->get()
             ->map(function (Item $item) use ($opening, $movements): array {
@@ -93,7 +93,7 @@ class InventoryReports
                 return [
                     'code' => $item->code,
                     'name' => trim($item->name.' '.($item->variant ?? '')),
-                    'category' => $item->category->name,
+                    'category' => $item->category->parent?->name ?? $item->category->name,
                     'unit' => $item->unit,
                     'opening' => $openingStock,
                     'incoming' => $incoming,
@@ -187,13 +187,13 @@ class InventoryReports
     public function inventoryValue(): array
     {
         $items = Item::query()
-            ->with('category')
+            ->with('category.parent')
             ->orderBy('code')
             ->get()
             ->map(fn (Item $item): array => [
                 'code' => $item->code,
                 'name' => trim($item->name.' '.($item->variant ?? '')),
-                'category' => $item->category->name,
+                'category' => $item->category->parent?->name ?? $item->category->name,
                 'unit' => $item->unit,
                 'stock' => $item->current_stock,
                 'average_price' => (float) $item->average_price,
@@ -225,7 +225,7 @@ class InventoryReports
     {
         $assets = Asset::query()
             ->where('status', '!=', AssetStatus::Dihapuskan)
-            ->with(['category', 'holder' => fn (MorphTo $morphTo) => $morphTo->morphWith([Employee::class => ['division']])])
+            ->with(['category.parent', 'holder' => fn (MorphTo $morphTo) => $morphTo->morphWith([Employee::class => ['division']])])
             ->orderBy('code')
             ->get();
 
@@ -250,7 +250,7 @@ class InventoryReports
                     'assets' => $group->map(fn (Asset $asset): array => [
                         'code' => $asset->code,
                         'name' => $asset->name,
-                        'category' => $asset->category->name,
+                        'category' => $asset->category->parent?->name ?? $asset->category->name,
                         'since' => isset($handedOverOn["{$asset->id}|{$asset->holder_type}|{$asset->holder_id}"])
                             ? substr((string) $handedOverOn["{$asset->id}|{$asset->holder_type}|{$asset->holder_id}"]->occurred_on, 0, 10)
                             : null,
@@ -269,7 +269,7 @@ class InventoryReports
                 ->map(fn (Asset $asset): array => [
                     'code' => $asset->code,
                     'name' => $asset->name,
-                    'category' => $asset->category->name,
+                    'category' => $asset->category->parent?->name ?? $asset->category->name,
                     'status' => $asset->status->label(),
                     'price' => (float) $asset->purchase_price,
                 ])

@@ -49,7 +49,7 @@ class RoomController extends Controller
     public function destroy(Room $room): RedirectResponse
     {
         if ($room->heldAssets()->exists() || $room->assetHistories()->exists()) {
-            $this->toast("{$room->name} sudah tercatat di riwayat aset, jadi tidak bisa dihapus.", 'error');
+            $this->toast("{$room->name} sudah tercatat di riwayat peralatan, jadi tidak bisa dihapus.", 'error');
 
             return back();
         }

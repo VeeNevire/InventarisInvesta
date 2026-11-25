@@ -8,17 +8,17 @@ const solidTones: Record<Tone, string> = {
     green: 'bg-ok text-white',
     red: 'bg-low text-white',
     gray: 'bg-empty text-white',
-    blue: 'bg-brand-600 text-white',
+    blue: 'bg-brand-700 text-white',
     amber: 'bg-service text-white',
     slate: 'bg-ink-700 text-white',
 };
 
 const softTones: Record<Tone, string> = {
     green: 'bg-ok/10 text-ok',
-    red: 'bg-low/10 text-[#c52c32]',
+    red: 'bg-low/10 text-low-ink',
     gray: 'bg-ink-100 text-ink-700',
     blue: 'bg-brand-50 text-brand-700',
-    amber: 'bg-service/10 text-[#b45309]',
+    amber: 'bg-service/10 text-sun-700',
     slate: 'bg-ink-100 text-ink-700',
 };
 

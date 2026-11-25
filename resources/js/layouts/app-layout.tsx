@@ -41,10 +41,23 @@ export default function AppLayout({
         <>
             <Head>
                 <title>{title}</title>
-                <link rel="icon" type="image/png" href="/logo-mark.png?v=3" />
+                <link
+                    rel="icon"
+                    type="image/svg+xml"
+                    href="/logo-mark.svg?v=7"
+                />
             </Head>
-            <div className="min-h-screen bg-[radial-gradient(120%_80%_at_0%_0%,#f4f7fc_0%,#e9eff8_55%,#e3eaf5_100%)] lg:flex print:block print:min-h-0 print:bg-white print:bg-none">
-                <aside className="hidden w-[272px] shrink-0 lg:block print:hidden">
+            <div className="relative min-h-screen bg-canvas lg:flex print:block print:min-h-0 print:bg-white">
+                <div
+                    aria-hidden="true"
+                    className="pointer-events-none fixed inset-0 overflow-hidden print:hidden"
+                >
+                    <div className="absolute -top-40 right-[-10%] size-[560px] rounded-full bg-brand-200/40 blur-3xl" />
+                    <div className="absolute top-[30%] right-[-14%] size-[420px] rounded-full bg-mint-300/40 blur-3xl" />
+                    <div className="absolute bottom-[-20%] left-[20%] size-[480px] rounded-full bg-accent-100/40 blur-3xl" />
+                </div>
+
+                <aside className="relative z-10 hidden w-[264px] shrink-0 border-r border-ink-200/70 bg-white/85 backdrop-blur-xl lg:block print:hidden">
                     <div className="sticky top-0 h-screen overflow-y-auto">
                         <AppSidebar />
                     </div>
@@ -58,12 +71,12 @@ export default function AppLayout({
                             className="absolute inset-0 bg-ink-900/30 backdrop-blur-[2px]"
                             onClick={() => setIsMenuOpen(false)}
                         />
-                        <div className="absolute inset-y-0 left-0 w-[288px] max-w-[85vw] overflow-y-auto bg-canvas shadow-2xl">
+                        <div className="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] overflow-y-auto bg-white shadow-2xl">
                             <button
                                 type="button"
                                 aria-label="Tutup menu"
                                 onClick={() => setIsMenuOpen(false)}
-                                className="absolute top-6 right-4 z-10 flex size-9 items-center justify-center rounded-lg bg-white text-ink-700"
+                                className="absolute top-5 right-4 z-10 flex size-9 items-center justify-center rounded-lg bg-ink-50 text-ink-700 hover:bg-ink-100"
                             >
                                 <XIcon className="size-4" />
                             </button>
@@ -74,16 +87,18 @@ export default function AppLayout({
                     </div>
                 )}
 
-                <div className="min-w-0 flex-1 p-2 sm:p-3 lg:py-3 lg:pr-3 lg:pl-0 print:p-0">
-                    <div className="flex min-h-[calc(100vh-1.5rem)] flex-col gap-6 rounded-[28px] border border-white/80 bg-panel/85 px-4 py-5 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_24px_48px_-24px_rgba(30,45,90,0.18)] backdrop-blur-sm sm:px-6 lg:px-8 lg:py-6 print:min-h-0 print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none print:backdrop-blur-none">
-                        <div className="print:hidden">
+                <div className="relative z-0 flex min-w-0 flex-1 flex-col">
+                    <div className="sticky top-0 z-30 border-b border-ink-200/60 bg-canvas/75 backdrop-blur-xl print:hidden">
+                        <div className="mx-auto w-full max-w-[1400px] px-4 py-3 sm:px-6 lg:px-8">
                             <AppHeader
                                 breadcrumbs={breadcrumbs}
                                 onOpenMenu={() => setIsMenuOpen(true)}
                             />
                         </div>
-                        <main className="flex flex-col gap-6">{children}</main>
                     </div>
+                    <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 print:max-w-none print:p-0">
+                        {children}
+                    </main>
                 </div>
             </div>
             <Toaster />

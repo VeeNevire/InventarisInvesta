@@ -190,7 +190,7 @@ export default function OpnameShow({
                             variant="ghost"
                             icon={<TrashIcon className="size-4" />}
                             onClick={() => setIsDeleting(true)}
-                            className="text-[#c52c32] hover:bg-low/10"
+                            className="text-low-ink hover:bg-low/10"
                         >
                             Hapus draf
                         </Button>
@@ -314,7 +314,7 @@ export default function OpnameShow({
             </div>
 
             {errors.lines && (
-                <p className="flex items-center gap-2 rounded-xl bg-low/10 px-4 py-3 text-sm text-[#a8262c]">
+                <p className="flex items-center gap-2 rounded-xl bg-low/10 px-4 py-3 text-sm text-low-ink">
                     <AlertIcon className="size-4" />
                     {errors.lines}
                 </p>
@@ -328,16 +328,16 @@ export default function OpnameShow({
                                 Barang
                             </th>
                             <th className="px-3 py-3.5 text-right font-medium">
-                                Stok sistem
+                                Stok Sistem
                             </th>
                             <th className="px-3 py-3.5 font-medium">
-                                Hitung fisik
+                                Hitung Fisik
                             </th>
                             <th className="px-3 py-3.5 text-right font-medium">
                                 Selisih
                             </th>
                             <th className="py-3.5 pr-5 pl-3 font-medium">
-                                Alasan selisih
+                                Alasan Selisih
                             </th>
                         </tr>
                     </thead>
@@ -469,7 +469,7 @@ export default function OpnameShow({
                                                 </span>
                                             )}
                                             {countError && (
-                                                <p className="mt-1 text-xs text-[#c52c32]">
+                                                <p className="mt-1 text-xs text-low-ink">
                                                     {countError}
                                                 </p>
                                             )}
@@ -537,7 +537,7 @@ export default function OpnameShow({
                                                             className="h-10"
                                                         />
                                                         {reasonError && (
-                                                            <p className="text-xs text-[#c52c32]">
+                                                            <p className="text-xs text-low-ink">
                                                                 {reasonError}
                                                             </p>
                                                         )}

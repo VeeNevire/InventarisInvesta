@@ -6,6 +6,7 @@ import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
 import { PageHeader } from '@/components/ui/page-header';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/status-badge';
 import AppLayout from '@/layouts/app-layout';
@@ -42,6 +43,7 @@ export default function OpnamesIndex({
     today,
 }: OpnamesIndexProps) {
     const [isStarting, setIsStarting] = useState(false);
+    const paginated = usePaginatedRows(opnames, 'opnames');
     const totalItems = categories.reduce(
         (total, category) => total + category.items_count,
         0,
@@ -85,116 +87,127 @@ export default function OpnamesIndex({
                     />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-                    {opnames.map((opname) => {
-                        const progress =
-                            opname.line_count > 0
-                                ? (opname.counted_count / opname.line_count) *
-                                  100
-                                : 0;
-                        const isDraft = opname.status.value === 'draf';
+                <>
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+                        {paginated.rows.map((opname) => {
+                            const progress =
+                                opname.line_count > 0
+                                    ? (opname.counted_count /
+                                          opname.line_count) *
+                                      100
+                                    : 0;
+                            const isDraft = opname.status.value === 'draf';
 
-                        return (
-                            <Link
-                                key={opname.number}
-                                href={opnameShow.url(opname.number)}
-                                className="group flex flex-col gap-4 rounded-2xl border border-white bg-white p-5 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)] transition-shadow hover:shadow-[0_1px_2px_rgba(18,24,38,0.04),0_16px_32px_-16px_rgba(42,56,176,0.3)]"
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <span
-                                            className={cn(
-                                                'flex size-11 items-center justify-center rounded-xl',
-                                                isDraft
-                                                    ? 'bg-service/10 text-service'
-                                                    : 'bg-ok/10 text-ok',
-                                            )}
-                                        >
-                                            <ClipboardIcon className="size-5" />
-                                        </span>
-                                        <span className="flex flex-col">
-                                            <span className="font-semibold text-ink-900 group-hover:text-brand-700">
-                                                {opname.number}
+                            return (
+                                <Link
+                                    key={opname.number}
+                                    href={opnameShow.url(opname.number)}
+                                    className="group flex flex-col gap-4 rounded-2xl border border-white bg-white p-5 shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)] transition-shadow hover:shadow-[0_1px_2px_rgba(18,24,38,0.04),0_16px_32px_-16px_rgba(22,121,201,0.3)]"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <span
+                                                className={cn(
+                                                    'flex size-11 items-center justify-center rounded-xl',
+                                                    isDraft
+                                                        ? 'bg-service/10 text-service'
+                                                        : 'bg-ok/10 text-ok',
+                                                )}
+                                            >
+                                                <ClipboardIcon className="size-5" />
                                             </span>
-                                            <span className="text-xs text-ink-500">
-                                                {formatDate(opname.counted_on)}{' '}
-                                                · {opname.scope}
+                                            <span className="flex flex-col">
+                                                <span className="font-semibold text-ink-900 group-hover:text-brand-700">
+                                                    {opname.number}
+                                                </span>
+                                                <span className="text-xs text-ink-500">
+                                                    {formatDate(
+                                                        opname.counted_on,
+                                                    )}{' '}
+                                                    · {opname.scope}
+                                                </span>
                                             </span>
-                                        </span>
-                                    </div>
-                                    <Badge
-                                        tone={isDraft ? 'amber' : 'green'}
-                                        variant="soft"
-                                    >
-                                        {isDraft ? 'Draf' : opname.status.label}
-                                    </Badge>
-                                </div>
-
-                                <div className="flex flex-col gap-1.5">
-                                    <div className="flex justify-between text-xs text-ink-500">
-                                        <span>Sudah dihitung</span>
-                                        <span className="font-semibold text-ink-900 tabular-nums">
-                                            {opname.counted_count} /{' '}
-                                            {opname.line_count} barang
-                                        </span>
-                                    </div>
-                                    <span className="h-1.5 overflow-hidden rounded-full bg-ink-100">
-                                        <span
-                                            className={cn(
-                                                'block h-full rounded-full',
-                                                isDraft
-                                                    ? 'bg-brand-600'
-                                                    : 'bg-ok',
-                                            )}
-                                            style={{ width: `${progress}%` }}
-                                        />
-                                    </span>
-                                </div>
-
-                                <dl className="grid grid-cols-2 gap-3 border-t border-ink-100 pt-3 text-sm">
-                                    <div className="flex flex-col gap-0.5">
-                                        <dt className="text-xs text-ink-500">
-                                            Barang selisih
-                                        </dt>
-                                        <dd className="font-semibold text-ink-900 tabular-nums">
-                                            {opname.difference_count}
-                                        </dd>
-                                    </div>
-                                    <div className="flex flex-col gap-0.5">
-                                        <dt className="text-xs text-ink-500">
-                                            Nilai selisih
-                                        </dt>
-                                        <dd
-                                            className={cn(
-                                                'font-semibold tabular-nums',
-                                                opname.difference_value < 0
-                                                    ? 'text-low'
-                                                    : opname.difference_value >
-                                                        0
-                                                      ? 'text-ok'
-                                                      : 'text-ink-900',
-                                            )}
+                                        </div>
+                                        <Badge
+                                            tone={isDraft ? 'amber' : 'green'}
+                                            variant="soft"
                                         >
-                                            {opname.difference_value > 0 && '+'}
-                                            {formatRupiah(
-                                                opname.difference_value,
-                                            )}
-                                        </dd>
+                                            {isDraft
+                                                ? 'Draf'
+                                                : opname.status.label}
+                                        </Badge>
                                     </div>
-                                </dl>
 
-                                {opname.adjustment_number && (
-                                    <p className="text-xs text-ink-500">
-                                        Penyesuaian:{' '}
-                                        <span className="font-semibold text-ink-700">
-                                            {opname.adjustment_number}
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className="flex justify-between text-xs text-ink-500">
+                                            <span>Sudah dihitung</span>
+                                            <span className="font-semibold text-ink-900 tabular-nums">
+                                                {opname.counted_count} /{' '}
+                                                {opname.line_count} barang
+                                            </span>
+                                        </div>
+                                        <span className="h-1.5 overflow-hidden rounded-full bg-ink-100">
+                                            <span
+                                                className={cn(
+                                                    'block h-full rounded-full',
+                                                    isDraft
+                                                        ? 'bg-brand-600'
+                                                        : 'bg-ok',
+                                                )}
+                                                style={{
+                                                    width: `${progress}%`,
+                                                }}
+                                            />
                                         </span>
-                                    </p>
-                                )}
-                            </Link>
-                        );
-                    })}
-                </div>
+                                    </div>
+
+                                    <dl className="grid grid-cols-2 gap-3 border-t border-ink-100 pt-3 text-sm">
+                                        <div className="flex flex-col gap-0.5">
+                                            <dt className="text-xs text-ink-500">
+                                                Barang selisih
+                                            </dt>
+                                            <dd className="font-semibold text-ink-900 tabular-nums">
+                                                {opname.difference_count}
+                                            </dd>
+                                        </div>
+                                        <div className="flex flex-col gap-0.5">
+                                            <dt className="text-xs text-ink-500">
+                                                Nilai selisih
+                                            </dt>
+                                            <dd
+                                                className={cn(
+                                                    'font-semibold tabular-nums',
+                                                    opname.difference_value < 0
+                                                        ? 'text-low'
+                                                        : opname.difference_value >
+                                                            0
+                                                          ? 'text-ok'
+                                                          : 'text-ink-900',
+                                                )}
+                                            >
+                                                {opname.difference_value > 0 &&
+                                                    '+'}
+                                                {formatRupiah(
+                                                    opname.difference_value,
+                                                )}
+                                            </dd>
+                                        </div>
+                                    </dl>
+
+                                    {opname.adjustment_number && (
+                                        <p className="text-xs text-ink-500">
+                                            Penyesuaian:{' '}
+                                            <span className="font-semibold text-ink-700">
+                                                {opname.adjustment_number}
+                                            </span>
+                                        </p>
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                    <ListPagination paginated={paginated} noun="cek stok" />
+                </>
             )}
 
             <Dialog

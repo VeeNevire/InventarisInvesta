@@ -80,7 +80,7 @@ class ReportExportController extends Controller
             ->row(['Barang masuk', $summary['incoming_count'], $summary['incoming_value']])
             ->row(['Barang keluar', $summary['outgoing_count'], $summary['outgoing_value']])
             ->row(['Selisih cek stok (penyesuaian)', $summary['adjustment_count'], $summary['adjustment_value']])
-            ->totals(['Nilai persediaan saat ini', null, $summary['inventory_value']])
+            ->totals(['Nilai perlengkapan saat ini', null, $summary['inventory_value']])
             ->note("Jumlah jenis barang: {$summary['item_count']}. Barang dengan stok kritis: {$summary['low_stock_count']}.")
             ->note('Nilai barang dihitung dengan harga rata-rata. Transaksi yang dibatalkan tidak dihitung.');
 
@@ -189,7 +189,7 @@ class ReportExportController extends Controller
      */
     private function inventorySheets(array $inventory): array
     {
-        $categories = (new Sheet('Per Kategori', 'Nilai Persediaan per Kategori'))
+        $categories = (new Sheet('Per Kategori', 'Nilai Perlengkapan per Kategori'))
             ->columns([['No', 6, 'int'], ['Kategori', 30], ['Jenis barang', 15, 'int'], ['Nilai', 22, 'rupiah'], ['Porsi', 10, 'percent']]);
 
         foreach ($inventory['categories'] as $index => $category) {
@@ -199,9 +199,9 @@ class ReportExportController extends Controller
             ]);
         }
 
-        $categories->totals([null, 'Total nilai persediaan', array_sum(array_column($inventory['categories'], 'items')), $inventory['total'], 1]);
+        $categories->totals([null, 'Total nilai perlengkapan', array_sum(array_column($inventory['categories'], 'items')), $inventory['total'], 1]);
 
-        $items = (new Sheet('Per Barang', 'Nilai Persediaan per Barang'))
+        $items = (new Sheet('Per Barang', 'Nilai Perlengkapan per Barang'))
             ->columns([['No', 6, 'int'], ['Kode', 11], ['Nama barang', 34], ['Kategori', 18], ['Stok', 10, 'int'], ['Satuan', 9], ['Harga rata-rata', 18, 'rupiah'], ['Nilai', 20, 'rupiah']]);
 
         foreach ($inventory['items'] as $index => $item) {
@@ -220,14 +220,14 @@ class ReportExportController extends Controller
      */
     private function assetSheets(array $assets): array
     {
-        $inUse = (new Sheet('Aset Dipakai', 'Aset per Pemegang'))
-            ->columns([['No', 6, 'int'], ['Kode aset', 15], ['Nama aset', 36], ['Kategori', 16], ['Sejak', 18], ['Harga perolehan', 20, 'rupiah']]);
+        $inUse = (new Sheet('Peralatan Dipakai', 'Peralatan per Pemegang'))
+            ->columns([['No', 6, 'int'], ['Kode peralatan', 15], ['Nama peralatan', 36], ['Kategori', 16], ['Sejak', 18], ['Harga perolehan', 20, 'rupiah']]);
 
         $counter = 0;
 
         foreach ($assets['holders'] as $holder) {
             $label = ($holder['type'] === 'room' ? 'Ruangan: ' : 'Karyawan: ').$holder['name'].($holder['detail'] ? " ({$holder['detail']})" : '');
-            $inUse->group([null, $label, null, null, count($holder['assets']).' aset', $holder['value']]);
+            $inUse->group([null, $label, null, null, count($holder['assets']).' peralatan', $holder['value']]);
 
             foreach ($holder['assets'] as $asset) {
                 $inUse->row([
@@ -238,10 +238,10 @@ class ReportExportController extends Controller
             }
         }
 
-        $inUse->totals([null, 'Total aset dipakai', null, null, $counter.' aset', array_sum(array_column($assets['holders'], 'value'))]);
+        $inUse->totals([null, 'Total peralatan dipakai', null, null, $counter.' peralatan', array_sum(array_column($assets['holders'], 'value'))]);
 
-        $unassigned = (new Sheet('Tanpa Pemegang', 'Aset Tanpa Pemegang'))
-            ->columns([['No', 6, 'int'], ['Kode aset', 15], ['Nama aset', 36], ['Kategori', 16], ['Status', 16], ['Harga perolehan', 20, 'rupiah']]);
+        $unassigned = (new Sheet('Tanpa Pemegang', 'Peralatan Tanpa Pemegang'))
+            ->columns([['No', 6, 'int'], ['Kode peralatan', 15], ['Nama peralatan', 36], ['Kategori', 16], ['Status', 16], ['Harga perolehan', 20, 'rupiah']]);
 
         foreach ($assets['unassigned'] as $index => $asset) {
             $unassigned->row([$index + 1, $asset['code'], $asset['name'], $asset['category'], $asset['status'], $asset['price']]);
@@ -251,8 +251,8 @@ class ReportExportController extends Controller
             ->map(fn (int $count, string $label): string => "{$label} {$count}")
             ->implode(', ');
 
-        $unassigned->totals([null, 'Total harga perolehan seluruh aset aktif', null, null, null, $assets['total_value']])
-            ->note("Jumlah aset: {$statusSummary}.");
+        $unassigned->totals([null, 'Total harga perolehan seluruh peralatan aktif', null, null, null, $assets['total_value']])
+            ->note("Jumlah peralatan: {$statusSummary}.");
 
         return [$inUse, $unassigned];
     }

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogFooter } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Field, inputClasses } from '@/components/ui/field';
+import { ListPagination, usePaginatedRows } from '@/components/ui/pagination';
 import { destroy, store, update } from '@/routes/master/rooms';
 
 type Room = {
@@ -21,6 +22,7 @@ type Room = {
 };
 
 export default function Rooms({ rooms }: { rooms: Room[] }) {
+    const paginated = usePaginatedRows(rooms, 'master.rooms');
     const [editing, setEditing] = useState<Room | 'new' | null>(null);
     const [deleting, setDeleting] = useState<Room | null>(null);
     const current = editing === 'new' ? null : editing;
@@ -28,7 +30,7 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
     return (
         <MasterLayout
             title="Ruangan"
-            description="Tempat aset bersama ditaruh, misalnya printer di Ruang Keuangan atau proyektor di Ruang Rapat."
+            description="Tempat peralatan bersama ditaruh, misalnya printer di Ruang Keuangan atau proyektor di Ruang Rapat."
             actions={
                 <Button
                     icon={<PlusIcon className="size-[18px]" />}
@@ -45,7 +47,7 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
                         <EmptyState
                             icon={DoorIcon}
                             title="Belum ada ruangan"
-                            description="Tambahkan ruangan untuk aset yang dipakai bersama, misalnya printer di Ruang Keuangan atau proyektor di Ruang Rapat."
+                            description="Tambahkan ruangan untuk peralatan yang dipakai bersama, misalnya printer di Ruang Keuangan atau proyektor di Ruang Rapat."
                             action={
                                 <Button
                                     size="sm"
@@ -66,7 +68,7 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
                         </th>
                         <th className="px-3 py-3.5 font-medium">Lantai</th>
                         <th className="px-3 py-3.5 text-right font-medium">
-                            Aset di ruangan
+                            Peralatan di Ruangan
                         </th>
                         <th className="py-3.5 pr-5 pl-3">
                             <span className="sr-only">Aksi</span>
@@ -74,7 +76,7 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                    {rooms.map((room) => (
+                    {paginated.rows.map((room) => (
                         <tr key={room.id}>
                             <td className="py-3 pr-3 pl-5">
                                 <span className="flex items-center gap-3 font-semibold text-ink-900">
@@ -102,6 +104,7 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
                     ))}
                 </tbody>
             </MasterTable>
+            <ListPagination paginated={paginated} noun="ruangan" />
 
             <Dialog
                 open={editing !== null}
@@ -168,7 +171,7 @@ export default function Rooms({ rooms }: { rooms: Room[] }) {
                     open
                     onClose={() => setDeleting(null)}
                     title={`Hapus ${deleting.name}?`}
-                    description="Ruangan ini belum pernah memegang aset, jadi bisa dihapus permanen."
+                    description="Ruangan ini belum pernah memegang peralatan, jadi bisa dihapus permanen."
                     url={destroy.url(deleting.id)}
                 />
             )}

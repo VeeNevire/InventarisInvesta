@@ -2,6 +2,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import type { ComponentType, FormEvent, SVGProps } from 'react';
 import { useState } from 'react';
 import {
+    ArrowLeftIcon,
     ArrowsIcon,
     BoxIcon,
     ChartIcon,
@@ -10,15 +11,15 @@ import {
     DatabaseIcon,
     HelpIcon,
     LaptopIcon,
-    LogoutIcon,
+    ChevronRightIcon,
     SearchIcon,
     SettingsIcon,
-    UserIcon,
 } from '@/components/icons';
+import type { MasterSection } from '@/components/master-layout';
 import { allowedMasterTabs } from '@/components/master-layout';
-import { initials } from '@/lib/format';
+import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { dashboard, guide, logout } from '@/routes';
+import { dashboard, guide } from '@/routes';
 import { index as assetsIndex } from '@/routes/assets';
 import { index as itemsIndex } from '@/routes/items';
 import { index as reportsIndex } from '@/routes/reports';
@@ -26,16 +27,18 @@ import { edit as settingsEdit } from '@/routes/settings';
 import { index as stockOpnamesIndex } from '@/routes/stock-opnames';
 import { index as transactionsIndex } from '@/routes/transactions';
 
-type NavEntry = {
+export type NavEntry = {
     title: string;
     href: string | null;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
     match?: (url: string) => boolean;
     /** Short plain-language hint shown under the title. */
     hint?: string;
+    /** Stable guided-tour target, so renaming the title does not break the tour. */
+    tourId?: string;
 };
 
-const modules: NavEntry[] = [
+export const modules: NavEntry[] = [
     {
         title: 'Beranda',
         href: dashboard.url(),
@@ -43,18 +46,20 @@ const modules: NavEntry[] = [
         match: (url) => url === '/' || url.startsWith('/?'),
     },
     {
-        title: 'Barang',
+        title: 'Perlengkapan Kantor',
         href: itemsIndex.url(),
         icon: BoxIcon,
         match: (url) => url.startsWith('/barang'),
-        hint: 'Habis pakai',
+        hint: 'Habis pakai: ATK, tisu, dll.',
+        tourId: 'barang',
     },
     {
-        title: 'Aset',
+        title: 'Peralatan Kantor',
         href: assetsIndex.url(),
         icon: LaptopIcon,
         match: (url) => url.startsWith('/aset'),
-        hint: 'Laptop, printer, dll.',
+        hint: 'Laptop, printer, meja, dll.',
+        tourId: 'aset',
     },
     {
         title: 'Transaksi',
@@ -76,7 +81,7 @@ const modules: NavEntry[] = [
     },
 ];
 
-const secondary: NavEntry[] = [
+export const secondary: NavEntry[] = [
     {
         title: 'Panduan',
         href: guide.url(),
@@ -94,8 +99,12 @@ const secondary: NavEntry[] = [
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     const { url, props } = usePage();
     const [search, setSearch] = useState('');
-    const user = props.auth.user;
-    const masterDataHref = allowedMasterTabs(props.auth.can)[0]?.href ?? null;
+    const masterSections = allowedMasterTabs(props.auth.can);
+    const isWithinMaster = url.startsWith('/master');
+    const [panel, setPanel] = useState<'main' | 'master'>(
+        isWithinMaster && masterSections.length > 0 ? 'master' : 'main',
+    );
+    const lowStockCount = props.lowStockAlerts.length;
 
     function submitSearch(event: FormEvent) {
         event.preventDefault();
@@ -109,245 +118,324 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     }
 
     return (
-        <div className="flex h-full flex-col gap-6 px-4 py-6">
+        <div className="flex h-full flex-col gap-6 px-4 py-5">
             <Link
                 href={dashboard.url()}
-                className="flex items-center gap-2.5 px-1"
+                className="flex items-center gap-2.5 px-2"
                 onClick={onNavigate}
             >
                 <img
-                    src="/logo-mark.png"
+                    src="/logo-mark.svg?v=7"
                     alt="Logo Inventaris Investa"
-                    className="size-9 rounded-xl object-contain shadow-[0_6px_14px_-6px_rgba(42,56,176,0.6)]"
+                    className="size-9 rounded-[9px] shadow-[0_6px_14px_-6px_rgba(22,121,201,0.6)]"
                 />
-                <span className="text-[19px] font-bold tracking-[-0.02em] text-ink-900">
-                    Inventaris
-                    <span className="text-brand-700">Investa</span>
+                <span className="text-[15px] font-bold tracking-[0.04em] text-ink-900 uppercase">
+                    Inventaris{' '}
+                    <span className="bg-gradient-to-r from-brand-800 to-brand-600 bg-clip-text text-transparent">
+                        Investa
+                    </span>
                 </span>
             </Link>
 
-            <form
-                onSubmit={submitSearch}
-                role="search"
-                className="flex h-11 items-center gap-2.5 border-b border-ink-200 px-2 text-ink-500 focus-within:border-brand-600"
-            >
-                <SearchIcon className="size-[18px]" />
-                <label htmlFor="sidebar-search" className="sr-only">
-                    Cari barang
-                </label>
-                <input
-                    id="sidebar-search"
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Cari barang…"
-                    className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
-                />
-            </form>
-
-            <nav aria-label="Modul utama" className="grid grid-cols-2 gap-2.5">
-                {modules.map((entry) => {
-                    const isActive = entry.match?.(url) ?? false;
-                    const content = (
-                        <>
-                            <entry.icon
-                                className={cn(
-                                    'size-6',
-                                    isActive
-                                        ? 'text-brand-700'
-                                        : 'text-ink-700',
-                                )}
-                                strokeWidth={1.6}
+            <div className="relative -mx-4 flex-1 overflow-hidden">
+                <div
+                    className={cn(
+                        'flex w-[200%] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
+                        panel === 'master' && '-translate-x-1/2',
+                    )}
+                >
+                    <div
+                        className="flex w-1/2 flex-col gap-6 px-4"
+                        inert={panel !== 'main'}
+                    >
+                        <form
+                            onSubmit={submitSearch}
+                            role="search"
+                            className="flex h-10 items-center gap-2.5 rounded-xl border border-ink-200/80 bg-ink-50 px-3 text-ink-400 transition-colors focus-within:border-brand-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-100"
+                        >
+                            <SearchIcon className="size-4" />
+                            <label htmlFor="sidebar-search" className="sr-only">
+                                Cari barang
+                            </label>
+                            <input
+                                id="sidebar-search"
+                                type="search"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                placeholder="Cari barang…"
+                                className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
                             />
-                            <span className="flex flex-col items-center gap-0.5">
-                                <span
+                        </form>
+
+                        <nav
+                            aria-label="Modul utama"
+                            className="flex flex-col gap-1"
+                        >
+                            <SectionLabel>Menu</SectionLabel>
+                            {modules.map((entry) => (
+                                <SidebarLink
+                                    key={entry.title}
+                                    entry={entry}
+                                    isActive={entry.match?.(url) ?? false}
+                                    onNavigate={onNavigate}
+                                    count={
+                                        entry.title === 'Perlengkapan Kantor' &&
+                                        lowStockCount > 0
+                                            ? lowStockCount
+                                            : undefined
+                                    }
+                                />
+                            ))}
+                        </nav>
+
+                        <nav
+                            aria-label="Lainnya"
+                            className="flex flex-col gap-1"
+                        >
+                            <SectionLabel>Lainnya</SectionLabel>
+                            {masterSections.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setPanel('master')}
+                                    data-tour="nav-master"
                                     className={cn(
-                                        'text-sm leading-tight',
-                                        isActive
-                                            ? 'font-semibold text-brand-700'
-                                            : 'text-ink-700',
+                                        'group flex h-10 items-center gap-3 rounded-xl px-2.5 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
+                                        isWithinMaster
+                                            ? 'bg-brand-50 font-semibold text-brand-800'
+                                            : 'text-ink-700 hover:bg-ink-50 hover:text-ink-900',
                                     )}
                                 >
-                                    {entry.title}
-                                </span>
-                                {entry.hint && (
-                                    <span className="text-[11px] leading-tight text-ink-500">
-                                        {entry.hint}
+                                    <span className="flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-500 group-hover:text-brand-700">
+                                        <DatabaseIcon
+                                            className="size-[18px]"
+                                            strokeWidth={1.7}
+                                        />
                                     </span>
-                                )}
-                            </span>
-                        </>
-                    );
+                                    <span className="flex-1 truncate">
+                                        Master Data
+                                    </span>
+                                    <ChevronRightIcon className="size-4 text-ink-400 transition-transform group-hover:translate-x-0.5" />
+                                </button>
+                            )}
+                            {secondary.map((entry) => (
+                                <SidebarLink
+                                    key={entry.title}
+                                    entry={entry}
+                                    isActive={entry.match?.(url) ?? false}
+                                    onNavigate={onNavigate}
+                                />
+                            ))}
+                        </nav>
+                    </div>
 
-                    const base =
-                        'flex h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border transition-colors';
+                    <div
+                        className="flex w-1/2 flex-col gap-5 px-4"
+                        inert={panel !== 'master'}
+                    >
+                        <MasterDataPanel
+                            sections={masterSections}
+                            url={url}
+                            onBack={() => setPanel('main')}
+                            onNavigate={onNavigate}
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
-                    if (!entry.href) {
-                        return (
-                            <span
-                                key={entry.title}
-                                aria-disabled="true"
-                                title="Segera hadir"
-                                className={cn(
-                                    base,
-                                    'relative cursor-not-allowed border-transparent bg-white/40 opacity-60',
-                                )}
-                            >
-                                {content}
-                                <span className="absolute top-2 right-2 rounded bg-ink-100 px-1.5 text-[10px] font-semibold text-ink-500">
-                                    Segera
-                                </span>
-                            </span>
-                        );
-                    }
+type MasterDataPanelProps = {
+    sections: MasterSection[];
+    url: string;
+    onBack: () => void;
+    onNavigate?: () => void;
+};
+
+/**
+ * Sidebar panel that replaces the main menu while working in Master Data.
+ */
+function MasterDataPanel({
+    sections,
+    url,
+    onBack,
+    onNavigate,
+}: MasterDataPanelProps) {
+    return (
+        <>
+            <button
+                type="button"
+                onClick={onBack}
+                className="group flex h-10 items-center gap-2 rounded-xl border border-ink-200/80 bg-ink-50 px-3 text-sm font-medium text-ink-600 transition-colors hover:border-brand-300 hover:bg-white hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+            >
+                <ArrowLeftIcon className="size-4 transition-transform group-hover:-translate-x-0.5" />
+                Kembali ke menu utama
+            </button>
+
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-800 via-brand-700 to-brand-500 p-4 text-white">
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-8 -right-8 size-24 rounded-full border-[14px] border-white/10"
+                />
+                <span className="relative flex size-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                    <DatabaseIcon className="size-5" />
+                </span>
+                <p className="relative mt-3 text-[15px] font-semibold">
+                    Master Data
+                </p>
+                <p className="relative text-xs text-white/80">
+                    Data dasar yang dipakai di seluruh aplikasi.
+                </p>
+            </div>
+
+            <nav aria-label="Master Data" className="flex flex-col gap-1">
+                <SectionLabel>Daftar</SectionLabel>
+                {sections.map((section) => {
+                    const isActive = url.startsWith(section.href);
 
                     return (
                         <Link
-                            key={entry.title}
-                            href={entry.href}
-                            data-tour={`nav-${entry.title.toLowerCase().replace(/ /g, '-')}`}
+                            key={section.key}
+                            href={section.href}
                             onClick={onNavigate}
-                            aria-current={isActive ? 'page' : undefined}
                             prefetch
+                            aria-current={isActive ? 'page' : undefined}
                             className={cn(
-                                base,
-                                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
-                                isActive
-                                    ? 'border-brand-700 bg-white shadow-[0_8px_20px_-12px_rgba(42,56,176,0.55)]'
-                                    : 'border-transparent bg-white/60 hover:bg-white',
+                                'group relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
+                                isActive ? 'bg-brand-50' : 'hover:bg-ink-50',
                             )}
                         >
-                            {content}
+                            {isActive && (
+                                <span
+                                    aria-hidden="true"
+                                    className="absolute top-2 bottom-2 -left-4 w-1 rounded-r-full bg-brand-500"
+                                />
+                            )}
+                            <span
+                                className={cn(
+                                    'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+                                    isActive
+                                        ? 'bg-brand-500 text-white shadow-[0_4px_10px_-4px_rgba(22,121,201,0.7)]'
+                                        : 'bg-ink-50 text-ink-500 group-hover:bg-white group-hover:text-brand-700',
+                                )}
+                            >
+                                <section.icon className="size-[18px]" />
+                            </span>
+                            <span className="flex min-w-0 flex-col">
+                                <span
+                                    className={cn(
+                                        'truncate text-sm',
+                                        isActive
+                                            ? 'font-semibold text-brand-800'
+                                            : 'text-ink-700',
+                                    )}
+                                >
+                                    {section.title}
+                                </span>
+                                <span className="truncate text-[11px] text-ink-400">
+                                    {section.hint}
+                                </span>
+                            </span>
                         </Link>
                     );
                 })}
             </nav>
+        </>
+    );
+}
 
-            <div className="h-px bg-ink-200" />
+function SectionLabel({ children }: { children: string }) {
+    return (
+        <span className="px-3 pb-1 text-[11px] font-semibold tracking-[0.08em] text-ink-400 uppercase">
+            {children}
+        </span>
+    );
+}
 
-            <ul className="flex flex-col gap-2">
-                {masterDataHref && (
-                    <li>
-                        <Link
-                            href={masterDataHref}
-                            data-tour="nav-master"
-                            onClick={onNavigate}
-                            aria-current={
-                                url.startsWith('/master') ? 'page' : undefined
-                            }
-                            className="group flex items-center gap-3"
-                        >
-                            <span
-                                className={cn(
-                                    'flex size-10 items-center justify-center rounded-xl',
-                                    url.startsWith('/master')
-                                        ? 'bg-brand-700 text-white'
-                                        : 'bg-white/60 text-ink-700 group-hover:bg-white',
-                                )}
-                            >
-                                <DatabaseIcon className="size-[18px]" />
-                            </span>
-                            <span
-                                className={cn(
-                                    'flex h-10 flex-1 items-center rounded-xl px-3.5 text-sm',
-                                    url.startsWith('/master')
-                                        ? 'bg-white font-semibold text-brand-700 ring-1 ring-brand-700'
-                                        : 'bg-white/60 text-ink-700 group-hover:bg-white',
-                                )}
-                            >
-                                Master Data
-                            </span>
-                        </Link>
-                    </li>
+type SidebarLinkProps = {
+    entry: NavEntry;
+    isActive: boolean;
+    onNavigate?: () => void;
+    count?: number;
+};
+
+function SidebarLink({ entry, isActive, onNavigate, count }: SidebarLinkProps) {
+    const Icon = entry.icon;
+    const base =
+        'group relative flex min-h-10 items-center gap-3 rounded-xl px-2.5 py-1.5 text-sm transition-colors';
+    const iconBox = (
+        <span
+            className={cn(
+                'flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors',
+                isActive
+                    ? 'bg-brand-500 text-white shadow-[0_4px_10px_-4px_rgba(22,121,201,0.7)]'
+                    : 'text-ink-500 group-hover:text-brand-700',
+            )}
+        >
+            <Icon className="size-[18px]" strokeWidth={isActive ? 2 : 1.7} />
+        </span>
+    );
+
+    if (!entry.href) {
+        return (
+            <span
+                aria-disabled="true"
+                title="Segera hadir"
+                className={cn(
+                    base,
+                    'cursor-not-allowed text-ink-500 opacity-60',
                 )}
-                {secondary.map((entry) => {
-                    if (entry.href) {
-                        const isActive = entry.match?.(url) ?? false;
+            >
+                {iconBox}
+                <span className="flex-1 truncate">{entry.title}</span>
+                <span className="rounded bg-ink-100 px-1.5 text-[10px] font-semibold text-ink-500">
+                    Segera
+                </span>
+            </span>
+        );
+    }
 
-                        return (
-                            <li key={entry.title}>
-                                <Link
-                                    href={entry.href}
-                                    data-tour={`nav-${entry.title.toLowerCase().replace(/ /g, '-')}`}
-                                    onClick={onNavigate}
-                                    aria-current={isActive ? 'page' : undefined}
-                                    className="group flex items-center gap-3"
-                                >
-                                    <span
-                                        className={cn(
-                                            'flex size-10 items-center justify-center rounded-xl',
-                                            isActive
-                                                ? 'bg-brand-700 text-white'
-                                                : 'bg-white/60 text-ink-700 group-hover:bg-white',
-                                        )}
-                                    >
-                                        <entry.icon className="size-[18px]" />
-                                    </span>
-                                    <span
-                                        className={cn(
-                                            'flex h-10 flex-1 items-center rounded-xl px-3.5 text-sm',
-                                            isActive
-                                                ? 'bg-white font-semibold text-brand-700 ring-1 ring-brand-700'
-                                                : 'bg-white/60 text-ink-700 group-hover:bg-white',
-                                        )}
-                                    >
-                                        {entry.title}
-                                    </span>
-                                </Link>
-                            </li>
-                        );
-                    }
-
-                    return (
-                        <li key={entry.title}>
-                            <span
-                                aria-disabled="true"
-                                title="Segera hadir"
-                                className="flex cursor-not-allowed items-center gap-3 opacity-60"
-                            >
-                                <span className="flex size-10 items-center justify-center rounded-xl bg-white/60 text-ink-700">
-                                    <entry.icon className="size-[18px]" />
-                                </span>
-                                <span className="flex h-10 flex-1 items-center justify-between rounded-xl bg-white/60 px-3.5 text-sm text-ink-700">
-                                    {entry.title}
-                                    <span className="text-[10px] font-semibold text-ink-400">
-                                        Segera
-                                    </span>
-                                </span>
-                            </span>
-                        </li>
-                    );
-                })}
-            </ul>
-
-            <div className="mt-auto border-t border-ink-200 pt-4">
-                <div
-                    data-tour="account"
-                    className="flex items-center gap-3 rounded-2xl bg-white/70 p-2.5"
-                >
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-sm font-bold text-brand-800">
-                        {user ? initials(user.name) : <UserIcon />}
+    return (
+        <Link
+            href={entry.href}
+            data-tour={`nav-${entry.tourId ?? entry.title.toLowerCase().replace(/ /g, '-')}`}
+            onClick={onNavigate}
+            aria-current={isActive ? 'page' : undefined}
+            title={entry.hint}
+            prefetch
+            className={cn(
+                base,
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
+                isActive
+                    ? 'bg-brand-50 font-semibold text-brand-800'
+                    : 'text-ink-700 hover:bg-ink-50 hover:text-ink-900',
+            )}
+        >
+            {isActive && (
+                <span
+                    aria-hidden="true"
+                    className="absolute top-2 bottom-2 -left-4 w-1 rounded-r-full bg-brand-500"
+                />
+            )}
+            {iconBox}
+            <span className="flex min-w-0 flex-1 flex-col">
+                <span className="leading-5 text-pretty">{entry.title}</span>
+                {entry.hint && (
+                    <span className="text-[11px] leading-4 font-normal text-pretty text-ink-400">
+                        {entry.hint}
                     </span>
-                    <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-sm font-semibold text-ink-900">
-                            {user?.name}
-                        </span>
-                        <span className="truncate text-xs text-ink-500">
-                            {user?.role === 'admin' ? 'Admin' : 'Sekretaris'}
-                        </span>
-                    </div>
-                    <Link
-                        href={logout.url()}
-                        method="post"
-                        as="button"
-                        aria-label="Keluar dari akun"
-                        title="Keluar"
-                        className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-500 hover:bg-low/10 hover:text-low"
-                    >
-                        <LogoutIcon className="size-[18px]" />
-                    </Link>
-                </div>
-            </div>
-        </div>
+                )}
+            </span>
+            {count !== undefined && (
+                <span
+                    className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1.5 text-[11px] font-bold text-white tabular-nums"
+                    aria-label={`${count} barang stok rendah`}
+                >
+                    {formatNumber(count)}
+                </span>
+            )}
+        </Link>
     );
 }

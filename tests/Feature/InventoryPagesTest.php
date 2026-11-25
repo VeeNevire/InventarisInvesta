@@ -26,13 +26,13 @@ test('dashboard shows stock and asset summaries', function () {
 });
 
 test('item list can be filtered by category and stock status', function () {
-    $this->get(route('items.index', ['category' => 'MRC', 'status' => 'menipis']))
+    $this->get(route('items.index', ['category' => 'PRM', 'status' => 'menipis']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('items/index')
             ->has('items', 2)
-            ->where('items.0.code', 'MRC-001')
-            ->where('items.1.code', 'MRC-003')
+            ->where('items.0.code', 'INVESTA-PLK-2026-PRM-GKC-001')
+            ->where('items.1.code', 'INVESTA-PLK-2026-PRM-KAL-001')
         );
 });
 
@@ -43,7 +43,7 @@ test('item list can be searched', function () {
 });
 
 test('item detail shows the stock card including cancelled rows', function () {
-    $this->get(route('items.show', 'MRC-001'))
+    $this->get(route('items.show', 'INVESTA-PLK-2026-PRM-KAL-001'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('items/show')
@@ -57,7 +57,7 @@ test('item detail shows the stock card including cancelled rows', function () {
 });
 
 test('low stock notification can be switched off per item', function () {
-    $item = Item::query()->where('code', 'MRC-001')->firstOrFail();
+    $item = Item::query()->where('code', 'INVESTA-PLK-2026-PRM-KAL-001')->firstOrFail();
 
     $this->patch(route('items.notification.update', $item->code), ['notify_low_stock' => false])
         ->assertRedirect();
@@ -69,7 +69,7 @@ test('low stock notification can be switched off per item', function () {
 });
 
 test('notification update requires a boolean', function () {
-    $this->patch(route('items.notification.update', 'MRC-001'), ['notify_low_stock' => 'maybe'])
+    $this->patch(route('items.notification.update', 'INVESTA-PLK-2026-PRM-KAL-001'), ['notify_low_stock' => 'maybe'])
         ->assertSessionHasErrors('notify_low_stock');
 });
 
@@ -84,7 +84,7 @@ test('asset list can be filtered by status', function () {
 });
 
 test('asset detail shows holder, history and depreciation', function () {
-    $this->get(route('assets.show', 'INV-LPT-003'))
+    $this->get(route('assets.show', 'INVESTA-PRL-2025-ITE-LPT-003'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('assets/show')
@@ -98,7 +98,7 @@ test('asset detail shows holder, history and depreciation', function () {
 });
 
 test('room holders are shown as rooms', function () {
-    $asset = Asset::query()->where('code', 'INV-PRY-001')->firstOrFail();
+    $asset = Asset::query()->where('code', 'INVESTA-PRL-2025-ITE-PRY-001')->firstOrFail();
 
     $this->get(route('assets.show', $asset->code))
         ->assertInertia(fn (Assert $page) => $page

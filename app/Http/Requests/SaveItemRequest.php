@@ -29,22 +29,12 @@ class SaveItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code' => $this->isMethod('post') ? ['sometimes', 'required', ...self::codeRules(), Rule::unique('items', 'code')] : ['prohibited'],
-            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('type', CategoryType::Persediaan->value)],
+            'code' => ['prohibited'],
+            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('type', CategoryType::Persediaan->value)->whereNotNull('parent_id')],
             ...self::attributeRules(),
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'remove_photo' => ['boolean'],
         ];
-    }
-
-    /**
-     * Format rules for an item code, shared with the Excel import.
-     *
-     * @return list<string>
-     */
-    public static function codeRules(): array
-    {
-        return ['string', 'max:100', 'alpha_dash:ascii'];
     }
 
     /**
@@ -80,13 +70,6 @@ class SaveItemRequest extends FormRequest
         ];
     }
 
-    protected function prepareForValidation(): void
-    {
-        if ($this->has('code')) {
-            $this->merge(['code' => strtoupper(trim((string) $this->input('code')))]);
-        }
-    }
-
     /**
      * Reject a name and variant pair that another item already uses.
      *
@@ -106,7 +89,7 @@ class SaveItemRequest extends FormRequest
                     ->first();
 
                 if ($existing) {
-                    $validator->errors()->add('name', "Barang dengan nama dan varian ini sudah ada ({$existing->code}).");
+                    $validator->errors()->add('name', "Perlengkapan dengan nama dan varian ini sudah ada ({$existing->code}).");
                 }
             },
         ];
@@ -119,9 +102,9 @@ class SaveItemRequest extends FormRequest
     {
         return [
             ...self::attributeMessages(),
-            'code.required' => 'Isi kode barang.',
-            'code.unique' => 'Kode barang ini sudah digunakan.',
-            'category_id.required' => 'Pilih kategori.',
+            'code.prohibited' => 'Kode dibuat otomatis dari kategori dan jenis barang.',
+            'category_id.required' => 'Pilih jenis barang.',
+            'category_id.exists' => 'Pilih jenis barang.',
             'photo.image' => 'Foto harus berupa gambar.',
             'photo.mimes' => 'Foto harus JPG, PNG, atau WEBP.',
             'photo.max' => 'Ukuran foto maksimal 5 MB.',

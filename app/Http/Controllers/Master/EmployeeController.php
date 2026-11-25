@@ -63,7 +63,7 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee): RedirectResponse
     {
         if ($employee->transactions()->exists() || $employee->assetHistories()->exists()) {
-            $this->toast("{$employee->name} sudah tercatat di transaksi atau riwayat aset. Nonaktifkan saja agar riwayatnya tetap ada.", 'error');
+            $this->toast("{$employee->name} sudah tercatat di transaksi atau riwayat peralatan. Nonaktifkan saja agar riwayatnya tetap ada.", 'error');
 
             return back();
         }
