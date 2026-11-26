@@ -41,7 +41,7 @@ class ItemImporter
     public const COLUMNS = [
         'name' => ['Nama Barang*', 30, 'text'],
         'variant' => ['Varian', 18, 'text'],
-        'category' => ['Jenis Barang*', 16, 'text'],
+        'category' => ['Subkategori*', 16, 'text'],
         'unit' => ['Satuan*', 10, 'text'],
         'location' => ['Lokasi Rak', 14, 'text'],
         'minimum_stock' => ['Stok Minimum', 13, 'int'],
@@ -52,6 +52,15 @@ class ItemImporter
     ];
 
     private const REQUIRED_COLUMNS = ['name', 'category', 'unit'];
+
+    /**
+     * Older header labels still accepted, so templates downloaded before a rename keep working.
+     *
+     * @var array<string, list<string>>
+     */
+    private const LEGACY_LABELS = [
+        'category' => ['Jenis Barang*'],
+    ];
 
     public function __construct(
         private readonly XlsxReader $reader,
@@ -83,10 +92,10 @@ class ItemImporter
             ->note('Kode dibuat otomatis, mis. INVESTA-PLK-'.now()->year.'-ATK-HVS-001.')
             ->note('Sebelum disimpan, sistem menampilkan pratinjau supaya Anda bisa memeriksa baris yang bermasalah.');
 
-        $categories = (new Sheet('Daftar Kategori', 'Daftar Jenis Perlengkapan Kantor'))
-            ->subtitle('Tulis kode jenis (kolom pertama) di kolom Jenis Barang pada sheet "Barang".')
-            ->columns([['Kode Jenis', 12], ['Jenis Barang', 32], ['Kode Kategori', 14], ['Kategori', 32]])
-            ->emptyMessage('Belum ada jenis perlengkapan. Tambahkan dulu di Master Data → Kategori.');
+        $categories = (new Sheet('Daftar Kategori', 'Daftar Subkategori Perlengkapan Kantor'))
+            ->subtitle('Tulis kode subkategori (kolom pertama) di kolom Subkategori pada sheet "Barang".')
+            ->columns([['Kode Subkategori', 18], ['Subkategori', 32], ['Kode Kategori', 14], ['Kategori', 32]])
+            ->emptyMessage('Belum ada subkategori perlengkapan. Tambahkan dulu di Master Data → Kategori.');
 
         foreach ($this->categories() as $category) {
             $categories->row([$category->code, $category->name, $category->parent?->code, $category->parent?->name]);
@@ -242,11 +251,25 @@ class ItemImporter
                 continue;
             }
 
-            $columnMap = array_map(function (string $label) use ($labels): ?int {
-                $position = array_search($label, $labels, true);
+            $columnMap = [];
 
-                return $position === false ? null : $position;
-            }, $wanted);
+            foreach ($wanted as $key => $label) {
+                $candidates = [$label, ...array_map(
+                    fn (string $legacy): string => $this->normalizeLabel($legacy),
+                    self::LEGACY_LABELS[$key] ?? [],
+                )];
+                $columnMap[$key] = null;
+
+                foreach ($candidates as $candidate) {
+                    $position = array_search($candidate, $labels, true);
+
+                    if ($position !== false) {
+                        $columnMap[$key] = $position;
+
+                        break;
+                    }
+                }
+            }
 
             $missing = array_filter(self::REQUIRED_COLUMNS, fn (string $key): bool => $columnMap[$key] === null);
 
@@ -303,9 +326,9 @@ class ItemImporter
             : ($categoriesByCode->get(Str::upper($categoryText)) ?? $categoriesByName->get(Str::lower($categoryText)));
 
         if ($categoryText === null) {
-            $messages[] = 'Jenis barang wajib diisi.';
+            $messages[] = 'Subkategori wajib diisi.';
         } elseif ($category === null) {
-            $messages[] = "Jenis barang \"{$categoryText}\" tidak ditemukan. Lihat sheet \"Daftar Kategori\".";
+            $messages[] = "Subkategori \"{$categoryText}\" tidak ditemukan. Lihat sheet \"Daftar Kategori\".";
         }
 
         $notify = $this->yesNo($values['notify_low_stock']);
@@ -391,7 +414,7 @@ class ItemImporter
         return [
             ['Nama Barang', 'Ya', 'Nama barang.', 'Kertas HVS'],
             ['Varian', 'Tidak', 'Ukuran, warna, atau tipe. Nama + varian yang sama dianggap barang yang sama.', 'A4 80 gram'],
-            ['Jenis Barang', 'Ya', 'Kode jenis dari sheet "Daftar Kategori" (nama jenis juga diterima). Kode barang dibuat otomatis dari kategori dan jenis ini.', 'HVS'],
+            ['Subkategori', 'Ya', 'Kode subkategori dari sheet "Daftar Kategori" (nama subkategori juga diterima). Kode barang dibuat otomatis dari kategori dan subkategori ini.', 'HVS'],
             ['Satuan', 'Ya', 'Satuan hitung, maksimal 20 huruf.', 'rim'],
             ['Lokasi Rak', 'Tidak', 'Tempat penyimpanan di gudang.', 'Rak A-2'],
             ['Stok Minimum', 'Tidak', 'Batas stok rendah. Kosong = 0.', '5'],

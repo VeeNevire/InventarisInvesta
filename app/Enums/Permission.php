@@ -45,7 +45,7 @@ enum Permission: string
             self::CancelTransactions => 'Membatalkan barang masuk atau keluar yang salah catat, dengan alasan.',
             self::ManageEmployees => 'Menambah, mengubah, dan menghapus karyawan serta divisi.',
             self::ManagePlaces => 'Menambah, mengubah, dan menghapus ruangan serta supplier.',
-            self::ManageCategories => 'Menambah, mengubah, dan menghapus kategori dan jenis barang.',
+            self::ManageCategories => 'Menambah, mengubah, dan menghapus kategori dan subkategori.',
         };
     }
 

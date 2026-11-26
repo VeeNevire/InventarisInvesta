@@ -77,7 +77,7 @@ class SaveCategoryRequest extends FormRequest
                 $category = $this->route('category');
 
                 if ($category instanceof Category && $this->filled('parent_id') && ((int) $this->input('parent_id') === $category->id || $category->children()->exists())) {
-                    $validator->errors()->add('parent_id', 'Kategori induk tidak valid atau kategori ini sudah memiliki jenis barang.');
+                    $validator->errors()->add('parent_id', 'Kategori induk tidak valid atau kategori ini sudah memiliki subkategori.');
                 }
 
                 if (! $category instanceof Category || ($category->items()->doesntExist() && $category->assets()->doesntExist() && $category->children()->doesntExist())) {

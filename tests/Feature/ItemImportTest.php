@@ -24,12 +24,19 @@ beforeEach(function () {
  * Build an import file the way a user would: the template's columns with filled-in rows.
  *
  * @param  list<array<string, string|int|float|null>>  $rows
+ * @param  array<string, string>  $headerOverrides  column key => header label to use instead of the template's
  */
-function importFile(array $rows): UploadedFile
+function importFile(array $rows, array $headerOverrides = []): UploadedFile
 {
+    $columns = ItemImporter::COLUMNS;
+
+    foreach ($headerOverrides as $key => $label) {
+        $columns[$key][0] = $label;
+    }
+
     $sheet = (new Sheet('Barang', 'Template Import Barang'))
         ->subtitle('Petunjuk')
-        ->columns(array_values(ItemImporter::COLUMNS));
+        ->columns(array_values($columns));
 
     foreach ($rows as $row) {
         $sheet->row(array_map(fn (string $key) => $row[$key] ?? null, array_keys(ItemImporter::COLUMNS)));
@@ -58,7 +65,7 @@ test('the template lists the columns and the consumable categories', function ()
     $sheetRows = app(XlsxReader::class)->firstSheet($response->getFile()->getPathname());
     $labels = array_merge(...$sheetRows);
 
-    expect($labels)->toContain('Nama Barang*', 'Jenis Barang*', 'Stok Awal', 'Harga Satuan')
+    expect($labels)->toContain('Nama Barang*', 'Subkategori*', 'Stok Awal', 'Harga Satuan')
         ->not->toContain('Kode Barang');
 
     $zip = new ZipArchive;
@@ -102,6 +109,22 @@ test('the preview marks valid, duplicate and invalid rows', function () {
             ]));
 
     expect(Item::query()->where('name', 'Stapler Besar')->exists())->toBeFalse();
+});
+
+test('a template with the old "Jenis Barang" header is still read', function () {
+    $response = $this->actingAs($this->admin)->post(route('items.import.upload'), [
+        'file' => importFile(
+            [['name' => 'Stapler Besar', 'category' => 'PTH', 'unit' => 'pcs']],
+            ['category' => 'Jenis Barang*'],
+        ),
+    ]);
+
+    $token = uploadToken($response->assertRedirect());
+
+    $this->get(route('items.import.show', $token))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('preview.counts', ['valid' => 1, 'duplicate' => 0, 'error' => 0]));
 });
 
 test('confirming saves valid rows and records opening stock as one incoming transaction', function () {

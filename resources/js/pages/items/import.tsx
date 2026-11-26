@@ -155,7 +155,7 @@ function UploadStep({ maxRows }: { maxRows: number }) {
                 <ol className="flex list-decimal flex-col gap-2 px-5 pb-5 pl-10 text-sm text-ink-700">
                     <li>
                         Unduh template. Sheet <b>Daftar Kategori</b> berisi kode
-                        jenis barang yang bisa dipakai (mis. HVS, TSU).
+                        subkategori yang bisa dipakai (mis. HVS, TSU).
                     </li>
                     <li>
                         Isi satu barang per baris di sheet <b>Barang</b>. Kolom
@@ -227,7 +227,7 @@ function PreviewStep({ preview, today }: { preview: Preview; today: string }) {
                             </th>
                             <th className="px-3 py-3.5 font-medium">Barang</th>
                             <th className="px-3 py-3.5 font-medium">
-                                Jenis Barang
+                                Subkategori
                             </th>
                             <th className="px-3 py-3.5 font-medium">Satuan</th>
                             <th className="px-3 py-3.5 text-right font-medium">

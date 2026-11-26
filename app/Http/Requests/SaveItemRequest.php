@@ -102,9 +102,9 @@ class SaveItemRequest extends FormRequest
     {
         return [
             ...self::attributeMessages(),
-            'code.prohibited' => 'Kode dibuat otomatis dari kategori dan jenis barang.',
-            'category_id.required' => 'Pilih jenis barang.',
-            'category_id.exists' => 'Pilih jenis barang.',
+            'code.prohibited' => 'Kode dibuat otomatis dari kategori dan subkategori.',
+            'category_id.required' => 'Pilih subkategori.',
+            'category_id.exists' => 'Pilih subkategori.',
             'photo.image' => 'Foto harus berupa gambar.',
             'photo.mimes' => 'Foto harus JPG, PNG, atau WEBP.',
             'photo.max' => 'Ukuran foto maksimal 5 MB.',

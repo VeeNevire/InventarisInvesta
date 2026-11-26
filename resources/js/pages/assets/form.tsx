@@ -178,7 +178,7 @@ export default function AssetForm({
                               ? `Kode otomatis: ${codeFor(selectedCategory.code_path, selectedCategory.next_sequence)}`
                               : isNewCategory && mainCategory && categoryCode
                                 ? `Kode otomatis: ${codeFor(`${mainCategory.code}-${categoryCode}`, 1)}`
-                                : 'Kode dibuat otomatis setelah jenis barang dipilih'}
+                                : 'Kode dibuat otomatis setelah subkategori dipilih'}
                     </span>
                 }
                 title={title}
@@ -310,7 +310,7 @@ export default function AssetForm({
                                     {isNewCategory ? (
                                         <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-3">
                                             <Field
-                                                label="Jenis barang baru"
+                                                label="Subkategori baru"
                                                 htmlFor="category_name"
                                                 error={errors.category_name}
                                             >
@@ -343,12 +343,12 @@ export default function AssetForm({
                                         </div>
                                     ) : (
                                         <Field
-                                            label="Jenis barang"
+                                            label="Subkategori"
                                             htmlFor="category_id"
                                             hint={
                                                 mainCategoryId &&
                                                 itemTypes.length === 0
-                                                    ? 'Kategori ini belum punya jenis barang. Centang "Tambah jenis barang baru".'
+                                                    ? 'Kategori ini belum punya subkategori. Centang "Tambah subkategori baru".'
                                                     : undefined
                                             }
                                             error={errors.category_id}
@@ -364,7 +364,7 @@ export default function AssetForm({
                                                 )}
                                                 placeholder={
                                                     mainCategoryId
-                                                        ? 'Pilih jenis barang'
+                                                        ? 'Pilih subkategori'
                                                         : 'Pilih kategori dulu'
                                                 }
                                                 options={itemTypes.map(
@@ -394,7 +394,7 @@ export default function AssetForm({
                                                     setCategoryCode('');
                                                 }}
                                             />
-                                            Tambah jenis barang baru di kategori
+                                            Tambah subkategori baru di kategori
                                             ini
                                         </label>
                                     )}

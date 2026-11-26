@@ -147,7 +147,7 @@ export default function ItemForm({
                             ? item.code
                             : nextCode
                               ? `Kode otomatis: ${nextCode}`
-                              : 'Kode dibuat otomatis setelah jenis barang dipilih'}
+                              : 'Kode dibuat otomatis setelah subkategori dipilih'}
                     </span>
                 }
                 title={title}
@@ -321,12 +321,12 @@ export default function ItemForm({
                                     />
                                 </Field>
                                 <Field
-                                    label="Jenis barang"
+                                    label="Subkategori"
                                     htmlFor="subcategory"
                                     hint={
                                         mainCategoryId && itemTypes.length === 0
-                                            ? 'Kategori ini belum punya jenis barang. Tambahkan di Master Data → Kategori.'
-                                            : 'Kode barang dibuat otomatis dari kategori dan jenis ini.'
+                                            ? 'Kategori ini belum punya subkategori. Tambahkan di Master Data → Kategori.'
+                                            : 'Kode barang dibuat otomatis dari kategori dan subkategori ini.'
                                     }
                                     error={
                                         mainCategoryId
@@ -342,7 +342,7 @@ export default function ItemForm({
                                         invalid={Boolean(errors.category_id)}
                                         placeholder={
                                             mainCategoryId
-                                                ? 'Pilih jenis barang'
+                                                ? 'Pilih subkategori'
                                                 : 'Pilih kategori dulu'
                                         }
                                         options={itemTypes.map((category) => ({

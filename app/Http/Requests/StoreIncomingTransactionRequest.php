@@ -4,9 +4,9 @@ namespace App\Http\Requests;
 
 use App\Enums\CategoryType;
 use App\Models\Item;
+use App\Support\TransactionFormOptions;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use App\Support\TransactionFormOptions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -120,7 +120,7 @@ class StoreIncomingTransactionRequest extends FormRequest
             'lines.min' => 'Tambahkan minimal satu barang.',
             'lines.*.item_id.distinct' => 'Barang ini sudah ada di daftar.',
             'lines.*.new_item.name.required_without' => 'Tulis nama barang baru.',
-            'lines.*.new_item.category_id.required_without' => 'Pilih jenis barang baru.',
+            'lines.*.new_item.category_id.required_without' => 'Pilih subkategori barang baru.',
             'lines.*.new_item.unit.required_without' => 'Tulis satuan barang baru.',
             'lines.*.quantity.required' => 'Isi jumlahnya.',
             'lines.*.quantity.min' => 'Jumlah minimal 1.',

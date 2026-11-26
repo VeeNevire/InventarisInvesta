@@ -59,16 +59,16 @@ class SaveAssetRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_parent_id.required' => 'Pilih kategori untuk jenis barang baru.',
-            'category_parent_id.exists' => 'Pilih kategori untuk jenis barang baru.',
-            'category_name.required' => 'Isi nama jenis barang baru.',
-            'category_code.required' => 'Isi kode jenis barang.',
+            'category_parent_id.required' => 'Pilih kategori untuk subkategori baru.',
+            'category_parent_id.exists' => 'Pilih kategori untuk subkategori baru.',
+            'category_name.required' => 'Isi nama subkategori baru.',
+            'category_code.required' => 'Isi kode subkategori.',
             'category_code.alpha' => 'Kode hanya boleh berisi huruf.',
             'category_code.min' => 'Kode minimal 2 huruf.',
             'category_code.max' => 'Kode maksimal 5 huruf.',
-            'category_code.unique' => 'Kode ini sudah dipakai kategori atau jenis peralatan lain.',
-            'category_id.required' => 'Pilih jenis barang.',
-            'category_id.exists' => 'Pilih jenis barang.',
+            'category_code.unique' => 'Kode ini sudah dipakai kategori atau subkategori peralatan lain.',
+            'category_id.required' => 'Pilih subkategori.',
+            'category_id.exists' => 'Pilih subkategori.',
             'name.required' => 'Nama peralatan wajib diisi.',
             'serial_number.unique' => 'Nomor seri ini sudah terdaftar di peralatan lain.',
             'purchased_on.required' => 'Isi tanggal beli.',

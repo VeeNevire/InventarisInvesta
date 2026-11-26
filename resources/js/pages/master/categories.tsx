@@ -51,12 +51,12 @@ const typeInfo: Record<
 > = {
     persediaan: {
         label: 'Perlengkapan Kantor',
-        hint: 'Barang habis pakai yang dihitung jumlahnya, seperti ATK atau tisu. Setiap kategori berisi jenis barang (mis. ATK → Kertas HVS).',
+        hint: 'Barang habis pakai yang dihitung jumlahnya, seperti ATK atau tisu. Setiap kategori berisi subkategori (mis. ATK → Kertas HVS).',
         module: 'PLK',
     },
     aset: {
         label: 'Peralatan Kantor',
-        hint: 'Barang yang dipakai dan dicatat per unit. Setiap kategori berisi jenis barang (mis. Perangkat IT → Laptop).',
+        hint: 'Barang yang dipakai dan dicatat per unit. Setiap kategori berisi subkategori (mis. Perangkat IT → Laptop).',
         module: 'PRL',
     },
 };
@@ -73,7 +73,7 @@ function codeExample(
     parentCode: string | null,
     sequence = 1,
 ): string {
-    const typePath = parentCode ? `${parentCode}-${code}` : `${code}-JENIS`;
+    const typePath = parentCode ? `${parentCode}-${code}` : `${code}-SUB`;
 
     return `INVESTA-${typeInfo[type].module}-${currentYear}-${typePath}-${String(sequence).padStart(3, '0')}`;
 }
@@ -123,7 +123,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
     return (
         <MasterLayout
             title="Kategori"
-            description="Kategori dan jenis barang untuk Perlengkapan dan Peralatan Kantor. Kode kategori dan kode jenis menjadi bagian kode barang."
+            description="Kategori dan subkategori untuk Perlengkapan dan Peralatan Kantor. Kode kategori dan kode subkategori menjadi bagian kode barang."
             actions={
                 <Button
                     icon={<PlusIcon className="size-[18px]" />}
@@ -304,7 +304,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                                 </span>
                                                 <span className="sr-only">
                                                     {' '}
-                                                    (jenis barang dari{' '}
+                                                    (subkategori dari{' '}
                                                     {category.parent_name})
                                                 </span>
                                             </td>
@@ -354,8 +354,8 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                                         </span>
                                                         <span className="text-xs text-ink-500">
                                                             {hasChildren
-                                                                ? `${category.children_count} jenis barang${isCollapsed ? ' · disembunyikan' : ''}`
-                                                                : 'Belum ada jenis barang'}
+                                                                ? `${category.children_count} subkategori${isCollapsed ? ' · disembunyikan' : ''}`
+                                                                : 'Belum ada subkategori'}
                                                         </span>
                                                     </span>
                                                 </button>
@@ -395,7 +395,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                                                 })
                                                             }
                                                         >
-                                                            Jenis barang
+                                                            Subkategori
                                                         </Button>
                                                     ) : undefined
                                                 }
@@ -411,7 +411,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                                 canDelete={!category.is_used}
                                                 deleteHint={
                                                     category.children_count > 0
-                                                        ? 'Masih punya jenis barang.'
+                                                        ? 'Masih punya subkategori.'
                                                         : 'Masih dipakai oleh perlengkapan atau peralatan.'
                                                 }
                                             />
@@ -491,7 +491,7 @@ function CategoryDialog({
         editing.mode === 'edit'
             ? `Ubah ${editing.category.name}`
             : editing.mode === 'new-sub'
-              ? `Tambah jenis barang ${editing.parent.name}`
+              ? `Tambah subkategori ${editing.parent.name}`
               : 'Tambah kategori';
     const previewCode = code.trim().toUpperCase() || 'KODE';
 
@@ -547,7 +547,7 @@ function CategoryDialog({
 
                         <Field
                             label={
-                                parentId ? 'Nama jenis barang' : 'Nama kategori'
+                                parentId ? 'Nama subkategori' : 'Nama kategori'
                             }
                             htmlFor="category-name"
                             error={errors.name}
@@ -613,8 +613,9 @@ function CategoryDialog({
                                 id="category-code-preview"
                                 className="text-xs text-ink-500"
                             >
-                                Barang {parentId ? 'jenis' : 'kategori'} ini
-                                akan berkode{' '}
+                                Barang di{' '}
+                                {parentId ? 'subkategori' : 'kategori'} ini akan
+                                berkode{' '}
                                 <span className="rounded bg-ink-100 px-1.5 py-0.5 font-mono font-semibold text-ink-900">
                                     {codeExample(type, previewCode, parentCode)}
                                 </span>
@@ -641,7 +642,7 @@ function CategoryDialog({
                             <Field
                                 label="Masuk ke kategori"
                                 htmlFor="category-parent"
-                                hint="Pilih kategori bila ini jenis barang"
+                                hint="Pilih kategori bila ini subkategori"
                                 error={errors.parent_id}
                             >
                                 <Select
@@ -657,7 +658,7 @@ function CategoryDialog({
                                         ...parentOptions.map((category) => ({
                                             value: String(category.id),
                                             label: category.name,
-                                            description: `Jadikan jenis barang ${category.name}`,
+                                            description: `Jadikan subkategori ${category.name}`,
                                         })),
                                     ]}
                                 />

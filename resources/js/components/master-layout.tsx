@@ -73,7 +73,7 @@ export const masterSections: MasterSection[] = [
         title: 'Kategori',
         href: categoriesIndex.url(),
         icon: TagIcon,
-        hint: 'Kategori & jenis barang',
+        hint: 'Kategori & subkategori',
         permission: 'master.categories',
     },
     {

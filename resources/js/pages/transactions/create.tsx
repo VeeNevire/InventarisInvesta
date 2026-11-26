@@ -1288,7 +1288,7 @@ function LineRow({
                                         Kode dibuat otomatis
                                         {category
                                             ? ` (INVESTA-PLK-…-${category.code}-…)`
-                                            : ' setelah jenis barang dipilih'}
+                                            : ' setelah subkategori dipilih'}
                                     </span>
                                 </>
                             )}
@@ -1473,7 +1473,7 @@ function LineRow({
                     </MiniField>
                     <MiniField
                         id={`line-${index}-new-category`}
-                        label="Jenis barang"
+                        label="Subkategori"
                         error={errorFor('new_item.category_id')}
                     >
                         <Select
@@ -1483,7 +1483,7 @@ function LineRow({
                                 updateNewItem({ category_id: categoryId })
                             }
                             invalid={Boolean(errorFor('new_item.category_id'))}
-                            placeholder="Pilih jenis barang"
+                            placeholder="Pilih subkategori"
                             options={categories.map((option) => ({
                                 value: String(option.id),
                                 label: option.name,

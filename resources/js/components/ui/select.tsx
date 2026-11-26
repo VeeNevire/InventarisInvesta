@@ -189,7 +189,7 @@ export function Select({
                         )}
                         {option.icon}
                         {option.indent && (
-                            <span className="sr-only">Jenis barang: </span>
+                            <span className="sr-only">Subkategori: </span>
                         )}
                         <span className="flex min-w-0 flex-1 flex-col">
                             <span className="truncate">{option.label}</span>
