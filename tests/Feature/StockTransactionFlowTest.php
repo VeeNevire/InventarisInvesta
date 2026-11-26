@@ -62,7 +62,7 @@ test('incoming goods require the PIC name', function () {
             'supplier_name' => 'CV Cetak Prima',
             'lines' => [['item_id' => $this->calendar->id, 'quantity' => 1, 'unit_price' => 5000]],
         ])
-        ->assertSessionHasErrors(['pic_name' => 'Tulis nama PIC yang menerima barang.']);
+        ->assertSessionHasErrors(['pic_name' => 'Pilih PIC yang menerima barang.']);
 
     expect(StockTransaction::query()->count())->toBe($transactionCount);
 });
@@ -94,12 +94,12 @@ test('purchase date cannot be after the received date', function () {
         ->assertSessionHasErrors(['purchased_on' => 'Tanggal pembelian tidak boleh setelah tanggal terima barang.']);
 });
 
-test('the typed PIC name is saved and searchable in transaction history', function () {
+test('the chosen PIC name is saved and searchable in transaction history', function () {
     $this->actingAs($this->secretary)
         ->post(route('transactions.incoming.store'), [
             'transacted_on' => now()->toDateString(),
             'supplier_name' => 'CV Cetak Prima',
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'purchased_on' => now()->subDays(3)->toDateString(),
             'lines' => [['item_id' => $this->calendar->id, 'quantity' => 2, 'unit_price' => 5000]],
         ])
@@ -107,17 +107,17 @@ test('the typed PIC name is saved and searchable in transaction history', functi
 
     $transaction = StockTransaction::query()->latest('id')->firstOrFail();
 
-    expect($transaction->pic_name)->toBe('Siti Aminah')
+    expect($transaction->pic_name)->toBe('Ayu Lestari')
         ->and($transaction->purchased_on->toDateString())->toBe(now()->subDays(3)->toDateString())
         ->and($transaction->transacted_on->toDateString())->toBe(now()->toDateString())
         ->and($transaction->recorded_by)->toBe($this->secretary->id);
 
-    $this->get(route('transactions.index', ['search' => 'Siti']))
+    $this->get(route('transactions.index', ['search' => 'Ayu']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('transactions/index')
             ->has('transactions', 1)
-            ->where('transactions.0.pic_name', 'Siti Aminah')
+            ->where('transactions.0.pic_name', 'Ayu Lestari')
             ->where('transactions.0.purchased_on', now()->subDays(3)->toDateString())
             ->where('transactions.0.transacted_on', now()->toDateString())
             ->where('transactions.0.recorded_by', 'Ayu Lestari')
@@ -129,7 +129,7 @@ test('outgoing goods reduce stock and record the recipient', function () {
 
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->toDateString(),
             'employee_id' => $employee->id,
             'purpose' => 'Hampers klien',
@@ -145,7 +145,7 @@ test('outgoing goods reduce stock and record the recipient', function () {
         ->and($line->quantity)->toBe(-30)
         ->and($line->balance_after)->toBe(48)
         ->and($line->transaction->employee_id)->toBe($employee->id)
-        ->and($line->transaction->pic_name)->toBe('Siti Aminah');
+        ->and($line->transaction->pic_name)->toBe('Ayu Lestari');
 });
 
 test('outgoing goods cannot exceed the remaining stock', function () {
@@ -154,7 +154,7 @@ test('outgoing goods cannot exceed the remaining stock', function () {
 
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->toDateString(),
             'employee_id' => $employee->id,
             'purpose' => 'Terlalu banyak',
@@ -168,6 +168,18 @@ test('outgoing goods cannot exceed the remaining stock', function () {
         ->and(StockTransaction::query()->count())->toBe($transactionCount);
 });
 
+test('the PIC must be an employee or a user', function () {
+    $this->actingAs($this->secretary)
+        ->post(route('transactions.outgoing.store'), [
+            'pic_name' => 'Orang Asing',
+            'transacted_on' => now()->toDateString(),
+            'new_employee_name' => 'Tono Sugiarto',
+            'purpose' => 'Klien',
+            'lines' => [['item_id' => $this->calendar->id, 'quantity' => 1]],
+        ])
+        ->assertSessionHasErrors(['pic_name' => 'PIC harus dipilih dari daftar karyawan atau pengguna.']);
+});
+
 test('outgoing goods require the PIC name', function () {
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
@@ -176,13 +188,13 @@ test('outgoing goods require the PIC name', function () {
             'purpose' => 'Keperluan kantor',
             'lines' => [['item_id' => $this->calendar->id, 'quantity' => 1]],
         ])
-        ->assertSessionHasErrors(['pic_name' => 'Tulis nama PIC yang mengeluarkan barang.']);
+        ->assertSessionHasErrors(['pic_name' => 'Pilih PIC yang mengeluarkan barang.']);
 });
 
 test('outgoing form requires a recipient, purpose and at least one item', function () {
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->toDateString(),
             'lines' => [],
         ])
@@ -192,7 +204,7 @@ test('outgoing form requires a recipient, purpose and at least one item', functi
 test('the same item cannot appear twice in one transaction', function () {
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->toDateString(),
             'employee_id' => Employee::query()->firstOrFail()->id,
             'purpose' => 'Dobel',
@@ -207,7 +219,7 @@ test('the same item cannot appear twice in one transaction', function () {
 test('transactions cannot be dated in the future', function () {
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->addDay()->toDateString(),
             'employee_id' => Employee::query()->firstOrFail()->id,
             'purpose' => 'Besok',
@@ -510,7 +522,7 @@ test('an item photo must be an image', function () {
 test('a new employee can be added while recording outgoing goods', function () {
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->toDateString(),
             'new_employee_name' => '  Tono   Sugiarto ',
             'purpose' => 'Perlengkapan karyawan baru',
@@ -534,7 +546,7 @@ test('a typed employee name reuses an existing employee', function () {
 
     $this->actingAs($this->secretary)
         ->post(route('transactions.outgoing.store'), [
-            'pic_name' => '  Siti   Aminah  ',
+            'pic_name' => 'Ayu Lestari',
             'transacted_on' => now()->toDateString(),
             'new_employee_name' => 'budi santoso',
             'purpose' => 'Klien',

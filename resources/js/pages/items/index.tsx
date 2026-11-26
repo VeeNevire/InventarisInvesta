@@ -364,21 +364,21 @@ function StockMeter({ item }: { item: Item }) {
 function ItemTable({ items }: { items: Item[] }) {
     return (
         <div className="overflow-x-auto rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
-            <table className="w-full min-w-[920px] text-sm">
+            <table className="w-full min-w-[920px] table-fixed text-sm">
                 <thead>
                     <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
-                        <th className="py-3.5 pr-3 pl-5 font-medium">Barang</th>
-                        <th className="px-3 py-3.5 font-medium">Kategori</th>
-                        <th className="px-3 py-3.5 font-medium">Lokasi</th>
-                        <th className="px-3 py-3.5 font-medium">Sisa Stok</th>
-                        <th className="px-3 py-3.5 text-right font-medium">
+                        <th className="w-[30%] py-3.5 pr-3 pl-5 font-medium">Barang</th>
+                        <th className="w-[16%] px-3 py-3.5 font-medium">Kategori</th>
+                        <th className="w-[11%] px-3 py-3.5 font-medium">Lokasi</th>
+                        <th className="w-[13%] px-3 py-3.5 font-medium">Sisa Stok</th>
+                        <th className="w-[11%] px-3 py-3.5 text-right font-medium">
                             Harga Rata-Rata
                         </th>
-                        <th className="px-3 py-3.5 text-right font-medium">
+                        <th className="w-[11%] px-3 py-3.5 text-right font-medium">
                             Nilai
                         </th>
-                        <th className="px-3 py-3.5 font-medium">Status</th>
-                        <th className="py-3.5 pr-5 pl-3 text-center font-medium">
+                        <th className="w-[100px] px-3 py-3.5 font-medium">Status</th>
+                        <th className="w-[50px] py-3.5 pr-5 pl-3 text-center font-medium">
                             <span className="sr-only">Notifikasi</span>
                             <BellIcon className="mx-auto size-4" />
                         </th>
@@ -400,7 +400,7 @@ function ItemTable({ items }: { items: Item[] }) {
                                     <div className="flex min-w-0 flex-col gap-0.5">
                                         <Link
                                             href={itemShow.url(item.code)}
-                                            className="font-semibold text-ink-900 group-hover:text-brand-700 after:absolute after:inset-0 focus-visible:outline-none"
+                                            className="truncate font-semibold text-ink-900 group-hover:text-brand-700 after:absolute after:inset-0 focus-visible:outline-none"
                                         >
                                             {item.name}
                                             {item.variant && (
@@ -410,18 +410,18 @@ function ItemTable({ items }: { items: Item[] }) {
                                                 </span>
                                             )}
                                         </Link>
-                                        <span className="text-xs text-ink-400">
+                                        <span className="truncate text-xs text-ink-400">
                                             {item.code}
                                         </span>
                                     </div>
                                 </div>
                             </td>
-                            <td className="px-3 py-3 text-ink-700">
+                            <td className="truncate px-3 py-3 text-ink-700">
                                 {item.category?.parent_name
                                     ? `${item.category.parent_name} › ${item.category.name}`
                                     : item.category?.name}
                             </td>
-                            <td className="px-3 py-3 text-ink-700">
+                            <td className="truncate px-3 py-3 text-ink-700">
                                 {item.location ?? '—'}
                             </td>
                             <td className="px-3 py-3">

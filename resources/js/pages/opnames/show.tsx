@@ -187,10 +187,10 @@ export default function OpnameShow({
                 actions={
                     isDraft ? (
                         <Button
-                            variant="ghost"
+                            variant="soft"
                             icon={<TrashIcon className="size-4" />}
                             onClick={() => setIsDeleting(true)}
-                            className="text-low-ink hover:bg-low/10"
+                            className="bg-low/10 text-low-ink hover:bg-low/20"
                         >
                             Hapus draf
                         </Button>
@@ -321,22 +321,22 @@ export default function OpnameShow({
             )}
 
             <div className="overflow-x-auto rounded-2xl border border-white bg-white shadow-[0_1px_2px_rgba(18,24,38,0.04),0_8px_24px_-12px_rgba(18,24,38,0.08)]">
-                <table className="w-full min-w-[920px] text-sm">
+                <table className="w-full min-w-[920px] table-fixed text-sm">
                     <thead>
                         <tr className="border-b border-ink-100 text-left text-xs text-ink-500">
                             <th className="py-3.5 pr-3 pl-5 font-medium">
                                 Barang
                             </th>
-                            <th className="px-3 py-3.5 text-right font-medium">
+                            <th className="w-28 px-3 py-3.5 text-right font-medium">
                                 Stok Sistem
                             </th>
-                            <th className="px-3 py-3.5 font-medium">
+                            <th className="w-44 px-3 py-3.5 font-medium">
                                 Hitung Fisik
                             </th>
-                            <th className="px-3 py-3.5 text-right font-medium">
+                            <th className="w-32 px-3 py-3.5 text-right font-medium">
                                 Selisih
                             </th>
-                            <th className="py-3.5 pr-5 pl-3 font-medium">
+                            <th className="w-64 py-3.5 pr-5 pl-3 font-medium">
                                 Alasan Selisih
                             </th>
                         </tr>
@@ -367,6 +367,7 @@ export default function OpnameShow({
                                     <tr
                                         key={line.id}
                                         className={cn(
+                                            'h-[68px]',
                                             difference !== null &&
                                                 difference !== 0 &&
                                                 'bg-service/[0.04]',
@@ -515,7 +516,7 @@ export default function OpnameShow({
                                             {isDraft ? (
                                                 difference !== null &&
                                                 difference !== 0 ? (
-                                                    <div className="flex w-56 flex-col gap-1">
+                                                    <div className="flex w-full flex-col gap-1">
                                                         <Autocomplete
                                                             id={`reason-${line.id}`}
                                                             value={input.reason}

@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\Employee;
 use App\Models\Item;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -10,6 +12,21 @@ use Illuminate\Support\Facades\Storage;
  */
 class TransactionFormOptions
 {
+    /**
+     * Names allowed as PIC: active employees and application users.
+     *
+     * @return array<int, string>
+     */
+    public function pics(): array
+    {
+        return Employee::query()->where('is_active', true)->pluck('name')
+            ->merge(User::query()->pluck('name'))
+            ->unique()
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->values()
+            ->all();
+    }
+
     /**
      * Every consumable item with the figures the form needs to validate and
      * prefill a line.

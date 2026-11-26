@@ -48,11 +48,11 @@ export function MenuSearch() {
                 type="button"
                 onClick={() => setIsOpen(true)}
                 aria-label="Cari menu"
-                className="hidden h-10 w-full max-w-sm items-center gap-2.5 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-400 transition-colors hover:border-brand-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 md:flex"
+                className="hidden h-10 w-full max-w-[280px] min-w-[180px] items-center gap-2.5 rounded-xl border border-ink-200 bg-white px-3 text-sm text-ink-400 transition-colors hover:border-brand-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 md:flex"
             >
-                <SearchIcon className="size-4" />
-                <span className="flex-1 text-left">Cari menu…</span>
-                <kbd className="rounded-md border border-ink-200 bg-ink-50 px-1.5 py-0.5 font-sans text-[11px] font-semibold text-ink-500">
+                <SearchIcon className="size-4 shrink-0" />
+                <span className="flex-1 truncate text-left whitespace-nowrap">Cari menu…</span>
+                <kbd className="shrink-0 rounded-md border border-ink-200 bg-ink-50 px-1.5 py-0.5 font-sans text-[11px] font-semibold text-ink-500">
                     Ctrl K
                 </kbd>
             </button>
@@ -60,7 +60,7 @@ export function MenuSearch() {
                 type="button"
                 onClick={() => setIsOpen(true)}
                 aria-label="Cari menu"
-                className="flex size-10 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:text-brand-700 md:hidden"
+                className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:text-brand-700 md:hidden"
             >
                 <SearchIcon className="size-[18px]" />
             </button>

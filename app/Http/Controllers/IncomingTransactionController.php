@@ -18,6 +18,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -30,6 +31,7 @@ class IncomingTransactionController extends Controller
             'type' => StockTransactionType::Masuk->value,
             'today' => now()->toDateString(),
             'items' => $options->items(),
+            'pics' => $options->pics(),
             'preselectedItem' => $request->string('barang')->value() ?: null,
             'suppliers' => Supplier::query()->orderBy('name')->pluck('name'),
             'employees' => [],
@@ -52,7 +54,14 @@ class IncomingTransactionController extends Controller
 
     public function store(StoreIncomingTransactionRequest $request, StockLedger $ledger, ItemCodeGenerator $codes): RedirectResponse
     {
-        $receiptPath = $request->file('receipt')?->store('receipts', 'local');
+        $receipt = $request->file('receipt');
+
+        // The temp upload can vanish before it is stored (e.g. antivirus); fail with a clear message.
+        if ($receipt instanceof UploadedFile && ! $receipt->getRealPath()) {
+            throw ValidationException::withMessages(['receipt' => 'Foto nota gagal terunggah. Pilih ulang fotonya lalu simpan lagi.']);
+        }
+
+        $receiptPath = $receipt?->store('receipts', 'local');
         $storedPhotos = [];
 
         try {

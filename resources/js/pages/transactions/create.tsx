@@ -39,6 +39,7 @@ type TransactionCreateProps = {
     items: FormItemOption[];
     preselectedItem: string | null;
     suppliers: string[];
+    pics: string[];
     employees: EmployeeOption[];
     divisions: { id: number; name: string }[];
     categories: { id: number; code: string; name: string }[];
@@ -98,6 +99,7 @@ export default function TransactionCreate({
     preselectedItem,
     suppliers,
     employees,
+    pics,
     divisions,
     categories,
     units,
@@ -399,22 +401,21 @@ export default function TransactionCreate({
                                     <Field
                                         label="PIC / yang menerima barang"
                                         htmlFor="pic_name"
-                                        hint="Isi nama yang memasukan barang"
+                                        hint="Pilih dari karyawan atau pengguna"
                                         error={errors.pic_name}
                                     >
-                                        <input
+                                        <Select
                                             id="pic_name"
                                             value={form.data.pic_name}
-                                            onChange={(event) =>
-                                                form.setData(
-                                                    'pic_name',
-                                                    event.target.value,
-                                                )
+                                            onChange={(pic) =>
+                                                form.setData('pic_name', pic)
                                             }
-                                            aria-invalid={Boolean(
-                                                errors.pic_name,
-                                            )}
-                                            className={inputClasses}
+                                            invalid={Boolean(errors.pic_name)}
+                                            placeholder="Pilih PIC"
+                                            options={pics.map((pic) => ({
+                                                value: pic,
+                                                label: pic,
+                                            }))}
                                         />
                                     </Field>
                                 </>
@@ -423,28 +424,27 @@ export default function TransactionCreate({
                                     <Field
                                         label="PIC / yang mengeluarkan barang"
                                         htmlFor="pic_name"
-                                        hint="Isi nama yang mengeluarkan barang"
+                                        hint="Pilih dari karyawan atau pengguna"
                                         error={errors.pic_name}
                                     >
-                                        <input
+                                        <Select
                                             id="pic_name"
                                             value={form.data.pic_name}
-                                            onChange={(event) =>
-                                                form.setData(
-                                                    'pic_name',
-                                                    event.target.value,
-                                                )
+                                            onChange={(pic) =>
+                                                form.setData('pic_name', pic)
                                             }
-                                            aria-invalid={Boolean(
-                                                errors.pic_name,
-                                            )}
-                                            className={inputClasses}
+                                            invalid={Boolean(errors.pic_name)}
+                                            placeholder="Pilih PIC"
+                                            options={pics.map((pic) => ({
+                                                value: pic,
+                                                label: pic,
+                                            }))}
                                         />
                                     </Field>
                                     <Field
                                         label="Penerima"
                                         htmlFor="employee-picker"
-                                        hint="Belum terdaftar? Ketik namanya"
+                                        hint="Belum ada? Ketik namanya"
                                     >
                                         <EmployeePicker
                                             id="employee-picker"
@@ -779,17 +779,18 @@ type FieldProps = {
 function Field({ label, htmlFor, hint, error, children }: FieldProps) {
     return (
         <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-2">
-                <label
-                    htmlFor={htmlFor}
-                    className="text-sm font-medium text-ink-700"
-                >
-                    {label}
-                </label>
-                {hint && <span className="text-xs text-ink-500">{hint}</span>}
-            </div>
+            <label
+                htmlFor={htmlFor}
+                className="text-sm font-medium text-ink-700"
+            >
+                {label}
+            </label>
             {children}
-            {error && <p className="text-sm text-low-ink">{error}</p>}
+            {error ? (
+                <p className="text-sm text-low-ink">{error}</p>
+            ) : (
+                hint && <p className="text-xs text-ink-500">{hint}</p>
+            )}
         </div>
     );
 }
@@ -1228,73 +1229,89 @@ function LineRow({
                       : 'border-ink-200',
             )}
         >
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
-                <div className="flex min-w-0 items-start gap-3">
-                    <PhotoSlot
-                        id={`line-${index}-photo`}
-                        existingUrl={item?.image_url ?? null}
-                        file={line.photo}
-                        canUpload={isIncoming}
-                        onChange={(photo) => onChange({ photo })}
-                    />
-                    <div className="flex min-w-0 flex-col gap-1">
-                        {item ? (
-                            <>
-                                <span className="truncate font-semibold text-ink-900">
-                                    {itemLabel(item)}
-                                </span>
-                                <span className="text-xs text-ink-500">
-                                    {item.code} · sisa{' '}
-                                    {formatNumber(item.current_stock)}{' '}
-                                    {item.unit}
-                                    {quantity > 0 && (
-                                        <>
-                                            {' '}
-                                            →{' '}
-                                            <strong
-                                                className={cn(
-                                                    'font-semibold',
-                                                    isOverdrawn
-                                                        ? 'text-low'
-                                                        : stockAfter <=
-                                                                item.minimum_stock &&
-                                                            !isIncoming
-                                                          ? 'text-service'
-                                                          : 'text-ink-900',
-                                                )}
-                                            >
-                                                {formatNumber(stockAfter)}{' '}
-                                                {item.unit}
-                                            </strong>
-                                        </>
-                                    )}
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <span className="flex items-center gap-2">
+            <div className="flex flex-col gap-4">
+                <div className="flex items-start gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <PhotoSlot
+                            id={`line-${index}-photo`}
+                            existingUrl={item?.image_url ?? null}
+                            file={line.photo}
+                            canUpload={isIncoming}
+                            onChange={(photo) => onChange({ photo })}
+                        />
+                        <div className="flex min-w-0 flex-col gap-1">
+                            {item ? (
+                                <>
                                     <span className="truncate font-semibold text-ink-900">
-                                        {newItem?.name || 'Barang baru'}
-                                        {newItem?.variant &&
-                                            ` · ${newItem.variant}`}
+                                        {itemLabel(item)}
                                     </span>
-                                    <span className="rounded-md bg-brand-700 px-1.5 py-0.5 text-[11px] font-semibold text-white">
-                                        Baru
+                                    <span className="text-xs text-ink-500">
+                                        {item.code} · sisa{' '}
+                                        {formatNumber(item.current_stock)}{' '}
+                                        {item.unit}
+                                        {quantity > 0 && (
+                                            <>
+                                                {' '}
+                                                →{' '}
+                                                <strong
+                                                    className={cn(
+                                                        'font-semibold',
+                                                        isOverdrawn
+                                                            ? 'text-low'
+                                                            : stockAfter <=
+                                                                    item.minimum_stock &&
+                                                                !isIncoming
+                                                              ? 'text-service'
+                                                              : 'text-ink-900',
+                                                    )}
+                                                >
+                                                    {formatNumber(stockAfter)}{' '}
+                                                    {item.unit}
+                                                </strong>
+                                            </>
+                                        )}
                                     </span>
-                                </span>
-                                <span className="text-xs text-ink-500">
-                                    Kode dibuat otomatis
-                                    {category
-                                        ? ` (INVESTA-PLK-…-${category.code}-…)`
-                                        : ' setelah jenis barang dipilih'}
-                                </span>
-                            </>
-                        )}
+                                </>
+                            ) : (
+                                <>
+                                    <span className="flex items-center gap-2">
+                                        <span className="truncate font-semibold text-ink-900">
+                                            {newItem?.name || 'Barang baru'}
+                                            {newItem?.variant &&
+                                                ` · ${newItem.variant}`}
+                                        </span>
+                                        <span className="rounded-md bg-brand-700 px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                                            Baru
+                                        </span>
+                                    </span>
+                                    <span className="text-xs text-ink-500">
+                                        Kode dibuat otomatis
+                                        {category
+                                            ? ` (INVESTA-PLK-…-${category.code}-…)`
+                                            : ' setelah jenis barang dipilih'}
+                                    </span>
+                                </>
+                            )}
+                        </div>
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={onRemove}
+                        aria-label={`Hapus ${item ? itemLabel(item) : newItem?.name || 'barang baru'} dari daftar`}
+                        className="flex size-10 shrink-0 items-center justify-center rounded-xl text-ink-500 hover:bg-low/10 hover:text-low"
+                    >
+                        <TrashIcon className="size-[18px]" />
+                    </button>
                 </div>
 
-                <div className="flex flex-wrap items-start gap-3">
-                    <div className="flex w-32 flex-col gap-1.5">
+                <div
+                    className={cn(
+                        'grid grid-cols-1 gap-3',
+                        isIncoming ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
+                    )}
+                >
+                    <div className="flex flex-col gap-1.5">
                         <label
                             htmlFor={`line-${index}-quantity`}
                             className="text-xs font-medium text-ink-500"
@@ -1322,7 +1339,7 @@ function LineRow({
                         />
                     </div>
                     {isIncoming && (
-                        <div className="flex w-40 flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
                             <label
                                 htmlFor={`line-${index}-price`}
                                 className="text-xs font-medium text-ink-500"
@@ -1344,7 +1361,7 @@ function LineRow({
                         </div>
                     )}
                     {isIncoming ? (
-                        <div className="flex w-44 flex-col gap-1.5">
+                        <div className="flex flex-col gap-1.5">
                             <label
                                 htmlFor={`line-${index}-subtotal`}
                                 className="flex items-center justify-between text-xs font-medium text-ink-500"
@@ -1407,14 +1424,6 @@ function LineRow({
                             </span>
                         </div>
                     )}
-                    <button
-                        type="button"
-                        onClick={onRemove}
-                        aria-label={`Hapus ${item ? itemLabel(item) : newItem?.name || 'barang baru'} dari daftar`}
-                        className="mt-[22px] flex size-11 items-center justify-center rounded-xl text-ink-500 hover:bg-low/10 hover:text-low"
-                    >
-                        <TrashIcon className="size-[18px]" />
-                    </button>
                 </div>
             </div>
 

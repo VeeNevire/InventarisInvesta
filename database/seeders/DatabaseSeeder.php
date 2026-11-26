@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'sekretaris@inventarisinvesta.test',
         ]);
 
-        $this->call(app()->environment('testing') ? InventorySeeder::class : OfficeCatalogSeeder::class);
+        $this->call([
+            InventorySeeder::class,
+        ]);
     }
 }

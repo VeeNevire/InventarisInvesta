@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
+use App\Support\TransactionFormOptions;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOutgoingTransactionRequest extends FormRequest
 {
@@ -27,7 +29,7 @@ class StoreOutgoingTransactionRequest extends FormRequest
             'employee_id' => ['nullable', 'required_without:new_employee_name', 'integer', 'exists:employees,id'],
             'new_employee_name' => ['nullable', 'required_without:employee_id', 'string', 'max:255'],
             'new_employee_division_id' => ['nullable', 'integer', 'exists:divisions,id'],
-            'pic_name' => ['required', 'string', 'max:255'],
+            'pic_name' => ['required', 'string', Rule::in(app(TransactionFormOptions::class)->pics())],
             'purpose' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:500'],
             'lines' => ['required', 'array', 'min:1', 'max:50'],
@@ -45,7 +47,8 @@ class StoreOutgoingTransactionRequest extends FormRequest
             'transacted_on.before_or_equal' => 'Tanggal tidak boleh melewati hari ini.',
             'employee_id.required_without' => 'Pilih penerima barang atau tambahkan karyawan baru.',
             'new_employee_name.required_without' => 'Pilih penerima barang atau tambahkan karyawan baru.',
-            'pic_name.required' => 'Tulis nama PIC yang mengeluarkan barang.',
+            'pic_name.required' => 'Pilih PIC yang mengeluarkan barang.',
+            'pic_name.in' => 'PIC harus dipilih dari daftar karyawan atau pengguna.',
             'purpose.required' => 'Tulis keperluannya.',
             'lines.required' => 'Tambahkan minimal satu barang.',
             'lines.min' => 'Tambahkan minimal satu barang.',

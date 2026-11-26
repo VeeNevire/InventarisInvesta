@@ -6,6 +6,7 @@ use App\Enums\CategoryType;
 use App\Models\Item;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use App\Support\TransactionFormOptions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -35,7 +36,7 @@ class StoreIncomingTransactionRequest extends FormRequest
             'transacted_on' => ['required', 'date', 'before_or_equal:today'],
             'purchased_on' => ['required', 'date', 'before_or_equal:today', 'before_or_equal:transacted_on'],
             'supplier_name' => ['required', 'string', 'max:255'],
-            'pic_name' => ['required', 'string', 'max:255'],
+            'pic_name' => ['required', 'string', Rule::in(app(TransactionFormOptions::class)->pics())],
             'receipt' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'notes' => ['nullable', 'string', 'max:500'],
             'lines' => ['required', 'array', 'min:1', 'max:50'],
@@ -110,7 +111,8 @@ class StoreIncomingTransactionRequest extends FormRequest
             'purchased_on.date' => 'Tanggal pembelian tidak valid.',
             'purchased_on.before_or_equal' => 'Tanggal pembelian tidak boleh setelah tanggal terima barang.',
             'supplier_name.required' => 'Tulis nama supplier atau sumber barang.',
-            'pic_name.required' => 'Tulis nama PIC yang menerima barang.',
+            'pic_name.required' => 'Pilih PIC yang menerima barang.',
+            'pic_name.in' => 'PIC harus dipilih dari daftar karyawan atau pengguna.',
             'receipt.image' => 'Bukti nota harus berupa foto.',
             'receipt.mimes' => 'Foto nota harus JPG, PNG, atau WEBP.',
             'receipt.max' => 'Ukuran foto nota maksimal 5 MB.',

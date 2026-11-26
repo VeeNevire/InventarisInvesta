@@ -22,6 +22,7 @@ class OutgoingTransactionController extends Controller
             'type' => StockTransactionType::Keluar->value,
             'today' => now()->toDateString(),
             'items' => $options->items(),
+            'pics' => $options->pics(),
             'preselectedItem' => $request->string('barang')->value() ?: null,
             'suppliers' => [],
             'categories' => [],

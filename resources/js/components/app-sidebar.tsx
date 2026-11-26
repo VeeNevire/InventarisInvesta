@@ -137,15 +137,15 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </span>
             </Link>
 
-            <div className="relative -mx-4 flex-1 overflow-hidden">
+            <div className="relative -mx-4 min-h-0 flex-1 overflow-hidden">
                 <div
                     className={cn(
-                        'flex w-[200%] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
+                        'flex h-full w-[200%] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none',
                         panel === 'master' && '-translate-x-1/2',
                     )}
                 >
                     <div
-                        className="flex w-1/2 flex-col gap-6 px-4"
+                        className="flex min-h-0 w-1/2 flex-col gap-6 overflow-y-auto px-4"
                         inert={panel !== 'main'}
                     >
                         <form
@@ -231,7 +231,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     </div>
 
                     <div
-                        className="flex w-1/2 flex-col gap-5 px-4"
+                        className="flex min-h-0 w-1/2 flex-col gap-5 px-4"
                         inert={panel !== 'master'}
                     >
                         <MasterDataPanel
@@ -268,13 +268,13 @@ function MasterDataPanel({
             <button
                 type="button"
                 onClick={onBack}
-                className="group flex h-10 items-center gap-2 rounded-xl border border-ink-200/80 bg-ink-50 px-3 text-sm font-medium text-ink-600 transition-colors hover:border-brand-300 hover:bg-white hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                className="group flex h-10 shrink-0 items-center gap-2 rounded-xl border border-ink-200/80 bg-ink-50 px-3 text-sm font-medium text-ink-600 transition-colors hover:border-brand-300 hover:bg-white hover:text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             >
                 <ArrowLeftIcon className="size-4 transition-transform group-hover:-translate-x-0.5" />
                 Kembali ke menu utama
             </button>
 
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-800 via-brand-700 to-brand-500 p-4 text-white">
+            <div className="relative shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-800 via-brand-700 to-brand-500 p-4 text-white">
                 <span
                     aria-hidden="true"
                     className="pointer-events-none absolute -top-8 -right-8 size-24 rounded-full border-[14px] border-white/10"
@@ -290,57 +290,59 @@ function MasterDataPanel({
                 </p>
             </div>
 
-            <nav aria-label="Master Data" className="flex flex-col gap-1">
+            <nav aria-label="Master Data" className="flex min-h-0 flex-1 flex-col">
                 <SectionLabel>Daftar</SectionLabel>
-                {sections.map((section) => {
-                    const isActive = url.startsWith(section.href);
+                <div className="-mx-4 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4">
+                    {sections.map((section) => {
+                        const isActive = url.startsWith(section.href);
 
-                    return (
-                        <Link
-                            key={section.key}
-                            href={section.href}
-                            onClick={onNavigate}
-                            prefetch
-                            aria-current={isActive ? 'page' : undefined}
-                            className={cn(
-                                'group relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
-                                isActive ? 'bg-brand-50' : 'hover:bg-ink-50',
-                            )}
-                        >
-                            {isActive && (
-                                <span
-                                    aria-hidden="true"
-                                    className="absolute top-2 bottom-2 -left-4 w-1 rounded-r-full bg-brand-500"
-                                />
-                            )}
-                            <span
+                        return (
+                            <Link
+                                key={section.key}
+                                href={section.href}
+                                onClick={onNavigate}
+                                prefetch
+                                aria-current={isActive ? 'page' : undefined}
                                 className={cn(
-                                    'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-                                    isActive
-                                        ? 'bg-brand-500 text-white shadow-[0_4px_10px_-4px_rgba(22,121,201,0.7)]'
-                                        : 'bg-ink-50 text-ink-500 group-hover:bg-white group-hover:text-brand-700',
+                                    'group relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600',
+                                    isActive ? 'bg-brand-50' : 'hover:bg-ink-50',
                                 )}
                             >
-                                <section.icon className="size-[18px]" />
-                            </span>
-                            <span className="flex min-w-0 flex-col">
+                                {isActive && (
+                                    <span
+                                        aria-hidden="true"
+                                        className="absolute top-2 bottom-2 -left-4 w-1 rounded-r-full bg-brand-500"
+                                    />
+                                )}
                                 <span
                                     className={cn(
-                                        'truncate text-sm',
+                                        'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors',
                                         isActive
-                                            ? 'font-semibold text-brand-800'
-                                            : 'text-ink-700',
+                                            ? 'bg-brand-500 text-white shadow-[0_4px_10px_-4px_rgba(22,121,201,0.7)]'
+                                            : 'bg-ink-50 text-ink-500 group-hover:bg-white group-hover:text-brand-700',
                                     )}
                                 >
-                                    {section.title}
+                                    <section.icon className="size-[18px]" />
                                 </span>
-                                <span className="truncate text-[11px] text-ink-400">
-                                    {section.hint}
+                                <span className="flex min-w-0 flex-col">
+                                    <span
+                                        className={cn(
+                                            'truncate text-sm',
+                                            isActive
+                                                ? 'font-semibold text-brand-800'
+                                                : 'text-ink-700',
+                                        )}
+                                    >
+                                        {section.title}
+                                    </span>
+                                    <span className="truncate text-[11px] text-ink-400">
+                                        {section.hint}
+                                    </span>
                                 </span>
-                            </span>
-                        </Link>
-                    );
-                })}
+                            </Link>
+                        );
+                    })}
+                </div>
             </nav>
         </>
     );

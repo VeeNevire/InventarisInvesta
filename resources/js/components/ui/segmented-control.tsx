@@ -46,7 +46,7 @@ export function SegmentedControl<T extends string>({
                         {segment.count !== undefined && (
                             <span
                                 className={cn(
-                                    'rounded px-1.5 text-[11px] font-semibold tabular-nums',
+                                    'min-w-7 rounded px-1.5 text-center text-[11px] font-semibold tabular-nums',
                                     isActive
                                         ? 'bg-white/20 text-white'
                                         : 'bg-ink-100 text-ink-500',

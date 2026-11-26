@@ -37,18 +37,20 @@ const todayFormatter = new Intl.DateTimeFormat('id-ID', {
 export function AppHeader({ breadcrumbs, onOpenMenu }: AppHeaderProps) {
     return (
         <header className="flex items-center gap-3">
-            <button
-                type="button"
-                onClick={onOpenMenu}
-                className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:text-brand-700 lg:hidden"
-                aria-label="Buka menu"
-            >
-                <MenuIcon />
-            </button>
+            <div className="flex min-w-0 shrink-0 items-center gap-3">
+                <button
+                    type="button"
+                    onClick={onOpenMenu}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:text-brand-700 lg:hidden"
+                    aria-label="Buka menu"
+                >
+                    <MenuIcon />
+                </button>
 
-            <Breadcrumbs breadcrumbs={breadcrumbs} />
+                <Breadcrumbs breadcrumbs={breadcrumbs} />
+            </div>
 
-            <div className="flex flex-1 justify-end md:justify-center">
+            <div className="flex flex-1 items-center justify-end md:justify-center">
                 <MenuSearch />
             </div>
 
@@ -67,8 +69,8 @@ function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItem[] }) {
 
     return (
         <nav aria-label="Breadcrumb" className="min-w-0">
-            <ol className="flex items-center gap-1.5 text-sm">
-                <li className={cn(!isHome && 'hidden sm:block')}>
+            <ol className="flex items-center gap-1.5 text-sm whitespace-nowrap">
+                <li className={cn('shrink-0', !isHome && 'hidden sm:block')}>
                     <Link
                         href={dashboard.url()}
                         aria-current={isHome ? 'page' : undefined}
@@ -79,7 +81,7 @@ function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItem[] }) {
                                 : 'text-ink-500 hover:bg-white hover:text-brand-700',
                         )}
                     >
-                        <DashboardIcon className="size-4" />
+                        <DashboardIcon className="size-4 shrink-0" />
                         {isHome && 'Beranda'}
                     </Link>
                 </li>
@@ -91,7 +93,7 @@ function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItem[] }) {
                             <li
                                 aria-hidden="true"
                                 className={cn(
-                                    'text-ink-200',
+                                    'shrink-0 text-ink-200',
                                     !isLast && 'hidden sm:block',
                                     isLast && index === 0 && 'hidden sm:block',
                                 )}
@@ -100,7 +102,7 @@ function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItem[] }) {
                             </li>
                             <li
                                 className={cn(
-                                    'min-w-0 truncate',
+                                    'shrink-0',
                                     !isLast && 'hidden sm:block',
                                 )}
                             >
@@ -139,8 +141,8 @@ function TodayChip() {
     const [today] = useState(() => todayFormatter.format(new Date()));
 
     return (
-        <span className="hidden h-10 items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 text-[13px] font-medium text-ink-700 xl:flex">
-            <span className="flex size-6 items-center justify-center rounded-md bg-sun-100 text-sun-700">
+        <span className="hidden h-10 shrink-0 items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 text-[13px] font-medium whitespace-nowrap text-ink-700 xl:flex">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sun-100 text-sun-700">
                 <CalendarIcon className="size-3.5" />
             </span>
             {today}
